@@ -27,15 +27,32 @@ from qgis.core import *
 from ui_lrsdockwidget import Ui_LrsDockWidget
 
 #class LrsDockWidget(QtGui.QDockWidget):
-class LrsDockWidget(QtGui.QDockWidget,Ui_LrsDockWidget):
-    def __init__(self,parent,iface):
+class LrsDockWidget( QtGui.QDockWidget, Ui_LrsDockWidget ):
+    def __init__( self,parent, iface ):
         self.iface = iface
-        QtGui.QDockWidget.__init__(self,parent)
+        #QtGui.QDockWidget.__init__( self, parent )
+        super(LrsDockWidget, self).__init__(parent )
         
         # Set up the user interface from Designer.
-        #self.ui = Ui_LrsDockWidget()
-        #self.ui.setupUi(self)
-        self.setupUi(self)
+        self.setupUi( self )
+        
+        # default item does not work because in qgiscombomanager is wrong index (+1) or findData() on user data instead text 
+        # TODO make pull request from fixes
 
-        self.genLinesLayerComboManager = cm.VectorLayerCombo(self.genLineLayerCombo, '', {'geomType':QGis.Line } )
+        self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, 'lines', {'geomType':QGis.Line } )
+        self.genLineRouteFieldCM = cm.FieldCombo( self.genLineRouteFieldCombo, self.genLineLayerCM, 'route' )
+        self.genPointLayerCM = cm.VectorLayerCombo( self.genPointLayerCombo, 'points', {'geomType':QGis.Point } )
+        self.genPointRouteFieldCM = cm.FieldCombo( self.genPointRouteFieldCombo, self.genPointLayerCM, 'route' )
+        # TODO: allow integers, currently only one type supported by fieldType
+        # in any case fieldType does not work, also wrong index (fixed in local copy) 
+        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km', { 'fieldType':QtCore.QVariant.Double } )
+
+    def close(self):
+      # Must delete combo managers to disconnect!
+      del self.genLineLayerCM
+      del self.genLineRouteFieldCM
+      del self.genPointLayerCM
+      del self.genPointRouteFieldCM
+      del self.genPointMeasureFieldCM
+      super(LrsDockWidget, self).close()
         

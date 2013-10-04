@@ -48,8 +48,6 @@ class LrsPlugin:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the docked panel 
-        self.dock = LrsDockWidget(self.iface.mainWindow(), self.iface)
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -63,17 +61,26 @@ class LrsPlugin:
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu(u"&LRS", self.action)
 
+        # Create the docked panel 
+        print "self.iface.mainWindow = %s" % self.iface.mainWindow()
+        self.dockWidget = LrsDockWidget(self.iface.mainWindow(), self.iface)
+        self.iface.addDockWidget(Qt.RightDockWidgetArea,self.dockWidget)
+
+
     def unload(self):
+        self.dockWidget.close()
+        self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
         self.iface.removePluginMenu(u"&LRS", self.action)
         self.iface.removeToolBarIcon(self.action)
 
     # run method that performs all the real work
     def run(self):
-        # show the dialog
-        self.dock.show()
-
         print "run"
+
+        # show the dialog
+        #self.dockWidget.show()
+
         # Run the dialog event loop
         #result = self.dock.exec_()
         # See if OK was pressed
