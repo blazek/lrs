@@ -26,7 +26,7 @@ from qgis.core import *
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
-from lrsplugindialog import LrsPluginDialog
+from lrsdockwidget import LrsDockWidget
 import os.path
 
 
@@ -48,8 +48,8 @@ class LrsPlugin:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = LrsPluginDialog()
+        # Create the docked panel 
+        self.dock = LrsDockWidget(self.iface.mainWindow(), self.iface)
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -71,11 +71,13 @@ class LrsPlugin:
     # run method that performs all the real work
     def run(self):
         # show the dialog
-        self.dlg.show()
+        self.dock.show()
+
+        print "run"
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        #result = self.dock.exec_()
         # See if OK was pressed
-        if result == 1:
+        #if result == 1:
             # do something useful (delete the line containing pass and
             # substitute with your code)
-            pass
+            #pass

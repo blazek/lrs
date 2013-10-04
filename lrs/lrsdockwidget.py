@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- LrsPluginDialog
+ LrsDockWidget
                                  A QGIS plugin
  Linear reference system builder and editor
                              -------------------
@@ -21,13 +21,21 @@
 """
 
 from PyQt4 import QtCore, QtGui
-from ui_lrsplugin import Ui_LrsPlugin
-# create the dialog for zoom to point
+import qgiscombomanager as cm
+from qgis.core import *
 
+from ui_lrsdockwidget import Ui_LrsDockWidget
 
-class LrsPluginDialog(QtGui.QDialog):
-    def __init__(self):
-        QtGui.QDialog.__init__(self)
+#class LrsDockWidget(QtGui.QDockWidget):
+class LrsDockWidget(QtGui.QDockWidget,Ui_LrsDockWidget):
+    def __init__(self,parent,iface):
+        self.iface = iface
+        QtGui.QDockWidget.__init__(self,parent)
+        
         # Set up the user interface from Designer.
-        self.ui = Ui_LrsPlugin()
-        self.ui.setupUi(self)
+        #self.ui = Ui_LrsDockWidget()
+        #self.ui.setupUi(self)
+        self.setupUi(self)
+
+        self.genLinesLayerComboManager = cm.VectorLayerCombo(self.genLineLayerCombo, '', {'geomType':QGis.Line } )
+        

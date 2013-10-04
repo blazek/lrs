@@ -23,7 +23,7 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = lrsplugin.py ui_lrsplugin.py __init__.py lrsplugindialog.py
+SOURCES = __init__.py lrsplugin.py ui_lrsdockwidget.py lrsdockwidget.py 
 #TRANSLATIONS = i18n/lrsplugin_en.ts
 TRANSLATIONS = 
 
@@ -31,11 +31,11 @@ TRANSLATIONS =
 
 PLUGINNAME = lrsplugin
 
-PY_FILES = lrsplugin.py lrsplugindialog.py __init__.py
+PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 
 EXTRAS = icon.png metadata.txt
 
-UI_FILES = ui_lrsplugin.py
+UI_FILES = ui_lrsdockwidget.py
 
 RESOURCE_FILES = resources_rc.py
 

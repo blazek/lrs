@@ -3,6 +3,8 @@
 .*.swp
 
 *.py[cod]
+resources_rc.py
+ui_*.py
 
 # C extensions
 *.so
