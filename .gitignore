@@ -1,3 +1,7 @@
+*.*~
+*~
+.*.swp
+
 *.py[cod]
 
 # C extensions
