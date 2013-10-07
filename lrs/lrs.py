@@ -26,6 +26,8 @@ from qgis.core import *
 
 from utils import *
 from route import LrsRoute
+from point import LrsPoint
+from error import LrsError
 #from line
 
 # Main class to keep all data and process them
@@ -54,27 +56,64 @@ class Lrs:
         # dictionary of LrsRoute
         self.routes = {} 
 
+        self.orphanPoints = []
+
         self.registerLines()
+        self.registerPoints()
 
     def registerLines (self):
-        debug ( "registerLines" )
         feature = QgsFeature()
         iterator = self.lineLayer.getFeatures()
         while iterator.nextFeature(feature):
             routeId = feature[self.lineRouteField]
             debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
             if not self.routes.has_key(routeId):
-                self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.lineTransform)
+                self.routes[routeId] = LrsRoute(self.lineLayer, routeId )
             route = self.routes[routeId]
-            route.addLine ( feature ) 
+            geo = feature.geometry()
+            if geo:
+                if self.lineTransform:
+                    geo.transform( self.lineTransform )
+                route.addLine ( geo ) 
 
         for route in self.routes.values():
             route.buildParts()
+
+    def registerPoints (self):
+        feature = QgsFeature()
+        iterator = self.pointLayer.getFeatures()
+        while iterator.nextFeature(feature):
+            routeId = feature[self.pointRouteField]
+            measure = feature[self.pointMeasureField]
+            debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
+            geo = feature.geometry()
+            if geo:
+                if self.pointTransform:
+                    geo.transform( self.pointTransform )
+
+            if geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+                pnts = [ geo.asPoint() ]
+            else: # multi (makes little sense)
+                pnts = geo.asMultiPoint()
+
+            for pnt in pnts:
+                point = LrsPoint( routeId, pnt, measure )
+                if not self.routes.has_key(routeId):
+                    self.orphanPoints.append ( point )
+                else:
+                    self.routes[routeId].addPoint( point )
+
+        #for route in self.routes.values():
+        #    route.buildParts()
 
     def getErrors(self):
         errors = []
         for route in self.routes.values():
             errors.extend( route.getErrors() )
+        for point in self.orphanPoints:
+            geo = QgsGeometry()
+            geo.fromPoint( point.point )
+            errors.append( LrsError( LrsError.ORPHAN, geo ) )    
         return errors
 
 

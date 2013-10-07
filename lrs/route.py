@@ -32,10 +32,9 @@ from error import LrsError
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId, transform):
+    def __init__(self, layer, routeId):
         debug ('init route %s' % routeId )
         #self.lrsCrs = lrsCrs
-        self.transform = transform
         self.layer = layer
         self.routeId = routeId
         self.errors = [] # list of LrsError
@@ -46,14 +45,10 @@ class LrsRoute:
         # list of LrsRoutePart
         self.parts = []
 
-    def addLine( self, feature ):
-        #self.lines.append( LrsLine( self.layer, feature ) )   
-        # add copy of all geometry parts
-        geo = feature.geometry()
-        if not geo : return
+        self.points = [] # list of LrsPoint
 
-        if self.transform:
-            geo.transform( self.transform )
+    def addLine( self, geo ):
+        # add all geometry parts
 
         # QGis::singleType and flatType are not in bindings (2.0)
         if geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
@@ -86,15 +81,68 @@ class LrsRoute:
             for i in [0,-1]:    
                 ph = pointHash( polyline[i] )
                 if not nodes.has_key( ph ):
-                    nodes[ ph ] = { 'point': polyline[i], 'count': 1 }
+                    nodes[ ph ] = { 'point': polyline[i], 'lines': 1 }
                 else:
-                    nodes[ ph ]['count'] += 1 
+                    nodes[ ph ]['lines'] += 1 
 
         for node in nodes.values():
-            if node['count'] > 2:
+            if node['lines'] > 2:
                 geo = QgsGeometry()
                 geo.fromPoint( node['point'] )
                 self.errors.append( LrsError( LrsError.FORK, geo ) )    
+
+        ###### join polylines to parts
+        while len( self.polylines ) > 0:
+            polyline = self.polylines.pop(0)
+            while True: # connect parts
+                connected = False
+                for i in range(len( self.polylines )):
+                    polyline2 = self.polylines[i]
+
+                    # dont connect in forks (we don't know which is better)
+                    fork = False
+                    for j in [0, -1]:
+                        ph = pointHash( polyline2[j] )
+                        if nodes[ph]['lines'] > 2:
+                            fork = True
+                            break
+                    if fork: 
+                        #debug ('skip fork' )
+                        continue
+
+                    if polyline[-1] == polyline2[0]: # --1-->  --2-->
+                        del polyline2[0]
+                        polyline.extend(polyline2)
+                        connected = True
+                    elif polyline[-1] == polyline2[-1]: # --1--> <--2--
+                        polyline2.reverse()
+                        del polyline2[0]
+                        polyline.extend(polyline2)
+                        connected = True
+                    elif polyline[0] == polyline2[-1]: # --2--> --1-->
+                        del polyline[0]
+                        polyline2.extend(polyline)
+                        polyline = polyline2
+                        connected = True
+                    elif polyline[0] == polyline2[0]: # <--2-- --1-->
+                        polyline2.reverse()
+                        del polyline[0]
+                        polyline2.extend(polyline)
+                        polyline = polyline2
+                        connected = True
+
+                    if connected: 
+                        #print '%s part connected' % i
+                        del self.polylines[i]
+                        break
+
+                if not connected: # no more parts can be connected
+                    break
+
+            self.parts.append( LrsRoutePart( polyline) )
+
+    def addPoint( self, point ):
+       self.points.append ( point )
 
     def getErrors(self):
         return self.errors 

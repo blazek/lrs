@@ -28,17 +28,10 @@ from utils import *
 
 # Chain of connected geometries
 
-class LrsRoutePart:
+class LrsPoint(object):
 
-    def __init__(self, polyline):
-        #debug ('init route part' )
-        self.polyline = polyline
-        print polyline
-        # store copy of the feature
-        # TODO: consider storing fid only
-        #self.feature = QgsFeature(feature)
-        #self.routeId = routeId
-        #self.lines = [] # list of LrsLine
+    def __init__(self, routeId, point, measure ):
+        self.routeId = routeId
+        self.point = point # QgsPoint
+        self.measure = measure
 
-    #def getFeature():
-    #    return self.feature

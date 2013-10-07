@@ -34,11 +34,13 @@ class LrsError(object):
     DUPLICATE_LINE = 1
     DUPLICATE_POINT = 2
     FORK = 3 # more than 2 lines connected in one node
+    ORPHAN = 4 # orphan point, no line with such routeId
 
     typeLabels = {
         DUPLICATE_LINE: "Duplicate line",
         DUPLICATE_POINT: "Duplicate point",
         FORK: "Fork",
+        ORPHAN: 'Orphan point',
     }
 
     def __init__(self, type, geometry, message = '' ):
@@ -61,7 +63,7 @@ class LrsErrorModel( QAbstractTableModel ):
         return len( self.errors )
 
     def columnCount(self, index):
-        return 2
+        return 1
 
     def data(self, index, role):
         if role != Qt.DisplayRole: return None
