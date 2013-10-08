@@ -24,6 +24,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import qgiscombomanager as cm
 from qgis.core import *
+from qgis.gui import *
 
 from ui_lrsdockwidget import Ui_LrsDockWidget
 from utils import *
@@ -38,6 +39,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
             self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
         self.lrs = None # Lrs object
+        self.errorHighlight = None 
         #QtGui.QDockWidget.__init__( self, parent )
         super(LrsDockWidget, self).__init__(parent )
         
@@ -60,17 +62,22 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         ##### errorTab
         self.errorModel = None
+        self.errorView.horizontalHeader().setStretchLastSection ( True )
 
         # debug
-        self.generateLrs()
+        if self.genLineLayerCM.getLayer():
+            self.generateLrs() # only when reloading!
 
     def close(self):
+        print "close"
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
         del self.genLineRouteFieldCM
         del self.genPointLayerCM
         del self.genPointRouteFieldCM
         del self.genPointMeasureFieldCM
+        if self.errorHighlight:
+            del self.errorHighlight
         super(LrsDockWidget, self).close()
 
     def generateLrs(self):
@@ -83,5 +90,31 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.sortErrorModel = QSortFilterProxyModel()
         self.sortErrorModel.setSourceModel( self.errorModel )
+         
         self.errorView.setModel( self.sortErrorModel )
- 
+        self.errorView.resizeColumnsToContents ()
+        self.errorView.selectionModel().selectionChanged.connect(self.errorSelectionChanged)
+
+    def errorSelectionChanged(self, selected, deselected ):
+        if self.errorHighlight:
+            del self.errorHighlight
+            self.errorHighlight = None
+
+        if len( selected.indexes() ) == 0: return
+
+        index = selected.indexes()[0]
+        error = self.errorModel.getError(index)
+        if not error: return
+
+        print 'error %s' % error.typeLabel()
+        # we have geo in current canvas CRS but QgsHighlight does reprojection
+        # from layer CRS so we have to use fake layer
+        layer = QgsVectorLayer( 'Point?crs=' + self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
+        
+        print error.geo
+        print error.geo.exportToWkt()
+        self.errorHighlight = QgsHighlight( self.iface.mapCanvas(), error.geo, layer )
+        # highlight point size is hardcoded in QgsHighlight
+        self.errorHighlight.setWidth( 2 )
+        self.errorHighlight.setColor( Qt.red )
+        self.errorHighlight.show()

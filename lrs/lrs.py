@@ -27,6 +27,7 @@ from qgis.core import *
 from utils import *
 from route import LrsRoute
 from point import LrsPoint
+from line import LrsLine
 from error import LrsError
 #from line
 
@@ -58,10 +59,16 @@ class Lrs:
 
         self.orphanPoints = []
 
+        self.calibrate()
+
+    def calibrate(self):
         self.registerLines()
         self.registerPoints()
+        for route in self.routes.values():
+            route.calibrate()
 
     def registerLines (self):
+        self.routes = {}
         feature = QgsFeature()
         iterator = self.lineLayer.getFeatures()
         while iterator.nextFeature(feature):
@@ -74,7 +81,7 @@ class Lrs:
             if geo:
                 if self.lineTransform:
                     geo.transform( self.lineTransform )
-                route.addLine ( geo ) 
+                route.addLine ( LrsLine( routeId, geo ) ) 
 
         for route in self.routes.values():
             route.buildParts()
@@ -91,29 +98,18 @@ class Lrs:
                 if self.pointTransform:
                     geo.transform( self.pointTransform )
 
-            if geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
-                pnts = [ geo.asPoint() ]
-            else: # multi (makes little sense)
-                pnts = geo.asMultiPoint()
-
-            for pnt in pnts:
-                point = LrsPoint( routeId, pnt, measure )
-                if not self.routes.has_key(routeId):
-                    self.orphanPoints.append ( point )
-                else:
-                    self.routes[routeId].addPoint( point )
-
-        #for route in self.routes.values():
-        #    route.buildParts()
+            point = LrsPoint( routeId, measure, geo )
+            if not self.routes.has_key(routeId):
+                self.orphanPoints.append ( point )
+            else:
+                self.routes[routeId].addPoint( point )
 
     def getErrors(self):
         errors = []
         for route in self.routes.values():
             errors.extend( route.getErrors() )
         for point in self.orphanPoints:
-            geo = QgsGeometry()
-            geo.fromPoint( point.point )
-            errors.append( LrsError( LrsError.ORPHAN, geo ) )    
+            errors.append( LrsError( LrsError.ORPHAN, point.geo ) )
         return errors
 
 

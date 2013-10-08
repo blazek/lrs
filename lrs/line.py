@@ -26,10 +26,9 @@ from qgis.core import *
 
 from utils import *
 
-class LrsPoint(object):
+class LrsLine(object):
 
-    def __init__(self, routeId, measure, geo ):
+    def __init__(self, routeId, geo ):
         self.routeId = routeId
-        self.measure = measure
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
 

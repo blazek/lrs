@@ -43,9 +43,9 @@ class LrsError(object):
         ORPHAN: 'Orphan point',
     }
 
-    def __init__(self, type, geometry, message = '' ):
+    def __init__(self, type, geo, message = '' ):
         self.type = type
-        self.geometry = geometry # QgsGeometry
+        self.geo = QgsGeometry(geo) # store copy of QgsGeometry
         self.message = message
 
     def typeLabel(self):
@@ -59,6 +59,16 @@ class LrsErrorModel( QAbstractTableModel ):
         super(LrsErrorModel, self).__init__()
         self.errors = []
 
+    def headerData( self, section, orientation, role = Qt.DisplayRole ):
+        if role != Qt.DisplayRole: return None
+        if orientation == Qt.Horizontal:
+            if section == 0:
+                return "Type"
+            else:
+                return "%s" % section
+        else:
+            return "%s" % section
+    
     def rowCount(self, index):
         return len( self.errors )
 
@@ -75,3 +85,10 @@ class LrsErrorModel( QAbstractTableModel ):
         
     def addErrors ( self, errors ):
         self.errors.extend ( errors )
+
+    def getError (self, index):
+        if not index: return None
+        row = index.row()
+        if row < 0 or row >= len(self.errors): return None
+        return self.errors[row]
+

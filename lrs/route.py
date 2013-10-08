@@ -34,80 +34,82 @@ class LrsRoute:
 
     def __init__(self, layer, routeId):
         debug ('init route %s' % routeId )
-        #self.lrsCrs = lrsCrs
         self.layer = layer
         self.routeId = routeId
-        self.errors = [] # list of LrsError
         
-        # geometry parts of all lines as QgsPolyline (=QVector<QgsPoint>)
-        self.polylines = []
-
-        # list of LrsRoutePart
-        self.parts = []
-
+        self.lines = [] # LrsLine list
         self.points = [] # list of LrsPoint
 
-    def addLine( self, geo ):
-        # add all geometry parts
+        self.parts = [] # list of LrsRoutePart
+        self.errors = [] # list of LrsError
 
-        # QGis::singleType and flatType are not in bindings (2.0)
-        if geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
-            self.polylines.append( geo.asPolyline() )
-        else: # multiline
-            self.polylines.extend ( geo.asMultiPolyline() )
+    def addLine( self, line ):
+        self.lines.append( line )
 
-        
+    def calibrate(self):
+        self.errors = []
+        self.buildParts()
+        self.checkPoints()
+ 
     # create LrsRoutePart from eometryParts
     def buildParts(self):
+        self.parts = []
+        polylines = []
+        for line in self.lines:
+            # QGis::singleType and flatType are not in bindings (2.0)
+            if line.geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
+                polylines.append( line.geo.asPolyline() )
+            else: # multiline
+                polylines.extend ( line.geo.asMultiPolyline() )
+
         ##### check for duplicates
         duplicates = set()
-        for i in range(len(self.polylines)-1):
-            for j in range(i+1,len(self.polylines)):
-                if polylinesIdentical( self.polylines[i], self.polylines[j] ):
+        for i in range(len(polylines)-1):
+            for j in range(i+1,len(polylines)):
+                if polylinesIdentical( polylines[i], polylines[j] ):
                     debug( 'identical polylines %d and %d' % (i, j) )
                     duplicates.add(j)
         # make reverse ordered unique list of duplicates and delete
         duplicates = list( duplicates )
         duplicates.sort(reverse=True)
-        for d in duplicates:
-            geo = QgsGeometry()
-            geo.fromPolyline( self.polylines[d] )
+        for d in duplicates: # delete going down (sorted reverse)
+            geo = QgsGeometry.fromPolyline( polylines[d] )
             self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo ) )
-            del  self.polylines[d]
+            del  polylines[d]
              
         ###### find forks
         nodes = {} 
-        for polyline in self.polylines:
+        for polyline in polylines:
             for i in [0,-1]:    
                 ph = pointHash( polyline[i] )
                 if not nodes.has_key( ph ):
-                    nodes[ ph ] = { 'point': polyline[i], 'lines': 1 }
+                    nodes[ ph ] = { 'point': polyline[i], 'nlines': 1 }
                 else:
-                    nodes[ ph ]['lines'] += 1 
+                    nodes[ ph ]['nlines'] += 1 
 
         for node in nodes.values():
-            if node['lines'] > 2:
-                geo = QgsGeometry()
-                geo.fromPoint( node['point'] )
+            print "nlines = %s" % node['nlines']
+            if node['nlines'] > 2:
+                geo = QgsGeometry.fromPoint( node['point'] )
                 self.errors.append( LrsError( LrsError.FORK, geo ) )    
 
         ###### join polylines to parts
-        while len( self.polylines ) > 0:
-            polyline = self.polylines.pop(0)
+        while len( polylines ) > 0:
+            polyline = polylines.pop(0)
             while True: # connect parts
                 connected = False
-                for i in range(len( self.polylines )):
-                    polyline2 = self.polylines[i]
+                for i in range(len( polylines )):
+                    polyline2 = polylines[i]
 
                     # dont connect in forks (we don't know which is better)
                     fork = False
                     for j in [0, -1]:
                         ph = pointHash( polyline2[j] )
-                        if nodes[ph]['lines'] > 2:
+                        if nodes[ph]['nlines'] > 2:
                             fork = True
                             break
                     if fork: 
-                        #debug ('skip fork' )
+                        debug ('skip fork' )
                         continue
 
                     if polyline[-1] == polyline2[0]: # --1-->  --2-->
@@ -133,7 +135,7 @@ class LrsRoute:
 
                     if connected: 
                         #print '%s part connected' % i
-                        del self.polylines[i]
+                        del polylines[i]
                         break
 
                 if not connected: # no more parts can be connected
@@ -143,6 +145,32 @@ class LrsRoute:
 
     def addPoint( self, point ):
        self.points.append ( point )
+
+    def checkPoints(self):
+        pnts = []
+        for point in self.points:
+            if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+                pnts.append( point.geo.asPoint() )
+            else: # multi (makes little sense)
+                pnts.extend( point.geo.asMultiPoint() )
+
+        print pnts
+
+        # check duplicates
+        nodes = {} 
+        for pnt in pnts:
+            ph = pointHash( pnt )
+            if not nodes.has_key( ph ):
+                nodes[ ph ] = { 'point': pnt, 'npoints': 1 }
+            else:
+                nodes[ ph ]['npoints'] += 1 
+
+        for node in nodes.values():
+            print "npoints = %s" % node['npoints']
+            if node['npoints'] > 1:
+                geo = QgsGeometry.fromPoint( node['point'] )
+                self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo ) )    
+            
 
     def getErrors(self):
         return self.errors 

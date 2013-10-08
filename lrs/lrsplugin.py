@@ -68,6 +68,7 @@ class LrsPlugin:
 
 
     def unload(self):
+        print "unload"
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
