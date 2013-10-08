@@ -1,6 +1,6 @@
 [submodule "lrs/qgiscombomanager"]
 	path = lrs/qgiscombomanager
 	#url = git://github.com/3nids/qgiscombomanager.git
-	url = git://github.com/blazek/qgiscombomanager.git
+  url = git@github.com:blazek/qgiscombomanager.git
   ignore = untracked
 

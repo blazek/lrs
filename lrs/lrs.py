@@ -109,7 +109,7 @@ class Lrs:
         for route in self.routes.values():
             errors.extend( route.getErrors() )
         for point in self.orphanPoints:
-            errors.append( LrsError( LrsError.ORPHAN, point.geo ) )
+            errors.append( LrsError( LrsError.ORPHAN, point.geo, routeId = point.routeId, measure = point.measure ) )
         return errors
 
 

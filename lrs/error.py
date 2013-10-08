@@ -43,10 +43,12 @@ class LrsError(object):
         ORPHAN: 'Orphan point',
     }
 
-    def __init__(self, type, geo, message = '' ):
+    def __init__(self, type, geo, **kwargs ):
         self.type = type
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
-        self.message = message
+        self.message = kwargs.get('message', '')
+        self.routeId = kwargs.get('routeId', None)
+        self.measure = kwargs.get('measure', None) # may be list !
 
     def typeLabel(self):
         if not self.typeLabels.has_key( self.type ):
@@ -55,6 +57,18 @@ class LrsError(object):
 
 class LrsErrorModel( QAbstractTableModel ):
     
+    TYPE_COL = 0
+    ROUTE_COL = 1
+    MEASURE_COL = 2
+    MESSAGE_COL = 3
+
+    headerLabels = {
+        TYPE_COL: 'Type',
+        ROUTE_COL: 'Route',
+        MEASURE_COL: 'Measure',
+        MESSAGE_COL: 'Message',
+    }
+
     def __init__(self):
         super(LrsErrorModel, self).__init__()
         self.errors = []
@@ -62,10 +76,10 @@ class LrsErrorModel( QAbstractTableModel ):
     def headerData( self, section, orientation, role = Qt.DisplayRole ):
         if role != Qt.DisplayRole: return None
         if orientation == Qt.Horizontal:
-            if section == 0:
-                return "Type"
+            if self.headerLabels.has_key(section):
+                return self.headerLabels[section]
             else:
-                return "%s" % section
+                return ""
         else:
             return "%s" % section
     
@@ -73,15 +87,31 @@ class LrsErrorModel( QAbstractTableModel ):
         return len( self.errors )
 
     def columnCount(self, index):
-        return 1
+        return 4
 
     def data(self, index, role):
         if role != Qt.DisplayRole: return None
 
-        if index.column() == 0:
-            return self.errors[index.row()].typeLabel()
+        error = self.getError(index)
+        if not error: return
 
-        return "row %s col %s" % ( index.row(), index.column() )
+        col = index.column()
+        if col == self.TYPE_COL:
+            return error.typeLabel()
+        elif col == self.ROUTE_COL:
+            return error.routeId
+        elif col == self.MEASURE_COL:
+            if isinstance(error.measure,list):
+                errors = list ( error.measure )
+                errors.sort()
+                return " ".join( map(str,errors) )
+            else:
+                return error.measure
+        elif col == self.MESSAGE_COL:
+            return error.message
+
+        #return "row %s col %s" % ( index.row(), index.column() )
+        return ""
         
     def addErrors ( self, errors ):
         self.errors.extend ( errors )

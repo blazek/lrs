@@ -56,13 +56,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointLayerCM = cm.VectorLayerCombo( self.genPointLayerCombo, 'points', {'geomType':QGis.Point } )
         self.genPointRouteFieldCM = cm.FieldCombo( self.genPointRouteFieldCombo, self.genPointLayerCM, 'route' )
         # TODO: allow integers, currently only one type supported by fieldType
-        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km', { 'fieldType':QVariant.Double } )
+        #self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km', { 'fieldType':QVariant.Double } )
+        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km' )
 
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
 
         ##### errorTab
         self.errorModel = None
         self.errorView.horizontalHeader().setStretchLastSection ( True )
+        self.errorZoomButton.setEnabled( False) 
+        self.errorZoomButton.setIcon( QgsApplication.getThemeIcon( '/mActionZoomIn.svg' ) )
+        self.errorZoomButton.setText('Zoom')
+        self.errorZoomButton.clicked.connect( self.errorZoom )
 
         # debug
         if self.genLineLayerCM.getLayer():
@@ -96,14 +101,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorView.selectionModel().selectionChanged.connect(self.errorSelectionChanged)
 
     def errorSelectionChanged(self, selected, deselected ):
+        self.errorZoomButton.setEnabled( False) 
         if self.errorHighlight:
             del self.errorHighlight
             self.errorHighlight = None
 
-        if len( selected.indexes() ) == 0: return
-
-        index = selected.indexes()[0]
-        error = self.errorModel.getError(index)
+        #if len( selected.indexes() ) == 0: return
+        #index = selected.indexes()[0]
+        #index = self.sortErrorModel.mapToSource( index)
+        #error = self.errorModel.getError(indexndex)
+        error = self.getSelectedError()
         if not error: return
 
         print 'error %s' % error.typeLabel()
@@ -118,3 +125,27 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorHighlight.setWidth( 2 )
         self.errorHighlight.setColor( Qt.red )
         self.errorHighlight.show()
+
+        self.errorZoomButton.setEnabled(True) 
+
+    def getSelectedError(self):
+        sm = self.errorView.selectionModel()
+        if not sm.hasSelection(): return None
+        index = sm.selection().indexes()[0]
+        index = self.sortErrorModel.mapToSource(index)
+        return self.errorModel.getError(index)
+
+    def errorZoom(self):
+        error = self.getSelectedError()
+        if not error: return
+        
+        geo = error.geo
+        if geo.wkbType() == QGis.WKBPoint:
+            p = geo.asPoint()
+            b = 2000 # buffer
+            extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
+        else: #line
+            extent = geo.boundingBox()
+            extent.scale(2)
+        self.iface.mapCanvas().setExtent( extent )
+        self.iface.mapCanvas().refresh();

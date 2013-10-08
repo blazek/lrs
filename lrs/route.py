@@ -74,7 +74,7 @@ class LrsRoute:
         duplicates.sort(reverse=True)
         for d in duplicates: # delete going down (sorted reverse)
             geo = QgsGeometry.fromPolyline( polylines[d] )
-            self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo ) )
+            self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo, routeId = self.routeId ) )
             del  polylines[d]
              
         ###### find forks
@@ -91,7 +91,7 @@ class LrsRoute:
             print "nlines = %s" % node['nlines']
             if node['nlines'] > 2:
                 geo = QgsGeometry.fromPoint( node['point'] )
-                self.errors.append( LrsError( LrsError.FORK, geo ) )    
+                self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
         ###### join polylines to parts
         while len( polylines ) > 0:
@@ -109,7 +109,7 @@ class LrsRoute:
                             fork = True
                             break
                     if fork: 
-                        debug ('skip fork' )
+                        #debug ('skip fork' )
                         continue
 
                     if polyline[-1] == polyline2[0]: # --1-->  --2-->
@@ -147,29 +147,27 @@ class LrsRoute:
        self.points.append ( point )
 
     def checkPoints(self):
-        pnts = []
-        for point in self.points:
-            if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
-                pnts.append( point.geo.asPoint() )
-            else: # multi (makes little sense)
-                pnts.extend( point.geo.asMultiPoint() )
-
-        print pnts
-
         # check duplicates
         nodes = {} 
-        for pnt in pnts:
-            ph = pointHash( pnt )
-            if not nodes.has_key( ph ):
-                nodes[ ph ] = { 'point': pnt, 'npoints': 1 }
-            else:
-                nodes[ ph ]['npoints'] += 1 
+        for point in self.points:
+            if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+                pnts = [ point.geo.asPoint() ]
+            else: # multi (makes little sense)
+                pnts = point.geo.asMultiPoint()
+
+            for pnt in pnts:
+                ph = pointHash( pnt )
+                if not nodes.has_key( ph ):
+                    nodes[ ph ] = { 'point': pnt, 'npoints': 1, 'measures': [ point.measure ] }
+                else:
+                    nodes[ ph ]['npoints'] += 1 
+                    nodes[ ph ]['measures'].append( point.measure )
 
         for node in nodes.values():
             print "npoints = %s" % node['npoints']
             if node['npoints'] > 1:
                 geo = QgsGeometry.fromPoint( node['point'] )
-                self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo ) )    
+                self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo, routeId = self.routeId, measure = node['measures'] ) )    
             
 
     def getErrors(self):
