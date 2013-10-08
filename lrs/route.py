@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import sys
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -27,21 +28,24 @@ from qgis.core import *
 from utils import *
 from part import LrsRoutePart
 from error import LrsError
+from point import *
 
 # LrsRoute keeps list of LrsLine 
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId):
+    def __init__(self, layer, routeId, threshold):
         debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId
+        self.threshold = threshold
         
         self.lines = [] # LrsLine list
-        self.points = [] # list of LrsPoint
+        self.points = [] # LrsPoint list
 
-        self.parts = [] # list of LrsRoutePart
-        self.errors = [] # list of LrsError
+        self.parts = [] # LrsRoutePart list
+        self.milestones = [] # LrsMilestone list 
+        self.errors = [] # LrsError list
 
     def addLine( self, line ):
         self.lines.append( line )
@@ -49,7 +53,8 @@ class LrsRoute:
     def calibrate(self):
         self.errors = []
         self.buildParts()
-        self.checkPoints()
+        self.createMilestones()
+        self.attachMilestones()
  
     # create LrsRoutePart from eometryParts
     def buildParts(self):
@@ -83,14 +88,14 @@ class LrsRoute:
             for i in [0,-1]:    
                 ph = pointHash( polyline[i] )
                 if not nodes.has_key( ph ):
-                    nodes[ ph ] = { 'point': polyline[i], 'nlines': 1 }
+                    nodes[ ph ] = { 'pnt': polyline[i], 'nlines': 1 }
                 else:
                     nodes[ ph ]['nlines'] += 1 
 
         for node in nodes.values():
-            print "nlines = %s" % node['nlines']
+            #debug( "nlines = %s" % node['nlines'] )
             if node['nlines'] > 2:
-                geo = QgsGeometry.fromPoint( node['point'] )
+                geo = QgsGeometry.fromPoint( node['pnt'] )
                 self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
         ###### join polylines to parts
@@ -146,8 +151,11 @@ class LrsRoute:
     def addPoint( self, point ):
        self.points.append ( point )
 
-    def checkPoints(self):
+    def createMilestones(self):
+        self.milestones = []
+
         # check duplicates
+        # TODO: maybe allow duplicates? Could be end/start of discontinuous segments
         nodes = {} 
         for point in self.points:
             if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
@@ -158,7 +166,7 @@ class LrsRoute:
             for pnt in pnts:
                 ph = pointHash( pnt )
                 if not nodes.has_key( ph ):
-                    nodes[ ph ] = { 'point': pnt, 'npoints': 1, 'measures': [ point.measure ] }
+                    nodes[ ph ] = { 'pnt': pnt, 'npoints': 1, 'measures': [ point.measure ] }
                 else:
                     nodes[ ph ]['npoints'] += 1 
                     nodes[ ph ]['measures'].append( point.measure )
@@ -166,9 +174,46 @@ class LrsRoute:
         for node in nodes.values():
             print "npoints = %s" % node['npoints']
             if node['npoints'] > 1:
-                geo = QgsGeometry.fromPoint( node['point'] )
+                geo = QgsGeometry.fromPoint( node['pnt'] )
                 self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo, routeId = self.routeId, measure = node['measures'] ) )    
-            
+    
+            measure = node['measures'][0] # first if duplicates, for now
+            self.milestones.append ( LrsMilestone( node['pnt'], measure ) )
+
+    # calculate measures along parts
+    def attachMilestones(self):
+        sqrThreshold = self.threshold * self.threshold
+        for milestone in self.milestones:
+            pointGeo = QgsGeometry.fromPoint( milestone.pnt )
+
+            nearSqrDist = sys.float_info.max
+            nearPartIdx = None
+            nearSegment = None
+            nearNearestPnt = None 
+            for i in range( len(self.parts) ):
+                part = self.parts[i]
+                partGeo = QgsGeometry.fromPolyline( part.polyline )
+
+                ( sqrDist, nearestPnt, afterVertex ) = partGeo.closestSegmentWithContext( milestone.pnt )
+                segment = afterVertex-1
+                #debug ('sqrDist %s x %s' % (sqrDist, sqrThreshold) )
+                if sqrDist <= sqrThreshold and sqrDist < nearSqrDist:
+                    nearSqrDist = sqrDist
+                    nearPartIdx = i
+                    nearSegment = segment
+                    nearNearestPnt = nearestPnt
+
+            debug ('nearest partIdx = %s segment = %s sqrDist = %s' % ( nearPartIdx, nearSegment, nearSqrDist) )
+            if nearNearestPnt: # found part in threshold
+                milestone.partIdx = nearPartIdx
+                nearPart = self.parts[nearPartIdx]
+                milestone.partMeasure = measureAlongPolyline( nearPart.polyline, nearSegment, nearNearestPnt )
+
+                # debug
+                geo = QgsGeometry.fromPoint( nearNearestPnt )
+                self.errors.append( LrsError( LrsError.FORK, geo, routeId = 111, measure = milestone.partMeasure  ) )
+                 
 
     def getErrors(self):
         return self.errors 
+

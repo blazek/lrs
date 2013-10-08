@@ -75,7 +75,7 @@ class Lrs:
             routeId = feature[self.lineRouteField]
             debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
             if not self.routes.has_key(routeId):
-                self.routes[routeId] = LrsRoute(self.lineLayer, routeId )
+                self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
             route = self.routes[routeId]
             geo = feature.geometry()
             if geo:

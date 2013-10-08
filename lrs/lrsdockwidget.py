@@ -87,7 +87,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def generateLrs(self):
         debug ( 'generateLrs')
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = 10.0 )
+        threshold = self.genThresholdSpin.value()
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold )
     
         self.errorModel = LrsErrorModel()
 
@@ -106,10 +107,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             del self.errorHighlight
             self.errorHighlight = None
 
-        #if len( selected.indexes() ) == 0: return
-        #index = selected.indexes()[0]
-        #index = self.sortErrorModel.mapToSource( index)
-        #error = self.errorModel.getError(indexndex)
         error = self.getSelectedError()
         if not error: return
 
