@@ -55,6 +55,14 @@ class LrsError(object):
             return "Unknown error"
         return self.typeLabels[ self.type ]
 
+    def getMeasureString(self):
+        if isinstance(self.measure,list):
+            errors = list ( self.measure )
+            errors.sort()
+            return " ".join( map(str,errors) )
+        else:
+            return self.measure
+
 class LrsErrorModel( QAbstractTableModel ):
     
     TYPE_COL = 0
@@ -101,12 +109,7 @@ class LrsErrorModel( QAbstractTableModel ):
         elif col == self.ROUTE_COL:
             return error.routeId
         elif col == self.MEASURE_COL:
-            if isinstance(error.measure,list):
-                errors = list ( error.measure )
-                errors.sort()
-                return " ".join( map(str,errors) )
-            else:
-                return error.measure
+            return error.getMeasureString()
         elif col == self.MESSAGE_COL:
             return error.message
 
@@ -122,3 +125,4 @@ class LrsErrorModel( QAbstractTableModel ):
         if row < 0 or row >= len(self.errors): return None
         return self.errors[row]
 
+    

@@ -63,3 +63,16 @@ def measureAlongPolyline( polyline, segment, pnt ):
     
     measure += pointsDistance( polyline[segment], pnt )
     return measure
+
+# delete all features from layer
+def clearLayer( layer ):
+    if not layer: return
+
+    iterator = layer.getFeatures()
+    ids = []
+    feature = QgsFeature()
+    while iterator.nextFeature(feature): ids.append( feature.id() )
+
+    layer.startEditing()
+    for id in ids: layer.deleteFeature( id )
+    layer.commitChanges()

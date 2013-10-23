@@ -210,8 +210,11 @@ class LrsRoute:
                 milestone.partMeasure = measureAlongPolyline( nearPart.polyline, nearSegment, nearNearestPnt )
 
                 # debug
-                geo = QgsGeometry.fromPoint( nearNearestPnt )
-                self.errors.append( LrsError( LrsError.FORK, geo, routeId = 111, measure = milestone.partMeasure  ) )
+                #geo = QgsGeometry.fromPoint( nearNearestPnt )
+                #self.errors.append( LrsError( LrsError.FORK, geo, routeId = 111, measure = milestone.partMeasure  ) )
+            else:   
+                # TODO: errors out of threshold
+                pass
                  
 
     def getErrors(self):

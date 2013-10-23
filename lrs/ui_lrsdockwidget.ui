@@ -169,6 +169,16 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
+           <widget class="QToolButton" name="errorZoomButton">
+            <property name="text">
+             <string>Zoom</string>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -182,12 +192,12 @@
            </spacer>
           </item>
           <item>
-           <widget class="QToolButton" name="errorZoomButton">
-            <property name="text">
-             <string>Zoom</string>
+           <widget class="QPushButton" name="addErrorLayersButton">
+            <property name="toolTip">
+             <string>Add layers of errors to map view</string>
             </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            <property name="text">
+             <string>Add error layers</string>
             </property>
            </widget>
           </item>
