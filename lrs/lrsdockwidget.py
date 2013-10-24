@@ -84,6 +84,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def close(self):
         print "close"
+        if self.lrs:
+            self.lrs.disconnect()
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
         del self.genLineRouteFieldCM

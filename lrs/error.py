@@ -19,6 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 """
+import md5
+
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -61,19 +63,42 @@ class LrsError(object):
         self.message = kwargs.get('message', '')
         self.routeId = kwargs.get('routeId', None)
         self.measure = kwargs.get('measure', None) # may be list !
+        self.lineFid = kwargs.get('lineFid', None)
+        self.pointFid = kwargs.get('pointFid', None) # may be list !
+        # multigeometry part
+        self.geoPart = kwargs.get('geoPart', None) # may be list !
+        # checksum cache
+        self.checksum_ = None
 
     def typeLabel(self):
         if not self.typeLabels.has_key( self.type ):
             return "Unknown error"
         return self.typeLabels[ self.type ]
 
-    def getMeasureString(self):
-        if isinstance(self.measure,list):
-            errors = list ( self.measure )
-            errors.sort()
-            return " ".join( map(str,errors) )
+    # get string of simple value or list
+    def getValueString(self, value ):
+        if isinstance(value,list):
+            vals = list ( value )
+            vals.sort()
+            return " ".join( map(str,vals) )
         else:
-            return self.measure
+            return str( value )
+
+    def getMeasureString(self):
+        return self.getValueString ( self.measure )
+
+    def getPointFidString(self):
+        return self.getValueString ( self.pointFid )
+
+    def getGeoPartString(self):
+        return self.getValueString ( self.geoPart )
+
+    def getChecksum(self):
+        if not self.checksum_: 
+            s  = "%s-%s-%s-%s-%s-%s-%s" % ( self.lineFid, self.getPointFidString(), self.getGeoPartString(), self.type, self.geo.asWkb(), self.routeId, self.getMeasureString() )
+            m = md5.new( s )
+            self.checksum_ = m.digest()
+        return self.checksum_
 
 class LrsErrorModel( QAbstractTableModel ):
     

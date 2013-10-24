@@ -115,3 +115,14 @@ def polylineSegment( polyline, frm, to ):
         length += l
 
     return poly
+
+def getLayerFeature( layer, fid ):
+    if not layer: return None
+
+    request = QgsFeatureRequest().setFilterFid(fid)
+
+    # StopIteration is raised if fid does not exist
+    feature = layer.getFeatures(request).next()
+
+    return feature
+    

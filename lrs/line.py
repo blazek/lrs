@@ -28,7 +28,8 @@ from utils import *
 
 class LrsLine(object):
 
-    def __init__(self, routeId, geo ):
+    def __init__(self, fid, routeId, geo ):
+        self.fid = fid # line
         self.routeId = routeId
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
 
