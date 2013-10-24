@@ -26,10 +26,11 @@ from qgis.core import *
 
 from utils import *
 
-class LrsPoint(object):
+class LrsMilestone(object):
 
-    def __init__(self, routeId, measure, geo ):
-        self.routeId = routeId
-        self.measure = measure
-        self.geo = QgsGeometry(geo) # store copy of QgsGeometry
-
+    def __init__(self, pnt, measure):
+        self.pnt = pnt   # QgsPoint
+        self.measure = measure # field measure
+        self.part = None # part index
+        # distance from beginning of part to the point on part nearest to pnt
+        self.partMeasure = None 

@@ -26,9 +26,10 @@ from PyQt4.QtCore import *
 from qgis.core import *
 
 from utils import *
-from part import LrsRoutePart
-from error import LrsError
+from part import *
+from error import *
 from point import *
+from milestone import *
 
 # LrsRoute keeps list of LrsLine 
 
@@ -55,6 +56,7 @@ class LrsRoute:
         self.buildParts()
         self.createMilestones()
         self.attachMilestones()
+        self.calibrateParts()
  
     # create LrsRoutePart from eometryParts
     def buildParts(self):
@@ -146,7 +148,7 @@ class LrsRoute:
                 if not connected: # no more parts can be connected
                     break
 
-            self.parts.append( LrsRoutePart( polyline) )
+            self.parts.append( LrsRoutePart( polyline, self.routeId) )
 
     def addPoint( self, point ):
        self.points.append ( point )
@@ -186,7 +188,7 @@ class LrsRoute:
         for milestone in self.milestones:
             pointGeo = QgsGeometry.fromPoint( milestone.pnt )
 
-            nearSqrDist = sys.float_info.max
+            nearSqDist = sys.float_info.max
             nearPartIdx = None
             nearSegment = None
             nearNearestPnt = None 
@@ -194,29 +196,36 @@ class LrsRoute:
                 part = self.parts[i]
                 partGeo = QgsGeometry.fromPolyline( part.polyline )
 
-                ( sqrDist, nearestPnt, afterVertex ) = partGeo.closestSegmentWithContext( milestone.pnt )
+                ( sqDist, nearestPnt, afterVertex ) = partGeo.closestSegmentWithContext( milestone.pnt )
                 segment = afterVertex-1
-                #debug ('sqrDist %s x %s' % (sqrDist, sqrThreshold) )
-                if sqrDist <= sqrThreshold and sqrDist < nearSqrDist:
-                    nearSqrDist = sqrDist
+                #debug ('sqDist %s x %s' % (sqDist, sqrThreshold) )
+                if sqDist <= sqrThreshold and sqDist < nearSqDist:
+                    nearSqDist = sqDist
                     nearPartIdx = i
                     nearSegment = segment
                     nearNearestPnt = nearestPnt
 
-            debug ('nearest partIdx = %s segment = %s sqrDist = %s' % ( nearPartIdx, nearSegment, nearSqrDist) )
+            debug ('nearest partIdx = %s segment = %s sqDist = %s' % ( nearPartIdx, nearSegment, nearSqDist) )
             if nearNearestPnt: # found part in threshold
                 milestone.partIdx = nearPartIdx
                 nearPart = self.parts[nearPartIdx]
                 milestone.partMeasure = measureAlongPolyline( nearPart.polyline, nearSegment, nearNearestPnt )
 
+                nearPart.milestones.append( milestone )
                 # debug
                 #geo = QgsGeometry.fromPoint( nearNearestPnt )
                 #self.errors.append( LrsError( LrsError.FORK, geo, routeId = 111, measure = milestone.partMeasure  ) )
             else:   
-                # TODO: errors out of threshold
-                pass
+                self.errors.append( LrsError( LrsError.OUTSIDE_THRESHOLD, pointGeo, routeId = self.routeId, measure = milestone.measure ) )    
                  
+    def calibrateParts(self):
+        for part in self.parts:
+            part.calibrate()
 
     def getErrors(self):
-        return self.errors 
+        errors = list ( self.errors )
+        for part in self.parts:
+            errors.extend( part.getErrors() )
+        return errors
+        
 

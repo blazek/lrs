@@ -35,12 +35,24 @@ class LrsError(object):
     DUPLICATE_POINT = 2
     FORK = 3 # more than 2 lines connected in one node
     ORPHAN = 4 # orphan point, no line with such routeId
+    OUTSIDE_THRESHOLD = 5 # out of the threshold from line
+    NOT_ENOUGH_MILESTONES = 6 # part has less than 2 milestones attached
+    NO_ROUTE_ID = 7 # missing route id
+    NO_MEASURE = 8 # missing point measure attribute value
+    DIRECTION_GUESS = 9 # cannot guess part direction
+    WRONG_MEASURE = 10 # milestones in wrong position
 
     typeLabels = {
-        DUPLICATE_LINE: "Duplicate line",
-        DUPLICATE_POINT: "Duplicate point",
-        FORK: "Fork",
+        DUPLICATE_LINE: 'Duplicate line',
+        DUPLICATE_POINT: 'Duplicate point',
+        FORK: 'Fork',
         ORPHAN: 'Orphan point',
+        OUTSIDE_THRESHOLD: 'Out of threshold',
+        NOT_ENOUGH_MILESTONES: 'Not enough points',
+        NO_ROUTE_ID: 'Missing route id',
+        NO_MEASURE: 'Missing measure',
+        DIRECTION_GUESS: 'Cannot guess direction',
+        WRONG_MEASURE: 'Wrong measure',
     }
 
     def __init__(self, type, geo, **kwargs ):

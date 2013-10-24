@@ -45,6 +45,7 @@ class Lrs:
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
         self.lrsCrs = kwargs.get('crs')
+        self.errors = [] # LrsError list
 
         self.lineTransform = None
         if self.lrsCrs and self.lrsCrs != lineLayer.crs():
@@ -62,6 +63,7 @@ class Lrs:
         self.calibrate()
 
     def calibrate(self):
+        self.errors = [] # reset
         self.registerLines()
         self.registerPoints()
         for route in self.routes.values():
@@ -74,13 +76,19 @@ class Lrs:
         while iterator.nextFeature(feature):
             routeId = feature[self.lineRouteField]
             debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
-            if not self.routes.has_key(routeId):
-                self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
-            route = self.routes[routeId]
             geo = feature.geometry()
             if geo:
                 if self.lineTransform:
                     geo.transform( self.lineTransform )
+
+            if routeId == None or routeId == '':
+                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, geo ) )
+                continue
+
+            if not self.routes.has_key(routeId):
+                self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
+            route = self.routes[routeId]
+            if geo:
                 route.addLine ( LrsLine( routeId, geo ) ) 
 
         for route in self.routes.values():
@@ -98,6 +106,14 @@ class Lrs:
                 if self.pointTransform:
                     geo.transform( self.pointTransform )
 
+            if routeId == None or routeId == '':
+                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, geo ) )
+                continue
+
+            if measure == None:
+                self.errors.append( LrsError( LrsError.NO_MEASURE, geo ) )
+                continue
+
             point = LrsPoint( routeId, measure, geo )
             if not self.routes.has_key(routeId):
                 self.orphanPoints.append ( point )
@@ -105,7 +121,7 @@ class Lrs:
                 self.routes[routeId].addPoint( point )
 
     def getErrors(self):
-        errors = []
+        errors = list ( self.errors )
         for route in self.routes.values():
             errors.extend( route.getErrors() )
         for point in self.orphanPoints:

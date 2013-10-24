@@ -76,6 +76,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.qualityLayer = None
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
 
+        QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
+
         # debug
         if self.genLineLayerCM.getLayer():
             self.generateLrs() # only when reloading!
@@ -164,56 +166,66 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             QgsField('route', QVariant.String),
             QgsField('measure', QVariant.String),
         ]
-        self.errorPointLayer = QgsVectorLayer('point', 'LRS point errors', 'memory')
-        self.errorLineLayer = QgsVectorLayer('linestring', 'LRS line errors', 'memory')
-        self.errorPointLayer.startEditing()
-        self.errorLineLayer.startEditing()
-        for attribute in attributes:
-            self.errorPointLayer.addAttribute( attribute )
-            self.errorLineLayer.addAttribute( attribute )
-        self.errorPointLayer.commitChanges()
-        self.errorLineLayer.commitChanges()
 
-        self.resetErrorLayers()
-        QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,self.errorPointLayer,] )
+        if not self.errorLineLayer:
+            self.errorLineLayer = QgsVectorLayer('linestring', 'LRS line errors', 'memory')
+            self.errorLineLayer.startEditing()
+            for attribute in attributes:
+                self.errorLineLayer.addAttribute( attribute )
+            self.errorLineLayer.commitChanges()
+            QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,] )
+            self.resetErrorLineLayer()
+
+        if not self.errorPointLayer:
+            self.errorPointLayer = QgsVectorLayer('point', 'LRS point errors', 'memory')
+            self.errorPointLayer.startEditing()
+            for attribute in attributes:
+                self.errorPointLayer.addAttribute( attribute )
+            self.errorPointLayer.commitChanges()
+            QgsMapLayerRegistry.instance().addMapLayers( [self.errorPointLayer,] )
+            self.resetErrorPointLayer()
    
     # reset error layers content (features)
     def resetErrorLayers(self):
-        if not self.errorPointLayer and not self.errorLineLayer: return
+        self.resetErrorPointLayer()
+        self.resetErrorLineLayer()
 
+    def resetErrorPointLayer(self):
+        if not self.errorPointLayer: return
+        clearLayer( self.errorPointLayer )
         errors = self.lrs.getErrors()
+        self.errorPointLayer.startEditing()
+        fields = self.errorPointLayer.pendingFields()
+        for error in errors:
+            if error.geo.wkbType() != QGis.WKBPoint: continue
+            feature = QgsFeature( fields )
+            feature.setGeometry( error.geo )
+            feature.setAttribute( 'type', error.typeLabel() )
+            feature.setAttribute( 'route', '%s' % error.routeId )
+            feature.setAttribute( 'measure', error.getMeasureString() )
+            self.errorPointLayer.addFeatures( [ feature ] )
+        self.errorPointLayer.commitChanges()            
 
-        if self.errorPointLayer:
-            clearLayer( self.errorPointLayer )
-            self.errorPointLayer.startEditing()
-
-            fields = self.errorPointLayer.pendingFields()
-            for error in errors:
-                if error.geo.wkbType() != QGis.WKBPoint: continue
-                feature = QgsFeature( fields )
-                feature.setGeometry( error.geo )
-                feature.setAttribute( 'type', error.typeLabel() )
-                feature.setAttribute( 'route', '%s' % error.routeId )
-                feature.setAttribute( 'measure', error.getMeasureString() )
-                self.errorPointLayer.addFeatures( [ feature ] )
-
-            self.errorPointLayer.commitChanges()            
-
-        if self.errorLineLayer:
-            clearLayer( self.errorLineLayer )
-            self.errorLineLayer.startEditing()
-        
-            fields = self.errorPointLayer.pendingFields()
-            for error in errors:
-                if error.geo.wkbType() != QGis.WKBLineString: continue
-                feature = QgsFeature( fields )
-                feature.setGeometry( error.geo )
-                feature.setAttribute( 'type', error.typeLabel() )
-                feature.setAttribute( 'route', '%s' % error.routeId )
-                feature.setAttribute( 'measure', error.getMeasureString() )
-                self.errorLineLayer.addFeatures( [ feature ] )
-
-            self.errorLineLayer.commitChanges()            
+    def resetErrorLineLayer(self):
+        if not self.errorLineLayer: return
+        clearLayer( self.errorLineLayer )
+        errors = self.lrs.getErrors()
+        self.errorLineLayer.startEditing()
+        fields = self.errorLineLayer.pendingFields()
+        for error in errors:
+            if error.geo.wkbType() != QGis.WKBLineString: continue
+            feature = QgsFeature( fields )
+            feature.setGeometry( error.geo )
+            feature.setAttribute( 'type', error.typeLabel() )
+            feature.setAttribute( 'route', '%s' % error.routeId )
+            feature.setAttribute( 'measure', error.getMeasureString() )
+            self.errorLineLayer.addFeatures( [ feature ] )
+        self.errorLineLayer.commitChanges()            
             
-        
+    def layersWillBeRemoved(self, layerIdList ):
+        for id in layerIdList:
+            if self.errorPointLayer and self.errorPointLayer.id() == id:
+                self.errorPointLayer = None
+            if self.errorLineLayer and self.errorLineLayer.id() == id:
+                self.errorLineLayer = None
             
