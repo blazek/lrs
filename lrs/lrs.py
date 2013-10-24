@@ -128,4 +128,8 @@ class Lrs:
             errors.append( LrsError( LrsError.ORPHAN, point.geo, routeId = point.routeId, measure = point.measure ) )
         return errors
 
-
+    def getSegments(self):
+        segments = []
+        for route in self.routes.values():
+            segments.extend( route.getSegments() )
+        return segments

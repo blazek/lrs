@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>311</width>
-    <height>288</height>
+    <width>381</width>
+    <height>289</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,6 +198,13 @@
             </property>
             <property name="text">
              <string>Add error layers</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="addQualityLayerButton">
+            <property name="text">
+             <string>Add quality layer</string>
             </property>
            </widget>
           </item>

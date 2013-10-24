@@ -228,4 +228,9 @@ class LrsRoute:
             errors.extend( part.getErrors() )
         return errors
         
+    def getSegments(self):
+        segments = []
+        for part in self.parts:
+            segments.extend( part.getSegments() )
+        return segments
 

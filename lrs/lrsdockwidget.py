@@ -42,6 +42,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorHighlight = None 
         self.errorPointLayer = None
         self.errorLineLayer = None
+        self.qualityLayer = None
  
         super(LrsDockWidget, self).__init__(parent )
         
@@ -72,9 +73,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorZoomButton.clicked.connect( self.errorZoom )
 
         ##### error / quality layers
-        self.errorLayer = None
-        self.qualityLayer = None
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
+        self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
 
@@ -173,8 +173,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             for attribute in attributes:
                 self.errorLineLayer.addAttribute( attribute )
             self.errorLineLayer.commitChanges()
-            QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,] )
             self.resetErrorLineLayer()
+            QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,] )
 
         if not self.errorPointLayer:
             self.errorPointLayer = QgsVectorLayer('point', 'LRS point errors', 'memory')
@@ -182,8 +182,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             for attribute in attributes:
                 self.errorPointLayer.addAttribute( attribute )
             self.errorPointLayer.commitChanges()
-            QgsMapLayerRegistry.instance().addMapLayers( [self.errorPointLayer,] )
             self.resetErrorPointLayer()
+            QgsMapLayerRegistry.instance().addMapLayers( [self.errorPointLayer,] )
    
     # reset error layers content (features)
     def resetErrorLayers(self):
@@ -221,6 +221,38 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             feature.setAttribute( 'measure', error.getMeasureString() )
             self.errorLineLayer.addFeatures( [ feature ] )
         self.errorLineLayer.commitChanges()            
+
+    def addQualityLayer(self):
+        if not self.qualityLayer:
+            attributes = [ 
+                QgsField('route', QVariant.String),
+                QgsField('m_from', QVariant.Double),
+                QgsField('m_to', QVariant.Double),
+                QgsField('l', QVariant.Double),
+            ]
+            self.qualityLayer = QgsVectorLayer('linestring', 'LRS quality', 'memory')
+            self.qualityLayer.startEditing()
+            for attribute in attributes:
+                self.qualityLayer.addAttribute( attribute )
+            self.qualityLayer.commitChanges()
+            self.resetQualityLayer()
+            QgsMapLayerRegistry.instance().addMapLayers( [self.qualityLayer,] )
+
+    def resetQualityLayer(self):
+        if not self.qualityLayer: return
+        clearLayer( self.qualityLayer )
+        segments = self.lrs.getSegments()
+        self.qualityLayer.startEditing()
+        fields = self.qualityLayer.pendingFields()
+        for segment in segments:
+            feature = QgsFeature( fields )
+            feature.setGeometry( segment.geo )
+            feature.setAttribute( 'route', '%s' % segment.routeId )
+            feature.setAttribute( 'm_from', segment.record.milestoneFrom )
+            feature.setAttribute( 'm_to', segment.record.milestoneTo )
+            feature.setAttribute( 'l', segment.geo.length() )
+            self.qualityLayer.addFeatures( [ feature ] )
+        self.qualityLayer.commitChanges()            
             
     def layersWillBeRemoved(self, layerIdList ):
         for id in layerIdList:
@@ -228,4 +260,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 self.errorPointLayer = None
             if self.errorLineLayer and self.errorLineLayer.id() == id:
                 self.errorLineLayer = None
+            if self.qualityLayer and self.qualityLayer.id() == id:
+                self.qualityLayer = None
             

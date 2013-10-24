@@ -76,3 +76,42 @@ def clearLayer( layer ):
     layer.startEditing()
     for id in ids: layer.deleteFeature( id )
     layer.commitChanges()
+
+# place point on line in distance from point 1
+def pointOnLine( point1, point2, distance ):
+    dx = point2.x() - point1.x()
+    dy = point2.y() - point1.y()
+    k = distance / math.sqrt(dx*dx+dy*dy)
+    x = point1.x() + k * dx
+    y = point1.y() + k * dy
+    return QgsPoint( x, y )
+
+# returns new polyline 'from - to' measured along original oplyline
+def polylineSegment( polyline, frm, to ):
+    geo = QgsGeometry.fromPolyline( polyline )
+    length = geo.length()
+
+    poly = [] # section
+    length = 0
+    for i in range(len(polyline)-1):
+        p1 = polyline[i]
+        p2 = polyline[i+1]
+        l = pointsDistance( p1, p2 )
+
+        if len(poly) == 0 and frm <= length + l:
+            d = frm - length
+            p = pointOnLine ( p1, p2, d )
+            poly.append( p )
+
+        if len(poly) > 0:
+            if to < length + l:
+                d = to - length
+                p = pointOnLine ( p1, p2, d )
+                poly.append( p )
+                break
+            else:
+                poly.append( p2 )
+
+        length += l
+
+    return poly

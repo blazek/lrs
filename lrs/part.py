@@ -27,8 +27,24 @@ from qgis.core import *
 from utils import *
 from error import *
 
-# Chain of connected geometries
+# calibration record
+class LrsRecord:
+    def __init__(self, milestoneFrom, milestoneTo, partFrom, partTo):
+        # measures from mileston measure attribute
+        self.milestoneFrom = milestoneFrom
+        self.milestoneTo = milestoneTo
+        # measures measured along part polyline
+        self.partFrom = partFrom
+        self.partTo = partTo
 
+class LrsSegment:
+
+    def __init__(self, routeId, record, geo ):
+        self.routeId = routeId
+        self.record = record # LrsRecord
+        self.geo = geo # QgsGeometry
+
+# Chain of connected geometries
 class LrsRoutePart:
 
     def __init__(self, polyline, routeId):
@@ -36,7 +52,7 @@ class LrsRoutePart:
         self.polyline = polyline
         self.routeId = routeId
         self.milestones = [] # LrsMilestone list, all input milestones
-        self.table = [] # sorted reference table 
+        self.records = [] # LrsRecord list
         self.errors = [] # LrsError list
 
     def calibrate(self):
@@ -117,7 +133,22 @@ class LrsRoutePart:
                 break
 
             if done: break
-                            
+
+        self.goodMilestones = milestones
+        
+        # create calibrarion table 
+        for i in range(len(milestones)-1):
+            m1 = milestones[i]
+            m2 = milestones[i+1]
+            self.records.append ( LrsRecord ( m1.measure, m2.measure, m1.partMeasure, m2.partMeasure ) )
+
+    def getSegments(self):
+        segments = []
+        for record in self.records:
+            polyline = polylineSegment( self.polyline, record.partFrom, record.partTo )
+            geo = QgsGeometry.fromPolyline( polyline )
+            segments.append ( LrsSegment( self.routeId, record, geo ) )
+        return segments
 
     def getErrors(self):
         return self.errors
