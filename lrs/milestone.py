@@ -28,10 +28,12 @@ from utils import *
 
 class LrsMilestone(object):
 
-    def __init__(self, fid, geoPart, pnt, measure):
+    def __init__(self, fid, geoPart, nGeoParts, pnt, measure):
         self.fid = fid # point 
         # multigeometry part
         self.geoPart = geoPart
+        # number of geometry parts in original feature, used for error checksum
+        self.nGeoParts = nGeoParts
         self.pnt = pnt   # QgsPoint
         self.measure = measure # field measure
         self.part = None # part index

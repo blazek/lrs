@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import math
+import sys, math
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -28,6 +28,7 @@ from qgis.core import *
 # print debug message
 def debug(msg):
     print "LRS: %s" % msg
+    sys.stdout.flush()
 
 # test if two QgsPolyline are identical including reverse order
 # return False - not identical

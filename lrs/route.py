@@ -38,11 +38,11 @@ class LrsRoute:
     def __init__(self, layer, routeId, threshold):
         debug ('init route %s' % routeId )
         self.layer = layer
-        self.routeId = routeId
+        self.routeId = routeId # if None, keeps all lines and points without routeId
         self.threshold = threshold
         
-        self.lines = [] # LrsLine list
-        self.points = [] # LrsPoint list
+        self.lines = [] # LrsLine list, may be empty 
+        self.points = [] # LrsPoint list, may be empty
 
         self.parts = [] # LrsRoutePart list
         self.milestones = [] # LrsMilestone list 
@@ -53,34 +53,76 @@ class LrsRoute:
     def addLine( self, line ):
         self.lines.append( line )
 
+    # returns: { removedErrorChecksums:[], updatedErrors:[], addedErrors[] }
     def calibrate(self):
         oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
+
+        self.parts = []
+        self.milestones = []
         self.errors = []
         self.allErrors_ = []
 
-        self.buildParts()
-        self.createMilestones()
-        self.attachMilestones()
-        self.calibrateParts()
+        if self.routeId == None: # special case 
+            for line in self.lines:
+                if not line.geo: continue
+                origin = LrsOrigin( QGis.Line, line.fid )
+                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, line.geo, origins = [ origin ] ) )  
+
+            for point in self.points:
+                if not point.geo: continue
+                origin = LrsOrigin( QGis.Point, point.fid )
+                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, point.geo, origins = [ origin ] ) )  
+
+                # in addition it may be without measure
+                if point.measure == None:
+                    origin = LrsOrigin( QGis.Point, point.fid )
+                    self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, origins = [ origin ] ) )
+
+        elif len( self.lines ) == 0: # no lines -> orphan points
+            for point in self.points:
+                if not point.geo: continue
+                origin = LrsOrigin( QGis.Point, point.fid )
+                self.errors.append( LrsError( LrsError.ORPHAN, point.geo, routeId = self.routeId, measure = point.measure, origins = [ origin ] ) )
+
+                # in addition it may be without measure
+                if point.measure == None:
+                    origin = LrsOrigin( QGis.Point, point.fid )
+                    self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, routeId = self.routeId, origins = [ origin ] ) )
+
+        else:
+            self.buildParts()
+            self.createMilestones()
+            self.attachMilestones()
+            self.calibrateParts()
 
         newErrors = self.getErrors() 
         newErrorChecksums = list( e.getChecksum() for e in newErrors )
-        removedErrorChecksums = []
         addedErrors = []
+        updatedErrors = []
+        removedErrorChecksums = []
         for checksum in oldErrorChecksums:
             if not checksum in newErrorChecksums:
                 debug ( 'removed error' )
                 removedErrorChecksums.append( checksum )
         for error in newErrors:
-            if not error.getChecksum() in oldErrorChecksums:
+            if error.getChecksum() in oldErrorChecksums:
+                debug ( 'updated error' )
+                updatedErrors.append ( error )
+            else:
                 debug ( 'added error' )
                 addedErrors.append ( error )
+
+        return { 'removedErrorChecksums': removedErrorChecksums,
+                 'updatedErrors': updatedErrors,
+                 'addedErrors': addedErrors  }
+            
  
     # create LrsRoutePart from eometryParts
     def buildParts(self):
         self.parts = []
-        polylines = [] # list of { polyline:, fid:, part: }
+        polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
         for line in self.lines:
+            if not line.geo: continue
             # QGis::singleType and flatType are not in bindings (2.0)
             polys = None # list of QgsPolyline
             if line.geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
@@ -95,6 +137,7 @@ class LrsRoute:
                     'polyline': polys[i],
                     'fid': line.fid,
                     'geoPart': i,
+                    'nGeoParts': len(polys),
                 })
 
         ##### check for duplicates
@@ -109,7 +152,8 @@ class LrsRoute:
         duplicates.sort(reverse=True)
         for d in duplicates: # delete going down (sorted reverse)
             geo = QgsGeometry.fromPolyline( polylines[d]['polyline'] )
-            self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo, routeId = self.routeId, lineFid = polylines[d]['fid'], geoPart = polylines[d]['geoPart'] ) )
+            origin = LrsOrigin( QGis.Line, polylines[d]['fid'], polylines[d]['geoPart'], polylines[d]['nGeoParts'] )
+            self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo, routeId = self.routeId, origins = [ origin ] ) )
             del  polylines[d]
              
         ###### find forks
@@ -127,7 +171,7 @@ class LrsRoute:
             #debug( "nlines = %s" % node['nlines'] )
             if node['nlines'] > 2:
                 geo = QgsGeometry.fromPoint( node['pnt'] )
-                # TODO: better identify error (fids, geoParts)?
+                # origins sould not be necessary
                 self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
         ###### join polylines to parts
@@ -135,6 +179,8 @@ class LrsRoute:
             #polyline = polylines.pop(0)
             poly = polylines.pop(0)
             polyline = poly['polyline']
+            origin = LrsOrigin( QGis.Line, poly['fid'], poly['geoPart'], poly['nGeoParts'] )
+            origins = [ origin ]
             while True: # connect parts
                 connected = False
                 for i in range(len( polylines )):
@@ -176,13 +222,15 @@ class LrsRoute:
 
                     if connected: 
                         #print '%s part connected' % i
+                        origin = LrsOrigin( QGis.Line, polylines[i]['fid'], polylines[i]['geoPart'], polylines[i]['nGeoParts'] )
+                        origins.append( origin )
                         del polylines[i]
                         break
 
                 if not connected: # no more parts can be connected
                     break
 
-            self.parts.append( LrsRoutePart( polyline, self.routeId) )
+            self.parts.append( LrsRoutePart( polyline, self.routeId, origins) )
 
     def addPoint( self, point ):
        self.points.append ( point )
@@ -200,6 +248,13 @@ class LrsRoute:
         # TODO: maybe allow duplicates? Could be end/start of discontinuous segments
         nodes = {} 
         for point in self.points:
+            if not point.geo: continue
+
+            if point.measure == None:
+                origin = LrsOrigin( QGis.Point, point.fid )
+                self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, origins = [ origin ] ) )
+                continue
+
             pts = []
             if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
                 pts = [ point.geo.asPoint() ]
@@ -208,33 +263,38 @@ class LrsRoute:
 
             pnts = [] # list of { point:, geoPart: }
             for i in range(len(pts)):
-                pnts.append( { 'point': pts[i], 'geoPart': i } )
+                pnts.append( { 'point': pts[i], 'geoPart': i, 'nGeoParts': len(pts) } )
 
             for p in pnts:
                 pnt = p['point']
                 ph = pointHash( pnt )
+
+                origin = LrsOrigin( QGis.Point, point.fid, p['geoPart'], p['nGeoParts'] )
+        
                 if not nodes.has_key( ph ):
                     nodes[ ph ] = { 
                         'pnt': pnt, 
                         'npoints': 1, 
                         'measures': [ point.measure ], 
-                        'fids': [ point.fid ],
-                        'geoPart': [ p['geoPart'] ],
+                        #'fids': [ point.fid ],
+                        #'geoPart': [ p['geoPart'] ],
+                        'origins': [ origin ] 
                     }
                 else:
                     nodes[ ph ]['npoints'] += 1 
                     nodes[ ph ]['measures'].append( point.measure )
-                    nodes[ ph ]['fids'].append( point.fid )
-                    nodes[ ph ]['geoPart'].append( ['geoPart'] )
+                    #nodes[ ph ]['fids'].append( point.fid )
+                    #nodes[ ph ]['geoPart'].append( ['geoPart'] )
+                    nodes[ ph ]['origins'].append( origin )
 
         for node in nodes.values():
             print "npoints = %s" % node['npoints']
             if node['npoints'] > 1:
                 geo = QgsGeometry.fromPoint( node['pnt'] )
-                self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo, routeId = self.routeId, measure = node['measures'], pointFid = node['fids'], geoPart =  node['geoPart'] ) )    
+                self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo, routeId = self.routeId, measure = node['measures'], origins = node['origins'] ) )    
     
             measure = node['measures'][0] # first if duplicates, for now
-            self.milestones.append ( LrsMilestone( node['fids'][0], node['geoPart'][0], node['pnt'], measure ) )
+            self.milestones.append ( LrsMilestone( node['origins'][0].fid, node['origins'][0].geoPart, node['origins'][0].nGeoParts, node['pnt'], measure ) )
 
     # calculate measures along parts
     def attachMilestones(self):
@@ -266,11 +326,9 @@ class LrsRoute:
                 milestone.partMeasure = measureAlongPolyline( nearPart.polyline, nearSegment, nearNearestPnt )
 
                 nearPart.milestones.append( milestone )
-                # debug
-                #geo = QgsGeometry.fromPoint( nearNearestPnt )
-                #self.errors.append( LrsError( LrsError.FORK, geo, routeId = 111, measure = milestone.partMeasure  ) )
             else:   
-                self.errors.append( LrsError( LrsError.OUTSIDE_THRESHOLD, pointGeo, routeId = self.routeId, measure = milestone.measure, pointFid = milestone.fid, geoPart = milestone.geoPart ) )    
+                origin = LrsOrigin( QGis.Point, milestone.fid, milestone.geoPart, milestone.nGeoParts )
+                self.errors.append( LrsError( LrsError.OUTSIDE_THRESHOLD, pointGeo, routeId = self.routeId, measure = milestone.measure, origins = [ origin ] ) )    
                  
     def calibrateParts(self):
         for part in self.parts:

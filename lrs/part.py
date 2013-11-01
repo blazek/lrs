@@ -47,10 +47,11 @@ class LrsSegment:
 # Chain of connected geometries
 class LrsRoutePart:
 
-    def __init__(self, polyline, routeId):
+    def __init__(self, polyline, routeId, origins):
         #debug ('init route part' )
         self.polyline = polyline
         self.routeId = routeId
+        self.origins = origins # list of LrsOrigin
         self.milestones = [] # LrsMilestone list, all input milestones
         self.records = [] # LrsRecord list
         self.errors = [] # LrsError list
@@ -59,7 +60,7 @@ class LrsRoutePart:
         polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
 
         if len ( self.milestones ) < 2:
-            self.errors.append( LrsError( LrsError.NOT_ENOUGH_MILESTONES, polylineGeo, routeId = self.routeId ))
+            self.errors.append( LrsError( LrsError.NOT_ENOUGH_MILESTONES, polylineGeo, routeId = self.routeId, origins = self.origins ))
             return
 
         # create list of milestones sorted by partMeasure
@@ -79,7 +80,7 @@ class LrsRoutePart:
                 down += 1
 
         if up == down:
-            self.errors.append( LrsError( LrsError.DIRECTION_GUESS, polylineGeo, routeId = self.routeId ))
+            self.errors.append( LrsError( LrsError.DIRECTION_GUESS, polylineGeo, routeId = self.routeId, origins = self.origins  ))
             return
         elif down > up: # revert
             self.polyline.reverse()
@@ -127,7 +128,8 @@ class LrsRoutePart:
                     idx = i if m2 in longestSeq else i+1
                     m = milestones[idx]
                     geo = QgsGeometry.fromPoint( m.pnt )
-                    self.errors.append( LrsError( LrsError.WRONG_MEASURE, geo, routeId = self.routeId, measure = m.measure ))
+                    origin = LrsOrigin( QGis.Point, m.fid, m.geoPart, m.nGeoParts )
+                    self.errors.append( LrsError( LrsError.WRONG_MEASURE, geo, routeId = self.routeId, measure = m.measure, origins = [ origin ] ))
                     del  milestones[idx]
                 done = False
                 break

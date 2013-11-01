@@ -28,14 +28,16 @@ from utils import *
 from route import LrsRoute
 from point import LrsPoint
 from line import LrsLine
-from error import LrsError
+from error import *
 #from line
 
 # Main class to keep all data and process them
 
-class Lrs:
+class Lrs(QObject):
+    updateErrors = pyqtSignal(dict, name = 'updateErrors')
 
     def __init__(self, lineLayer, lineRouteField, pointLayer, pointRouteField, pointMeasureField, **kwargs ):
+        super(Lrs, self).__init__()
 
         self.lineLayer = lineLayer
         self.lineRouteField = lineRouteField
@@ -50,6 +52,8 @@ class Lrs:
         self.pointLayer.editingStopped.connect( self.pointLayerEditingStopped )
         self.pointEditBuffer = None
 
+        self.lines = {} # dict of LrsLine with fid as key
+        self.points = {} # dict of LrsPoint with fid as key
 
         self.errors = [] # LrsError list
 
@@ -64,21 +68,27 @@ class Lrs:
         # dictionary of LrsRoute
         self.routes = {} 
 
-        self.orphanPoints = [] # LrsPoint list
-
-        self.pointRoutes = {} # dict of LrsRoutes with point fid as keys
-
         self.calibrate()
+
 
     def disconnect(self):
         self.pointLayerEditingDisconnect()
 
     def calibrate(self):
+        self.points = {}
+        self.lines = {} 
         self.errors = [] # reset
         self.registerLines()
+        self.buildParts()
         self.registerPoints()
         for route in self.routes.values():
             route.calibrate()
+
+    # get route by id, create it if does not exist
+    def getRoute(self, routeId):
+        if not self.routes.has_key(routeId):
+            self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
+        return self.routes[routeId]
 
     def registerLines (self):
         self.routes = {}
@@ -86,22 +96,20 @@ class Lrs:
         iterator = self.lineLayer.getFeatures()
         while iterator.nextFeature(feature):
             routeId = feature[self.lineRouteField]
+            if routeId == '': routeId = None
             debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
+
             geo = feature.geometry()
             if geo:
                 if self.lineTransform:
                     geo.transform( self.lineTransform )
 
-            if routeId == None or routeId == '':
-                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, geo, lineFid = feature.id() ) )
-                continue
+            route = self.getRoute( routeId )
+            line = LrsLine( feature.id(), routeId, geo )
+            self.lines[feature.id()] = line
+            route.addLine ( line ) 
 
-            if not self.routes.has_key(routeId):
-                self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
-            route = self.routes[routeId]
-            if geo:
-                route.addLine ( LrsLine( feature.id(), routeId, geo ) ) 
-
+    def buildParts(self):
         for route in self.routes.values():
             route.buildParts()
 
@@ -109,41 +117,29 @@ class Lrs:
         feature = QgsFeature()
         iterator = self.pointLayer.getFeatures()
         while iterator.nextFeature(feature):
-            self.registerPoint ( feature )
+            self.registerPointFeature ( feature )
 
     # returns LrsPoint
-    def registerPoint (self, feature):
-            routeId = feature[self.pointRouteField]
-            measure = feature[self.pointMeasureField]
-            debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
-            geo = feature.geometry()
-            if geo:
-                if self.pointTransform:
-                    geo.transform( self.pointTransform )
+    def registerPointFeature (self, feature):
+        routeId = feature[self.pointRouteField]
+        if routeId == '': routeId = None
+        measure = feature[self.pointMeasureField]
+        debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
+        geo = feature.geometry()
+        if geo:
+            if self.pointTransform:
+                geo.transform( self.pointTransform )
 
-            if routeId == None or routeId == '':
-                self.errors.append( LrsError( LrsError.NO_ROUTE_ID, geo, pointFid = feature.id() ) )
-                return None
-
-            if measure == None:
-                self.errors.append( LrsError( LrsError.NO_MEASURE, geo, pointFid = feature.id() ) )
-                return None
-
-            point = LrsPoint( feature.id(), routeId, measure, geo )
-            if not self.routes.has_key(routeId):
-                self.orphanPoints.append ( point )
-            else:
-                self.routes[routeId].addPoint( point )
-                self.pointRoutes[ feature.id() ] = self.routes[routeId]
-                
-            return point
+        point = LrsPoint( feature.id(), routeId, measure, geo )
+        self.points[feature.id()] = point
+        route = self.getRoute( routeId )
+        route.addPoint( point )
+        return point
 
     def getErrors(self):
         errors = list ( self.errors )
         for route in self.routes.values():
             errors.extend( route.getErrors() )
-        for point in self.orphanPoints:
-            errors.append( LrsError( LrsError.ORPHAN, point.geo, routeId = point.routeId, measure = point.measure, pointFid = point.fid ) )
         return errors
 
     def getSegments(self):
@@ -157,6 +153,7 @@ class Lrs:
         self.pointEditBuffer = self.pointLayer.editBuffer()
         self.pointEditBuffer.featureAdded.connect( self.pointFeatureAdded )
         self.pointEditBuffer.featureDeleted.connect( self.pointFeatureDeleted )
+        self.pointEditBuffer.geometryChanged.connect( self.pointGeometryChanged )
 
     def pointLayerEditingStopped(self):
         self.pointEditBuffer = None
@@ -165,6 +162,9 @@ class Lrs:
         if self.pointEditBuffer:
             self.pointEditBuffer.featureAdded.disconnect( self.pointFeatureAdded )
             self.pointEditBuffer.featureDeleted.disconnect( self.pointFeatureDeleted )
+            self.pointEditBuffer.geometryChanged.disconnect( self.pointGeometryChanged )
+
+    
 
     # Warning: featureAdded is called first with temporary (negative fid)
     # then, when changes are commited, featureDeleted is called with that 
@@ -175,18 +175,34 @@ class Lrs:
         # added features have temporary negative id
         debug ( "feature added fid %s" % fid )
         feature = getLayerFeature( self.pointLayer, fid )
-        point = self.registerPoint ( feature ) # returns LrsPoint or None
-        if point and self.routes.has_key( point.routeId ):
-            self.routes[point.routeId].calibrate()
+        point = self.registerPointFeature ( feature ) # returns LrsPoint
+        route = self.getRoute( point.routeId )
+        errorUpdates = route.calibrate()
+        self.updateErrors.emit ( errorUpdates )
 
     def pointFeatureDeleted( self, fid ):
         debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
-        route = self.pointRoutes.get(fid)
-        if route:
-            route.removePoint( fid )
-            route.calibrate()
-        else:
-            # TODO: orphan
-            pass
+        point = self.points[fid]
+        route = self.getRoute( point.routeId )
+        route.removePoint( fid )
+        del self.points[fid]
+        errorUpdates = route.calibrate()
+        self.updateErrors.emit ( errorUpdates )
             
+    def pointGeometryChanged( self, fid, geo ):
+        debug ( "geometry changed fid %s" % fid )
+
+        #remove old
+        point = self.points[fid]
+        route = self.getRoute( point.routeId )
+        route.removePoint( fid )
+        
+        # add new
+        feature = getLayerFeature( self.pointLayer, fid )
+        self.registerPointFeature ( feature )
+
+        errorUpdates = route.calibrate()
+        self.updateErrors.emit ( errorUpdates )
+
+

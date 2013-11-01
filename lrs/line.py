@@ -31,5 +31,5 @@ class LrsLine(object):
     def __init__(self, fid, routeId, geo ):
         self.fid = fid # line
         self.routeId = routeId
-        self.geo = QgsGeometry(geo) # store copy of QgsGeometry
+        self.geo = QgsGeometry(geo) # store copy of QgsGeometry, may be None
 

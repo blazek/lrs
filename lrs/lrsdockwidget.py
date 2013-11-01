@@ -111,9 +111,25 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
          
         self.errorView.setModel( self.sortErrorModel )
         self.errorView.resizeColumnsToContents ()
+        self.errorView.setSelectionBehavior(QAbstractItemView.SelectRows)
+        # Attention, if selectionMode is QTableView.SingleSelection, selection is not
+        # cleared if deleted row was selected (at least one row is always selected)
+        self.errorView.setSelectionMode(QTableView.SingleSelection)
         self.errorView.selectionModel().selectionChanged.connect(self.errorSelectionChanged)
         
+        self.lrs.updateErrors.connect ( self.updateErrors )
+        
         self.resetErrorLayers()
+
+    def updateErrors( self, errorUpdates):
+        # because SingleSelection does not allow to deselect row, we have to clear selection manually
+        index = self.getSelectedErrorIndex()
+        if index:
+            rows = self.errorModel.rowsToBeRemoved( errorUpdates )
+            selected = index.row()
+            if selected in rows:
+                self.errorView.selectionModel().clear()
+        self.errorModel.updateErrors( errorUpdates )
 
     def errorSelectionChanged(self, selected, deselected ):
         self.errorZoomButton.setEnabled( False) 
@@ -139,11 +155,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.errorZoomButton.setEnabled(True) 
 
-    def getSelectedError(self):
+    def getSelectedErrorIndex(self):
         sm = self.errorView.selectionModel()
         if not sm.hasSelection(): return None
         index = sm.selection().indexes()[0]
         index = self.sortErrorModel.mapToSource(index)
+        return index
+
+    def getSelectedError(self):
+        index = self.getSelectedErrorIndex()
+        if not index: return None
         return self.errorModel.getError(index)
 
     def errorZoom(self):
