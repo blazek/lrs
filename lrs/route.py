@@ -241,6 +241,12 @@ class LrsRoute:
                 del self.points[i]
                 return
 
+    def removeLine( self, fid ):
+        for i in range ( len(self.lines) ): 
+            if self.lines[i].fid == fid:
+                del self.lines[i]
+                return
+
     def createMilestones(self):
         self.milestones = []
 
@@ -252,7 +258,7 @@ class LrsRoute:
 
             if point.measure == None:
                 origin = LrsOrigin( QGis.Point, point.fid )
-                self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, origins = [ origin ] ) )
+                self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, routeId = self.routeId, origins = [ origin ] ) )
                 continue
 
             pts = []

@@ -97,7 +97,9 @@ class LrsError(object):
 
     # get string of simple value or list
     def getValueString(self, value ):
-        if isinstance(value,list):
+        if value == None:
+            return ""
+        elif isinstance(value,list):
             vals = list ( value )
             vals.sort()
             return " ".join( map(str,vals) )
@@ -209,17 +211,18 @@ class LrsErrorModel( QAbstractTableModel ):
         if not error: return
 
         col = index.column()
+        value = ""
         if col == self.TYPE_COL:
-            return error.typeLabel()
+            value = error.typeLabel()
         elif col == self.ROUTE_COL:
-            return error.routeId
+            value = error.routeId
         elif col == self.MEASURE_COL:
-            return error.getMeasureString()
+            value = error.getMeasureString()
         elif col == self.MESSAGE_COL:
-            return error.message
+            value = error.message
 
         #return "row %s col %s" % ( index.row(), index.column() )
-        return ""
+        return value
         
     def addErrors ( self, errors ):
         self.errors.extend ( errors )
@@ -250,5 +253,21 @@ class LrsErrorModel( QAbstractTableModel ):
             self.beginRemoveRows( QModelIndex(), idx, idx )
             del self.errors[idx]
             self.endRemoveRows()
-                
 
+        for error in errorUpdates['updatedErrors']:
+            checksum = error.getChecksum() 
+            idx = self.getErrorIndexForChecksum( checksum )
+            debug ( 'update row %s' % idx )
+            #error.message = 'updated'
+            self.errors[idx] = error
+            topLeft = self.createIndex( idx, 0 )
+            bottomRight = self.createIndex( idx, 3 )
+            self.dataChanged.emit( topLeft, bottomRight )
+
+        for error in errorUpdates['addedErrors']:
+            debug ( 'add row' )
+            #error.message = 'new'
+            idx = len ( self.errors )
+            self.beginInsertRows( QModelIndex(), idx, idx )
+            self.errors.append ( error )
+            self.endInsertRows()
