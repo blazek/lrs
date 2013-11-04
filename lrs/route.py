@@ -36,7 +36,7 @@ from milestone import *
 class LrsRoute:
 
     def __init__(self, layer, routeId, threshold):
-        debug ('init route %s' % routeId )
+        #debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId # if None, keeps all lines and points without routeId
         self.threshold = threshold
@@ -102,14 +102,14 @@ class LrsRoute:
         removedErrorChecksums = []
         for checksum in oldErrorChecksums:
             if not checksum in newErrorChecksums:
-                debug ( 'removed error' )
+                #debug ( 'removed error' )
                 removedErrorChecksums.append( checksum )
         for error in newErrors:
             if error.getChecksum() in oldErrorChecksums:
-                debug ( 'updated error' )
+                #debug ( 'updated error' )
                 updatedErrors.append ( error )
             else:
-                debug ( 'added error' )
+                #debug ( 'added error' )
                 addedErrors.append ( error )
 
         return { 'removedErrorChecksums': removedErrorChecksums,
@@ -145,7 +145,7 @@ class LrsRoute:
         for i in range(len(polylines)-1):
             for j in range(i+1,len(polylines)):
                 if polylinesIdentical( polylines[i]['polyline'], polylines[j]['polyline'] ):
-                    debug( 'identical polylines %d and %d' % (i, j) )
+                    #debug( 'identical polylines %d and %d' % (i, j) )
                     duplicates.add(j)
         # make reverse ordered unique list of duplicates and delete
         duplicates = list( duplicates )
@@ -325,7 +325,7 @@ class LrsRoute:
                     nearSegment = segment
                     nearNearestPnt = nearestPnt
 
-            debug ('nearest partIdx = %s segment = %s sqDist = %s' % ( nearPartIdx, nearSegment, nearSqDist) )
+            #debug ('nearest partIdx = %s segment = %s sqDist = %s' % ( nearPartIdx, nearSegment, nearSqDist) )
             if nearNearestPnt: # found part in threshold
                 milestone.partIdx = nearPartIdx
                 nearPart = self.parts[nearPartIdx]

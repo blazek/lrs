@@ -103,7 +103,7 @@ class Lrs(QObject):
     def registerLineFeature (self, feature):
         routeId = feature[self.lineRouteField]
         if routeId == '' or routeId == NULL: routeId = None
-        debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
+        #debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
 
         geo = feature.geometry()
         if geo:
@@ -135,7 +135,7 @@ class Lrs(QObject):
         if routeId == '' or routeId == NULL: routeId = None
         measure = feature[self.pointMeasureField]
         if measure == NULL: measure = None
-        debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
+        #debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
         geo = feature.geometry()
         if geo:
             if self.pointTransform:
@@ -219,7 +219,7 @@ class Lrs(QObject):
     #### point edit ####
     def pointFeatureAdded( self, fid ):
         # added features have temporary negative id
-        debug ( "feature added fid %s" % fid )
+        #debug ( "feature added fid %s" % fid )
         feature = getLayerFeature( self.pointLayer, fid )
         point = self.registerPointFeature ( feature ) # returns LrsPoint
         route = self.getRoute( point.routeId )
@@ -227,7 +227,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
 
     def pointFeatureDeleted( self, fid ):
-        debug ( "feature deleted fid %s" % fid )
+        #debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
         point = self.points[fid]
         route = self.getRoute( point.routeId )
@@ -236,7 +236,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
             
     def pointGeometryChanged( self, fid, geo ):
-        debug ( "geometry changed fid %s" % fid )
+        #debug ( "geometry changed fid %s" % fid )
 
         #remove old
         point = self.points[fid]
@@ -251,7 +251,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
 
     def pointAttributeValueChanged( self, fid, attIdx, value ):
-        debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
+        #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
 
         fields = self.pointLayer.pendingFields()
         routeIdx = fields.indexFromName ( self.pointRouteField )
@@ -277,7 +277,7 @@ class Lrs(QObject):
     #### line edit ####
     def lineFeatureAdded( self, fid ):
         # added features have temporary negative id
-        debug ( "feature added fid %s" % fid )
+        #debug ( "feature added fid %s" % fid )
         feature = getLayerFeature( self.lineLayer, fid )
         line = self.registerLineFeature ( feature ) # returns LrsLine
         route = self.getRoute( line.routeId )
@@ -285,7 +285,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
 
     def lineFeatureDeleted( self, fid ):
-        debug ( "feature deleted fid %s" % fid )
+        #debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
         line = self.lines[fid]
         route = self.getRoute( line.routeId )
@@ -294,7 +294,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
             
     def lineGeometryChanged( self, fid, geo ):
-        debug ( "geometry changed fid %s" % fid )
+        #debug ( "geometry changed fid %s" % fid )
 
         #remove old
         line = self.lines[fid]
@@ -309,7 +309,7 @@ class Lrs(QObject):
         self.updateErrors.emit ( errorUpdates )
 
     def lineAttributeValueChanged( self, fid, attIdx, value ):
-        debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
+        #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
 
         fields = self.lineLayer.pendingFields()
         routeIdx = fields.indexFromName ( self.lineRouteField )

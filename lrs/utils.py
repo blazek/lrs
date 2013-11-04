@@ -25,6 +25,9 @@ from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
+# name of plugin in project file
+PROJECT_PLUGIN_NAME = "lrs"
+
 # print debug message
 def debug(msg):
     print "LRS: %s" % msg

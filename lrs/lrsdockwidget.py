@@ -77,15 +77,39 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
+        
+        QgsProject.instance().readProject.connect( self.projectRead )
 
         # debug
         if self.genLineLayerCM.getLayer():
             self.generateLrs() # only when reloading!
 
+    def projectRead(self):
+        debug("projectRead")
+        ##### set error layers if stored in project
+        project = QgsProject.instance()
+        registry = QgsMapLayerRegistry.instance()
+
+        errorLineLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )[0]
+        debug ( str(errorLineLayerId) )
+        debug ( "%s" % errorLineLayerId )
+        if errorLineLayerId: 
+            self.errorLineLayer = registry.mapLayer( errorLineLayerId )
+
+        errorPointLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )[0]
+        if errorPointLayerId: 
+            self.errorPointLayer = registry.mapLayer( errorPointLayerId )
+
+        qualityLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )[0]
+        if qualityLayerId: 
+            self.qualityLayer = registry.mapLayer( qualityLayerId )
+
+
     def close(self):
         print "close"
         if self.lrs:
             self.lrs.disconnect()
+        QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
         del self.genLineRouteFieldCM
@@ -184,29 +208,35 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     # add new error layers to map
     def addErrorLayers(self):
+        # changes done to vector layer attributes are not store correctly in project file
+        # http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
+
         attributes = [ 
-            QgsField('type', QVariant.String),
-            QgsField('route', QVariant.String),
-            QgsField('measure', QVariant.String),
+            QgsField('error', QVariant.String, "string"), # error type, avoid 'type' which could be keyword
+            QgsField('route', QVariant.String, "string" ),
+            QgsField('measure', QVariant.String, "string"),
         ]
 
+        project = QgsProject.instance()
+
         if not self.errorLineLayer:
-            self.errorLineLayer = QgsVectorLayer('linestring', 'LRS line errors', 'memory')
-            self.errorLineLayer.startEditing()
-            for attribute in attributes:
-                self.errorLineLayer.addAttribute( attribute )
-            self.errorLineLayer.commitChanges()
+            provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
+            provider.addAttributes( attributes )
+            uri = provider.dataSourceUri()
+            #debug ( "uri = " + uri )
+            self.errorLineLayer = QgsVectorLayer( uri, 'LRS line errors', 'memory')
             self.resetErrorLineLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,] )
+            project.writeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id() )
 
         if not self.errorPointLayer:
-            self.errorPointLayer = QgsVectorLayer('point', 'LRS point errors', 'memory')
-            self.errorPointLayer.startEditing()
-            for attribute in attributes:
-                self.errorPointLayer.addAttribute( attribute )
-            self.errorPointLayer.commitChanges()
+            provider = QgsProviderRegistry.instance().provider( 'memory', 'Point' )
+            provider.addAttributes( attributes )
+            uri = provider.dataSourceUri()
+            self.errorPointLayer = QgsVectorLayer( uri, 'LRS point errors', 'memory')
             self.resetErrorPointLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.errorPointLayer,] )
+            project.writeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId", self.errorPointLayer.id() )
    
     # reset error layers content (features)
     def resetErrorLayers(self):
@@ -223,7 +253,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if error.geo.wkbType() != QGis.WKBPoint: continue
             feature = QgsFeature( fields )
             feature.setGeometry( error.geo )
-            feature.setAttribute( 'type', error.typeLabel() )
+            feature.setAttribute( 'error', error.typeLabel() )
             feature.setAttribute( 'route', '%s' % error.routeId )
             feature.setAttribute( 'measure', error.getMeasureString() )
             self.errorPointLayer.addFeatures( [ feature ] )
@@ -239,7 +269,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if error.geo.wkbType() != QGis.WKBLineString: continue
             feature = QgsFeature( fields )
             feature.setGeometry( error.geo )
-            feature.setAttribute( 'type', error.typeLabel() )
+            feature.setAttribute( 'error', error.typeLabel() )
             feature.setAttribute( 'route', '%s' % error.routeId )
             feature.setAttribute( 'measure', error.getMeasureString() )
             self.errorLineLayer.addFeatures( [ feature ] )
@@ -248,18 +278,19 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def addQualityLayer(self):
         if not self.qualityLayer:
             attributes = [ 
-                QgsField('route', QVariant.String),
-                QgsField('m_from', QVariant.Double),
-                QgsField('m_to', QVariant.Double),
-                QgsField('l', QVariant.Double),
+                QgsField('route', QVariant.String, "string"),
+                QgsField('m_from', QVariant.Double, "double"),
+                QgsField('m_to', QVariant.Double, "double"),
+                QgsField('l', QVariant.Double, "double"),
             ]
-            self.qualityLayer = QgsVectorLayer('linestring', 'LRS quality', 'memory')
-            self.qualityLayer.startEditing()
-            for attribute in attributes:
-                self.qualityLayer.addAttribute( attribute )
-            self.qualityLayer.commitChanges()
+            provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
+            provider.addAttributes( attributes )
+            uri = provider.dataSourceUri()
+            self.qualityLayer = QgsVectorLayer( uri, 'LRS quality', 'memory')
             self.resetQualityLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.qualityLayer,] )
+            project = QgsProject.instance()
+            project.writeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId", self.qualityLayer.id() )
 
     def resetQualityLayer(self):
         if not self.qualityLayer: return
@@ -278,11 +309,15 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.qualityLayer.commitChanges()            
             
     def layersWillBeRemoved(self, layerIdList ):
+        project = QgsProject.instance()
         for id in layerIdList:
             if self.errorPointLayer and self.errorPointLayer.id() == id:
                 self.errorPointLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )
             if self.errorLineLayer and self.errorLineLayer.id() == id:
                 self.errorLineLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )
             if self.qualityLayer and self.qualityLayer.id() == id:
                 self.qualityLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
             
