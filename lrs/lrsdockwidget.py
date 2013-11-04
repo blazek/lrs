@@ -80,19 +80,22 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         QgsProject.instance().readProject.connect( self.projectRead )
 
+        # read project if plugin was reloaded
+        self.projectRead()
+
         # debug
         if self.genLineLayerCM.getLayer():
             self.generateLrs() # only when reloading!
 
     def projectRead(self):
-        debug("projectRead")
+        #debug("projectRead")
         ##### set error layers if stored in project
         project = QgsProject.instance()
+        if not project: return
+
         registry = QgsMapLayerRegistry.instance()
 
         errorLineLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )[0]
-        debug ( str(errorLineLayerId) )
-        debug ( "%s" % errorLineLayerId )
         if errorLineLayerId: 
             self.errorLineLayer = registry.mapLayer( errorLineLayerId )
 
@@ -121,7 +124,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         super(LrsDockWidget, self).close()
 
     def generateLrs(self):
-        debug ( 'generateLrs')
+        #debug ( 'generateLrs')
+
+        self.clearHighlight()
 
         threshold = self.genThresholdSpin.value()
         self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold )
@@ -144,8 +149,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs.updateErrors.connect ( self.updateErrors )
         
         self.resetErrorLayers()
+        self.resetQualityLayer()
+
+        if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
+            self.iface.mapCanvas().refresh()
+        
 
     def updateErrors( self, errorUpdates):
+        debug ( "updateErrors" )
         # because SingleSelection does not allow to deselect row, we have to clear selection manually
         index = self.getSelectedErrorIndex()
         if index:
@@ -154,12 +165,17 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if selected in rows:
                 self.errorView.selectionModel().clear()
         self.errorModel.updateErrors( errorUpdates )
+        self.resetErrorLayers()
+        self.resetQualityLayer()
 
-    def errorSelectionChanged(self, selected, deselected ):
+    def clearHighlight(self):
         self.errorZoomButton.setEnabled( False) 
         if self.errorHighlight:
             del self.errorHighlight
             self.errorHighlight = None
+
+    def errorSelectionChanged(self, selected, deselected ):
+        self.clearHighlight()
 
         error = self.getSelectedError()
         if not error: return
@@ -240,15 +256,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
    
     # reset error layers content (features)
     def resetErrorLayers(self):
+        #debug ( "resetErrorLayers" )
         self.resetErrorPointLayer()
         self.resetErrorLineLayer()
 
     def resetErrorPointLayer(self):
+        #debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
         if not self.errorPointLayer: return
         clearLayer( self.errorPointLayer )
         errors = self.lrs.getErrors()
-        self.errorPointLayer.startEditing()
+        #self.errorPointLayer.startEditing()
         fields = self.errorPointLayer.pendingFields()
+        features = []
         for error in errors:
             if error.geo.wkbType() != QGis.WKBPoint: continue
             feature = QgsFeature( fields )
@@ -256,15 +275,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             feature.setAttribute( 'error', error.typeLabel() )
             feature.setAttribute( 'route', '%s' % error.routeId )
             feature.setAttribute( 'measure', error.getMeasureString() )
-            self.errorPointLayer.addFeatures( [ feature ] )
-        self.errorPointLayer.commitChanges()            
+            #self.errorPointLayer.addFeatures( [ feature ] )
+            features.append( feature )
+        self.errorPointLayer.dataProvider().addFeatures( features )
+        #self.errorPointLayer.commitChanges()            
 
     def resetErrorLineLayer(self):
         if not self.errorLineLayer: return
         clearLayer( self.errorLineLayer )
         errors = self.lrs.getErrors()
-        self.errorLineLayer.startEditing()
+        #self.errorLineLayer.startEditing()
         fields = self.errorLineLayer.pendingFields()
+        features = []
         for error in errors:
             if error.geo.wkbType() != QGis.WKBLineString: continue
             feature = QgsFeature( fields )
@@ -272,8 +294,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             feature.setAttribute( 'error', error.typeLabel() )
             feature.setAttribute( 'route', '%s' % error.routeId )
             feature.setAttribute( 'measure', error.getMeasureString() )
-            self.errorLineLayer.addFeatures( [ feature ] )
-        self.errorLineLayer.commitChanges()            
+            #self.errorLineLayer.addFeatures( [ feature ] )
+            features.append( feature )
+        #self.errorLineLayer.commitChanges()            
+        self.errorLineLayer.dataProvider().addFeatures( features )
 
     def addQualityLayer(self):
         if not self.qualityLayer:
@@ -293,11 +317,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             project.writeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId", self.qualityLayer.id() )
 
     def resetQualityLayer(self):
+        debug ( "resetQualityLayer %s" % self.qualityLayer )
         if not self.qualityLayer: return
         clearLayer( self.qualityLayer )
         segments = self.lrs.getSegments()
-        self.qualityLayer.startEditing()
+        #self.qualityLayer.startEditing()
         fields = self.qualityLayer.pendingFields()
+        features = []
         for segment in segments:
             feature = QgsFeature( fields )
             feature.setGeometry( segment.geo )
@@ -306,7 +332,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             feature.setAttribute( 'm_to', segment.record.milestoneTo )
             feature.setAttribute( 'l', segment.geo.length() )
             self.qualityLayer.addFeatures( [ feature ] )
-        self.qualityLayer.commitChanges()            
+            features.append( feature )
+        #self.qualityLayer.commitChanges()            
+        self.qualityLayer.dataProvider().addFeatures( features )
             
     def layersWillBeRemoved(self, layerIdList ):
         project = QgsProject.instance()
