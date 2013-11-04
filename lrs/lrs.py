@@ -46,6 +46,7 @@ class Lrs(QObject):
         self.pointMeasureField = pointMeasureField
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
+        self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
         self.lrsCrs = kwargs.get('crs')
 
         self.pointLayer.editingStarted.connect( self.pointLayerEditingStarted )

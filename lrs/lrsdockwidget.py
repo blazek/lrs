@@ -38,6 +38,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrsCrs = None
         if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
             self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+        self.mapUnitsPerMeasureUnit = None
         self.lrs = None # Lrs object
         self.errorHighlight = None 
         self.errorPointLayer = None
@@ -129,7 +130,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.clearHighlight()
 
         threshold = self.genThresholdSpin.value()
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold )
+        self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
     
         self.errorZoomButton.setEnabled( False)
         self.errorModel = LrsErrorModel()
@@ -305,12 +307,35 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 QgsField('route', QVariant.String, "string"),
                 QgsField('m_from', QVariant.Double, "double"),
                 QgsField('m_to', QVariant.Double, "double"),
-                QgsField('l', QVariant.Double, "double"),
+                QgsField('m_len', QVariant.Double, "double"),
+                QgsField('len', QVariant.Double, "double"),
+                QgsField('err_abs', QVariant.Double, "double"),
+                QgsField('err_rel', QVariant.Double, "double"),
+                QgsField('err_perc', QVariant.Double, "double"), # relative in percents
             ]
             provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
             provider.addAttributes( attributes )
             uri = provider.dataSourceUri()
             self.qualityLayer = QgsVectorLayer( uri, 'LRS quality', 'memory')
+            
+            # min, max, color, label
+            styles = [ 
+                [ -1000000, -30, QColor(Qt.red), '< -30 %' ],
+                [ -30, -10, QColor(Qt.blue), '-30 -10 %' ],
+                [ -10, 10, QColor(Qt.green), '-10 10 %' ],
+                [ 10, 30, QColor(Qt.blue), '10 30 %' ],
+                [ 30, 1000000, QColor(Qt.red), '> 30 %' ]
+            ]
+            ranges = []
+            for style in styles:
+                symbol = QgsSymbolV2.defaultSymbol(  QGis.Line )
+                symbol.setColor( style[2] )
+                range = QgsRendererRangeV2 ( style[0], style[1], symbol, style[3] )
+                ranges.append(range)
+
+            renderer = QgsGraduatedSymbolRendererV2( 'err_perc', ranges)
+            self.qualityLayer.setRendererV2 ( renderer )
+
             self.resetQualityLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.qualityLayer,] )
             project = QgsProject.instance()
@@ -321,19 +346,25 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if not self.qualityLayer: return
         clearLayer( self.qualityLayer )
         segments = self.lrs.getSegments()
-        #self.qualityLayer.startEditing()
         fields = self.qualityLayer.pendingFields()
         features = []
         for segment in segments:
+            m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
+            length = segment.geo.length()
+            err_abs = m_len - length
+            err_rel = err_abs / length if length > 0 else 0
             feature = QgsFeature( fields )
             feature.setGeometry( segment.geo )
             feature.setAttribute( 'route', '%s' % segment.routeId )
             feature.setAttribute( 'm_from', segment.record.milestoneFrom )
             feature.setAttribute( 'm_to', segment.record.milestoneTo )
-            feature.setAttribute( 'l', segment.geo.length() )
+            feature.setAttribute( 'm_len', m_len )
+            feature.setAttribute( 'len', length )
+            feature.setAttribute( 'err_abs', err_abs )
+            feature.setAttribute( 'err_rel', err_rel )
+            feature.setAttribute( 'err_perc', err_rel * 100 )
             self.qualityLayer.addFeatures( [ feature ] )
             features.append( feature )
-        #self.qualityLayer.commitChanges()            
         self.qualityLayer.dataProvider().addFeatures( features )
             
     def layersWillBeRemoved(self, layerIdList ):
