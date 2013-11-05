@@ -7,3 +7,4 @@
 [submodule "lrs/qgissettingmanager"]
 	path = lrs/qgissettingmanager
 	url = git://github.com/blazek/qgissettingmanager.git
+  ignore = untracked

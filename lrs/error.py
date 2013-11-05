@@ -189,7 +189,7 @@ class LrsErrorModel( QAbstractTableModel ):
         self.errors = []
 
     def headerData( self, section, orientation, role = Qt.DisplayRole ):
-        if role != Qt.DisplayRole: return None
+        if not Qt or role != Qt.DisplayRole: return None
         if orientation == Qt.Horizontal:
             if self.headerLabels.has_key(section):
                 return self.headerLabels[section]

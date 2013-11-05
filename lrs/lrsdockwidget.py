@@ -29,12 +29,14 @@ from qgis.gui import *
 from ui_lrsdockwidget import Ui_LrsDockWidget
 from utils import *
 from error import *
-from lrs import Lrs
+from lrs import *
+from settings import *
 
 #class LrsDockWidget(QDockWidget):
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         self.iface = iface
+        self.settings = LrsSettings()
         self.lrsCrs = None
         if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
             self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
@@ -55,15 +57,34 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # initLayer, initField, fieldType did not work, fixed and created pull request
         # https://github.com/3nids/qgiscombomanager/pull/1
 
-        self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, 'lines', {'geomType':QGis.Line } )
-        self.genLineRouteFieldCM = cm.FieldCombo( self.genLineRouteFieldCombo, self.genLineLayerCM, 'route' )
-        self.genPointLayerCM = cm.VectorLayerCombo( self.genPointLayerCombo, 'points', {'geomType':QGis.Point } )
-        self.genPointRouteFieldCM = cm.FieldCombo( self.genPointRouteFieldCombo, self.genPointLayerCM, 'route' )
+        #self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, 'lines', {'geomType':QGis.Line } )
+        self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, lambda: self.settings.value('lineLayerId'), {'geomType':QGis.Line } )
+        self.genLineRouteFieldCM = cm.FieldCombo( self.genLineRouteFieldCombo, self.genLineLayerCM, lambda: self.settings.value('lineRouteField') )
+        self.genPointLayerCM = cm.VectorLayerCombo( self.genPointLayerCombo, lambda: self.settings.value('pointLayerId'), {'geomType':QGis.Point } )
+        self.genPointRouteFieldCM = cm.FieldCombo( self.genPointRouteFieldCombo, self.genPointLayerCM, lambda: self.settings.value('pointRouteField') )
         # TODO: allow integers, currently only one type supported by fieldType
         #self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km', { 'fieldType':QVariant.Double } )
-        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km' )
+        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, lambda: self.settings.value('pointMeasureField') )
+
+        # set settings widgets
+        self.settings.setting('lineLayerId').setWidget( self.genLineLayerCombo )
+        self.settings.setting('lineRouteField').setWidget( self.genLineRouteFieldCombo )
+        self.settings.setting('pointLayerId').setWidget( self.genPointLayerCombo )
+        self.settings.setting('pointRouteField').setWidget( self.genPointRouteFieldCombo )
+        self.settings.setting('pointMeasureField').setWidget( self.genPointMeasureFieldCombo )
+        self.settings.setting('threshold').setWidget( self.genThresholdSpin )
+        self.settings.setting('threshold').setWidgetFromValue()
+        self.settings.setting('mapUnitsPerMeasureUnit').setWidget( self.genMapUnitsPerMeasureUnitSpin )
+        self.settings.setting('mapUnitsPerMeasureUnit').setWidgetFromValue()
+
+        self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
+        self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
+        self.genPointLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
+        self.genPointRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
+        self.genPointMeasureFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
 
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
+        self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateSettings)
 
         ##### errorTab
         self.errorModel = None
@@ -84,15 +105,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # read project if plugin was reloaded
         self.projectRead()
 
-        # debug
-        if self.genLineLayerCM.getLayer():
-            self.generateLrs() # only when reloading!
-
     def projectRead(self):
         #debug("projectRead")
         ##### set error layers if stored in project
         project = QgsProject.instance()
         if not project: return
+
+        for setting in ['threshold', 'mapUnitsPerMeasureUnit' ]:
+            self.settings.setting(setting).setWidgetFromValue()
 
         registry = QgsMapLayerRegistry.instance()
 
@@ -108,6 +128,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if qualityLayerId: 
             self.qualityLayer = registry.mapLayer( qualityLayerId )
 
+        self.resetGenerateButtons()
+
+        # debug
+        if self.genLineLayerCM.getLayer():
+            self.generateLrs() # only when reloading!
 
     def close(self):
         print "close"
@@ -124,10 +149,33 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             del self.errorHighlight
         super(LrsDockWidget, self).close()
 
+    def resetGenerateButtons(self):
+        enabled = self.genLineLayerCombo.currentIndex() != -1 and self.genLineRouteFieldCombo.currentIndex() != -1 and self.genPointLayerCombo.currentIndex() != -1 and self.genPointRouteFieldCombo.currentIndex() != -1 and self.genPointMeasureFieldCombo.currentIndex() != -1
+
+        self.genButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+
+    def resetGenerateSettings(self):
+        return
+        self.genLineLayerCombo.setCurrentIndex(-1) 
+        self.genLineRouteFieldCombo.setCurrentIndex(-1) 
+        self.genPointLayerCombo.setCurrentIndex(-1) 
+        self.genPointRouteFieldCombo.setCurrentIndex(-1) 
+        self.genPointMeasureFieldCombo.setCurrentIndex(-1) 
+        self.settings.setting('threshold').setWidgetFromValue()
+        self.settings.setting('mapUnitsPerMeasureUnit').setWidgetFromValue()
+        
+        self.saveGenerateSettings()
+
+    # save settings in project
+    def saveGenerateSettings(self):
+        for setting in ['lineLayerId', 'lineRouteField', 'pointLayerId', 'pointRouteField', 'pointMeasureField', 'threshold', 'mapUnitsPerMeasureUnit']:
+            self.settings.setting(setting).setValueFromWidget()
+
     def generateLrs(self):
         #debug ( 'generateLrs')
-
         self.clearHighlight()
+        
+        self.saveGenerateSettings()
 
         threshold = self.genThresholdSpin.value()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
