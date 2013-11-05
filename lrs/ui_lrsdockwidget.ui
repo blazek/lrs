@@ -144,6 +144,13 @@
          </layout>
         </item>
         <item>
+         <widget class="QDialogButtonBox" name="genButtonBox">
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -155,13 +162,6 @@
            </size>
           </property>
          </spacer>
-        </item>
-        <item>
-         <widget class="QDialogButtonBox" name="genButtonBox">
-          <property name="standardButtons">
-           <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
