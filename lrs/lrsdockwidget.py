@@ -22,7 +22,6 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import qgiscombomanager as cm
 from qgis.core import *
 from qgis.gui import *
 
@@ -30,6 +29,7 @@ from ui_lrsdockwidget import Ui_LrsDockWidget
 from utils import *
 from error import *
 from lrs import *
+from combo import *
 from settings import *
 
 #class LrsDockWidget(QDockWidget):
@@ -57,17 +57,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # initLayer, initField, fieldType did not work, fixed and created pull request
         # https://github.com/3nids/qgiscombomanager/pull/1
 
-        #self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, 'lines', {'geomType':QGis.Line } )
-        self.genLineLayerCM = cm.VectorLayerCombo( self.genLineLayerCombo, lambda: self.settings.value('lineLayerId'), {'geomType':QGis.Line } )
-        self.genLineRouteFieldCM = cm.FieldCombo( self.genLineRouteFieldCombo, self.genLineLayerCM, lambda: self.settings.value('lineRouteField') )
-        self.genPointLayerCM = cm.VectorLayerCombo( self.genPointLayerCombo, lambda: self.settings.value('pointLayerId'), {'geomType':QGis.Point } )
-        self.genPointRouteFieldCM = cm.FieldCombo( self.genPointRouteFieldCombo, self.genPointLayerCM, lambda: self.settings.value('pointRouteField') )
-        # TODO: allow integers, currently only one type supported by fieldType
-        #self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, 'km', { 'fieldType':QVariant.Double } )
-        self.genPointMeasureFieldCM = cm.FieldCombo( self.genPointMeasureFieldCombo, self.genPointLayerCM, lambda: self.settings.value('pointMeasureField') )
+        self.genLineLayerCM = LrsLayerComboManager( self.genLineLayerCombo, geometryType = QGis.Line, settingsName = 'lineLayerId' )
+        self.genLineRouteFieldCM = LrsFieldComboManager( self.genLineRouteFieldCombo, self.genLineLayerCM )
+        self.genPointLayerCM = LrsLayerComboManager( self.genPointLayerCombo, geometryType = QGis.Point, settingsName = 'pointLayerId' )
+        self.genPointRouteFieldCM = LrsFieldComboManager( self.genPointRouteFieldCombo, self.genPointLayerCM )
+        self.genPointMeasureFieldCM = LrsFieldComboManager( self.genPointMeasureFieldCombo, self.genPointLayerCM, types = [ QVariant.Int, QVariant.Double ] )
 
         # set settings widgets
-        self.settings.setting('lineLayerId').setWidget( self.genLineLayerCombo )
+        #self.settings.setting('lineLayerId').setWidget( self.genLineLayerCombo )
         self.settings.setting('lineRouteField').setWidget( self.genLineRouteFieldCombo )
         self.settings.setting('pointLayerId').setWidget( self.genPointLayerCombo )
         self.settings.setting('pointRouteField').setWidget( self.genPointRouteFieldCombo )
@@ -131,8 +128,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        if self.genLineLayerCM.getLayer():
-            self.generateLrs() # only when reloading!
+        #if self.genLineLayerCM.getLayer():
+        #    self.generateLrs() # only when reloading!
 
     def close(self):
         print "close"
@@ -141,7 +138,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
-        del self.genLineRouteFieldCM
+        #del self.genLineRouteFieldCM
         del self.genPointLayerCM
         del self.genPointRouteFieldCM
         del self.genPointMeasureFieldCM
