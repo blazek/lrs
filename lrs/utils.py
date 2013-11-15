@@ -30,7 +30,7 @@ PROJECT_PLUGIN_NAME = "lrs"
 
 # print debug message
 def debug(msg):
-    print "LRS: %s" % msg
+    print "LRSDEBUG: %s" % msg
     sys.stdout.flush()
 
 # test if two QgsPolyline are identical including reverse order

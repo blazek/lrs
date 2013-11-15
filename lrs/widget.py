@@ -21,22 +21,33 @@
 """
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
-#from PyQt4.QtGui import *
+from PyQt4.QtGui import *
 from qgis.core import *
 
 from utils import *
-from qgissettingmanager import *
 
-class LrsSettings(SettingManager):
+class LrsWidgetManager(QObject):
 
-    def __init__(self):
-        SettingManager.__init__(self, PROJECT_PLUGIN_NAME )
+    def __init__(self, widget, **kwargs ):
+        super(LrsWidgetManager, self).__init__()
+        self.widget = widget
+        self.settingsName = kwargs.get('settingsName')
 
-        # project settings
-        self.addSetting('lineLayerId', 'string', 'project', '')
-        self.addSetting('lineRouteField', 'string', 'project', '')
-        self.addSetting('pointLayerId', 'string', 'project', '')
-        self.addSetting('pointRouteField', 'string', 'project', '')
-        self.addSetting('pointMeasureField', 'string', 'project', '')
-        self.addSetting('threshold', 'double', 'project', 200.0)
-        self.addSetting('mapUnitsPerMeasureUnit', 'double', 'project', 1000.0)
+    def writeToProject(self):
+        project = QgsProject.instance()
+        if issubclass(self.widget.__class__, QDoubleSpinBox):
+            val = self.widget.value()
+            project.writeEntryDouble(PROJECT_PLUGIN_NAME, self.settingsName, val )
+        else:
+            raise Exception("not supported widget")
+
+
+    def readFromProject(self):
+        project = QgsProject.instance()
+
+        if issubclass(self.widget.__class__, QDoubleSpinBox):
+            val = project.readDoubleEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+            self.widget.setValue( val )
+        else:
+            raise Exception("not supported widget")
+

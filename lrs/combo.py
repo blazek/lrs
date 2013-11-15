@@ -31,16 +31,34 @@ from utils import *
 
 class LrsComboManager(QObject):
 
-    def __init__(self, **kwargs ):
+    def __init__(self, combo, **kwargs ):
         super(LrsComboManager, self).__init__()
+        self.combo = combo # QComboBox
         self.settingsName = kwargs.get('settingsName')
+    
+        #QgsProject.instance().readProject.connect( self.projectRead )
+
+        #self.combo.currentIndexChanged.connect( self.indexChanged )
+
+    #def __del__(self):
+        #QgsProject.instance().readProject.disconnect( self.projectRead )
+        #self.combo.currentIndexChanged.disconnect( self.indexChanged )
+
+    def writeToProject(self):
+        idx = self.combo.currentIndex()
+        val = self.combo.itemData(idx, Qt.UserRole )
+        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val )
+
+    def readFromProject(self):
+        val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+        idx = self.combo.findData(val, Qt.UserRole)
+        self.combo.setCurrentIndex(idx)
 
 class LrsLayerComboManager(LrsComboManager):
     layerChanged = pyqtSignal()
 
     def __init__(self, combo, **kwargs ):
-        super(LrsLayerComboManager, self).__init__(**kwargs)
-        self.combo = combo # QComboBox
+        super(LrsLayerComboManager, self).__init__(combo,**kwargs)
         self.geometryType = kwargs.get('geometryType') # QGis.GeometryType
 
         self.proxy = QSortFilterProxyModel(self)
@@ -63,8 +81,12 @@ class LrsLayerComboManager(LrsComboManager):
             return self.combo.itemData(idx, Qt.UserRole )
         return None
 
+    def getLayer(self):
+        lId = self.layerId()
+        return QgsMapLayerRegistry.instance().mapLayer( lId )
+
     def canvasLayersChanged(self):
-        #debug ("canvasLayersChanged")
+        debug ("canvasLayersChanged")
         if not QgsMapLayerRegistry: return
         layerIds = []
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
@@ -98,8 +120,7 @@ class LrsLayerComboManager(LrsComboManager):
 class LrsFieldComboManager(LrsComboManager):
 
     def __init__(self, combo, layerComboManager, **kwargs ):
-        super(LrsFieldComboManager, self).__init__(**kwargs)
-        self.combo = combo # QComboBox
+        super(LrsFieldComboManager, self).__init__(combo, **kwargs)
         self.types = kwargs.get('types', None) # QVariant.type
         self.layerComboManager = layerComboManager
 
@@ -111,6 +132,12 @@ class LrsFieldComboManager(LrsComboManager):
         self.layerChanged()
 
         self.layerComboManager.layerChanged.connect(self.layerChanged)
+
+    def getFieldName(self):
+        idx = self.combo.currentIndex()
+        if idx != -1:
+            return self.combo.itemData(idx, Qt.UserRole )
+        return None
 
     def layerChanged(self):
         debug ("layerChanged")
