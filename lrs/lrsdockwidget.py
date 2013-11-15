@@ -85,6 +85,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorZoomButton.setIcon( QgsApplication.getThemeIcon( '/mActionZoomIn.svg' ) )
         self.errorZoomButton.setText('Zoom')
         self.errorZoomButton.clicked.connect( self.errorZoom )
+        self.errorFilterLineEdit.textChanged.connect( self.errorFilterChanged )
 
         ##### error / quality layers
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
@@ -96,6 +97,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         # read project if plugin was reloaded
         self.projectRead()
+
+    def errorFilterChanged(self, text):
+        if not self.sortErrorModel: return
+        self.sortErrorModel.setFilterWildcard( text )
 
     def projectRead(self):
         #debug("projectRead")
@@ -124,8 +129,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        #if self.genLineLayerCM.getLayer():
-        #    self.generateLrs() # only when reloading!
+        if self.genLineLayerCM.getLayer():
+            self.generateLrs() # only when reloading!
 
     def close(self):
         print "close"
@@ -199,6 +204,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorModel.addErrors( self.lrs.getErrors() )
 
         self.sortErrorModel = QSortFilterProxyModel()
+        self.sortErrorModel.setFilterKeyColumn(-1) # all columns
+        self.sortErrorModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
+        self.sortErrorModel.setDynamicSortFilter(True)
         self.sortErrorModel.setSourceModel( self.errorModel )
          
         self.errorView.setModel( self.sortErrorModel )

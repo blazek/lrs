@@ -304,6 +304,8 @@ class LrsRoute:
 
     # calculate measures along parts
     def attachMilestones(self):
+        if not self.routeId: return 
+
         sqrThreshold = self.threshold * self.threshold
         for milestone in self.milestones:
             pointGeo = QgsGeometry.fromPoint( milestone.pnt )

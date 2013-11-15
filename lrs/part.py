@@ -86,7 +86,7 @@ class LrsRoutePart:
             self.polyline.reverse()
             milestones.reverse()
             # recalc partMeasures
-            length = geo.length()
+            length = polylineGeo.length()
             for milestone in milestones:
                 milestone.partMeasure = length - milestone.partMeasure
 

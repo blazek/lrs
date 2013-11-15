@@ -215,7 +215,7 @@ class LrsErrorModel( QAbstractTableModel ):
         if col == self.TYPE_COL:
             value = error.typeLabel()
         elif col == self.ROUTE_COL:
-            value = error.routeId
+            value = "%s" % error.routeId
         elif col == self.MEASURE_COL:
             value = error.getMeasureString()
         elif col == self.MESSAGE_COL:
