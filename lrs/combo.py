@@ -71,6 +71,9 @@ class LrsLayerComboManager(LrsComboManager):
 
         QgsMapLayerRegistry.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsMapLayerRegistry.instance().layersRemoved.connect(self.canvasLayersChanged)
+    def __del__(self):
+        QgsMapLayerRegistry.instance().layersAdded.disconnect(self.canvasLayersChanged)
+        QgsMapLayerRegistry.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
     def currentIndexChanged(self):
         self.layerChanged.emit()
@@ -82,14 +85,16 @@ class LrsLayerComboManager(LrsComboManager):
         return None
 
     def getLayer(self):
+        if not QgsMapLayerRegistry: return
         lId = self.layerId()
         return QgsMapLayerRegistry.instance().mapLayer( lId )
 
     def canvasLayersChanged(self):
-        debug ("canvasLayersChanged")
+        #debug ("canvasLayersChanged")
         if not QgsMapLayerRegistry: return
         layerIds = []
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+            if layer.type() != QgsMapLayer.VectorLayer: continue
             if layer.geometryType() != self.geometryType: continue
             layerIds.append(layerId)
 
@@ -101,6 +106,7 @@ class LrsLayerComboManager(LrsComboManager):
 
         # add new layers
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+            if layer.type() != QgsMapLayer.VectorLayer: continue
             if layer.geometryType() != self.geometryType: continue
 
             start = self.model.index(0,0, QModelIndex())
@@ -140,11 +146,11 @@ class LrsFieldComboManager(LrsComboManager):
         return None
 
     def layerChanged(self):
-        debug ("layerChanged")
+        #debug ("layerChanged")
         if not QgsMapLayerRegistry: return
 
         layerId = self.layerComboManager.layerId()
-        debug ("layerId = %s" % layerId)
+        #debug ("layerId = %s" % layerId)
 
         layer = QgsMapLayerRegistry.instance().mapLayer( layerId )
         if not layer:

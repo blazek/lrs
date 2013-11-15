@@ -51,7 +51,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         # Set up the user interface from Designer.
         self.setupUi( self )
-        
+
+        # keep progress frame height
+        self.genProgressFrame.setMinimumHeight( self.genProgressFrame.height() )
+        self.hideProgress()
 
         ##### getTab 
         # initLayer, initField, fieldType did not work, fixed and created pull request
@@ -63,8 +66,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM = LrsFieldComboManager( self.genPointRouteFieldCombo, self.genPointLayerCM, settingsName = 'pointRouteField' )
         self.genPointMeasureFieldCM = LrsFieldComboManager( self.genPointMeasureFieldCombo, self.genPointLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'pointMeasureField' )
 
-        self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit' )
-        self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold' )
+        self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
+        self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -186,6 +189,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         threshold = self.genThresholdSpin.value()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
         self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
+
+        self.lrs.progressChanged.connect(self.showProgress)
+        self.lrs.calibrate()
+        self.hideProgress()
     
         self.errorZoomButton.setEnabled( False)
         self.errorModel = LrsErrorModel()
@@ -195,6 +202,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.sortErrorModel.setSourceModel( self.errorModel )
          
         self.errorView.setModel( self.sortErrorModel )
+        self.sortErrorModel.sort(0)
         self.errorView.resizeColumnsToContents ()
         self.errorView.setSelectionBehavior(QAbstractItemView.SelectRows)
         # Attention, if selectionMode is QTableView.SingleSelection, selection is not
@@ -209,7 +217,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
             self.iface.mapCanvas().refresh()
-        
+
+    def showProgress(self, label, percent):
+        self.genProgressLabel.show()
+        self.genProgressBar.show()
+        self.genProgressLabel.setText( label )
+        self.genProgressBar.setValue( percent)
+
+    def hideProgress(self):
+        self.genProgressLabel.hide()
+        self.genProgressBar.hide()
 
     def updateErrors( self, errorUpdates):
         debug ( "updateErrors" )

@@ -32,6 +32,7 @@ class LrsWidgetManager(QObject):
         super(LrsWidgetManager, self).__init__()
         self.widget = widget
         self.settingsName = kwargs.get('settingsName')
+        self.defaultValue = kwargs.get('defaultValue')
 
     def writeToProject(self):
         project = QgsProject.instance()
@@ -46,7 +47,7 @@ class LrsWidgetManager(QObject):
         project = QgsProject.instance()
 
         if issubclass(self.widget.__class__, QDoubleSpinBox):
-            val = project.readDoubleEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+            val = project.readDoubleEntry(PROJECT_PLUGIN_NAME, self.settingsName, self.defaultValue )[0]
             self.widget.setValue( val )
         else:
             raise Exception("not supported widget")

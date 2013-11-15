@@ -34,7 +34,28 @@ from error import *
 # Main class to keep all data and process them
 
 class Lrs(QObject):
+    progressChanged = pyqtSignal( str, float, name = 'progressChanged' )
     updateErrors = pyqtSignal(dict, name = 'updateErrors')
+
+    # progress counts
+    CURRENT = 1 # current progress count
+    TOTAL = 2 # sum of steps to do
+    NLINES = 3 # number of lines
+    NPOINTS = 4 # number of points
+    NROUTES = 5 # number of routes
+
+    # calibration steps
+    REGISTERING_LINES = 1
+    REGISTERING_POINTS = 2
+    BUILDING_PARTS = 3
+    CALIBRATING_ROUTES = 4
+
+    stateLabels = {
+        REGISTERING_LINES: 'Registering lines',
+        REGISTERING_POINTS: 'Registering points',
+        BUILDING_PARTS: 'Building routes',
+        CALIBRATING_ROUTES: 'Calibrating routes',
+    }
 
     def __init__(self, lineLayer, lineRouteField, pointLayer, pointRouteField, pointMeasureField, **kwargs ):
         super(Lrs, self).__init__()
@@ -61,6 +82,8 @@ class Lrs(QObject):
 
         self.errors = [] # LrsError list
 
+        self.progressCounts = {}
+
         self.lineTransform = None
         if self.lrsCrs and self.lrsCrs != lineLayer.crs():
             self.lineTransform = QgsCoordinateTransform( lineLayer.crs(), self.lrsCrs)
@@ -72,26 +95,51 @@ class Lrs(QObject):
         # dictionary of LrsRoute
         self.routes = {} 
 
-        self.calibrate()
-
+        #self.calibrate()
 
     def disconnect(self):
         self.pointLayerEditingDisconnect()
         self.lineLayerEditingDisconnect()
 
+    def updateProgressTotal(self):
+        cnts = self.progressCounts
+        cnts[self.TOTAL] = cnts[self.NLINES]
+        cnts[self.TOTAL] += cnts[self.NPOINTS]
+        cnts[self.TOTAL] += cnts[self.NROUTES] # build parts
+        cnts[self.TOTAL] += cnts[self.NROUTES] # calibrate routes
+        debug ("%s" % cnts )
+
+    # increase progress, called after each step (line, point...)
+    def progressStep(self, state):
+        self.progressCounts[self.CURRENT] = self.progressCounts.get(self.CURRENT,0) + 1
+        percent = 100 * self.progressCounts[self.CURRENT] / self.progressCounts[self.TOTAL]
+        debug ( "percent = %s %s / %s" % (percent, self.progressCounts[self.CURRENT], self.progressCounts[self.TOTAL] ) ) 
+        self.progressChanged.emit( self.stateLabels[state], percent )
+
     def calibrate(self):
         self.points = {}
         self.lines = {} 
         self.errors = [] # reset
+
+        self.progressCounts = {}
+        # we dont know progressTotal at the beginning, but we can estimate it
+        self.progressCounts[self.NLINES] =  self.lineLayer.featureCount()
+        self.progressCounts[self.NPOINTS] =  self.pointLayer.featureCount()
+        # estimation (precise later when routes are built)
+        self.progressCounts[self.NROUTES] = self.progressCounts[self.NLINES]
+        self.updateProgressTotal()
+
         self.registerLines()
-        self.buildParts()
         self.registerPoints()
+        self.buildParts()
         for route in self.routes.values():
             route.calibrate()
+            self.progressStep(self.CALIBRATING_ROUTES) 
 
     def buildParts(self):
         for route in self.routes.values():
             route.buildParts()
+            self.progressStep(self.BUILDING_PARTS) 
 
     # get route by id, create it if does not exist
     def getRoute(self, routeId):
@@ -129,6 +177,10 @@ class Lrs(QObject):
         iterator = self.lineLayer.getFeatures()
         while iterator.nextFeature(feature):
             self.registerLineFeature(feature)
+            self.progressStep(self.REGISTERING_LINES) 
+        # precise number of routes
+        self.progressCounts[self.NROUTES] = len( self.routes )
+        self.updateProgressTotal()
 
     # returns LrsPoint
     def registerPointFeature (self, feature):
@@ -159,6 +211,10 @@ class Lrs(QObject):
         iterator = self.pointLayer.getFeatures()
         while iterator.nextFeature(feature):
             self.registerPointFeature ( feature )
+            self.progressStep(self.REGISTERING_POINTS) 
+        # route total may increase (e.g. orphans)
+        self.progressCounts[self.NROUTES] = len( self.routes )
+        self.updateProgressTotal()
 
     #############################################33
 
