@@ -68,7 +68,7 @@ class LrsRoutePart:
         # sort by partMeasure and measure
         milestones.sort ( key=lambda milestone: ( milestone.partMeasure, milestone.measure) )
 
-        # check direction
+        # find direction
         up = down = 0
         for i in range( len(milestones)-1 ):
             if milestones[i].measure == milestones[i+1].measure:
@@ -92,49 +92,53 @@ class LrsRoutePart:
 
         # remove milestones in wrong direction, to do it well is not trivial because
         # sequence of milestones in correct order may appear in wrong place, e.g.7,8,3,4
-        # 1) find longest sequence in correct order
-        # 2) delete wrong milestones before and after
-        longestSeq = set()
-        seq = set()
-        for i in range(len(milestones)-1):
-            if milestones[i].measure < milestones[i+1].measure:
-                seq.add ( milestones[i] )
-                seq.add ( milestones[i+1] )
-                if len( seq ) > len(longestSeq):
-                    longestSeq = seq
-            else:
-                # previous sequence interrupted
-                seq = set()
+        # or it may happen that correct sequence is interrupted by wrong milestone but in
+        # correct order respect to longest sequence e.g. 1,2,0,3,4,5
+        # Algorithm: 
+        #     While there are milestones in wrong order:
+        #         * for each milestones calculate correctness score
+        #         * mark as error all milestones with lowest score
          
         while True:
             done = True
-            for i in range(len(milestones)-1):
-                m1 = milestones[i]
-                m2 = milestones[i+1]
-                if m1 in longestSeq and m2 in longestSeq:
-                    # both already in sequence
-                    continue
 
-                if not ( m1 in longestSeq or m2 in longestSeq ):
-                    # not around sequence
-                    continue
+            # calculate scores
+            # score: number of milestones to which it is in correct order minus 
+            #        number of milestones to which it is in wrong order,
+            #        if both have the same measure, it is considered wrong order
+            scores = []
 
-                if m1.measure < m2.measure: # correct order, add to sequence
-                    if m1 in longestSeq:
-                        longestSeq.add ( m2 )
+            for i in range(len(milestones)):
+                score = 0
+                for j in range(len(milestones)):
+                    if i == j: continue
+                    mi = milestones[i].measure
+                    mj = milestones[j].measure
+                    if (i < j and mi < mj) or (i > j and mi > mj ):
+                        score += 1
                     else:
-                        longestSeq.add ( m1 )
-                else: # wrong order, delete
-                    idx = i if m2 in longestSeq else i+1
-                    m = milestones[idx]
+                        score -= 1 # includes equal measures
+                        done = False # at least one in wron order
+
+                scores.append( score )
+
+            if done: break # all in crorrect order
+
+            # find lowest score
+            minScore = sys.maxint
+            for i in range(len(scores)):
+                if scores[i] < minScore: minScore = scores[i]
+
+            # mark all with lowest score as errors, if more neighbours have the same score
+            # e.g. measures: 3,0,4,5, both 3 and 0 have score +1, both are marked as 
+            # error because we cannot decide which is correct
+            for i in range(len(milestones)-1,-1,-1):
+                if scores[i] == minScore:
+                    m = milestones[i]
                     geo = QgsGeometry.fromPoint( m.pnt )
                     origin = LrsOrigin( QGis.Point, m.fid, m.geoPart, m.nGeoParts )
                     self.errors.append( LrsError( LrsError.WRONG_MEASURE, geo, routeId = self.routeId, measure = m.measure, origins = [ origin ] ))
-                    del  milestones[idx]
-                done = False
-                break
-
-            if done: break
+                    del  milestones[i]
 
         self.goodMilestones = milestones
         
