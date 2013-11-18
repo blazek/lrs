@@ -34,6 +34,9 @@ class LrsWidgetManager(QObject):
         self.settingsName = kwargs.get('settingsName')
         self.defaultValue = kwargs.get('defaultValue')
 
+    def reset(self):
+        self.widget.setValue( self.defaultValue )
+
     def writeToProject(self):
         project = QgsProject.instance()
         if issubclass(self.widget.__class__, QDoubleSpinBox):

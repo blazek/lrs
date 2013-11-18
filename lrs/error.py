@@ -249,7 +249,7 @@ class LrsErrorModel( QAbstractTableModel ):
         debug ( 'errorUpdates: %s' % errorUpdates ) 
         for checksum in errorUpdates['removedErrorChecksums']:
             idx = self.getErrorIndexForChecksum( checksum )
-            debug ( 'remove row %s' % idx )
+            #debug ( 'remove row %s' % idx )
             self.beginRemoveRows( QModelIndex(), idx, idx )
             del self.errors[idx]
             self.endRemoveRows()
@@ -257,16 +257,14 @@ class LrsErrorModel( QAbstractTableModel ):
         for error in errorUpdates['updatedErrors']:
             checksum = error.getChecksum() 
             idx = self.getErrorIndexForChecksum( checksum )
-            debug ( 'update row %s' % idx )
-            #error.message = 'updated'
+            #debug ( 'update row %s' % idx )
             self.errors[idx] = error
             topLeft = self.createIndex( idx, 0 )
             bottomRight = self.createIndex( idx, 3 )
             self.dataChanged.emit( topLeft, bottomRight )
 
         for error in errorUpdates['addedErrors']:
-            debug ( 'add row' )
-            #error.message = 'new'
+            #debug ( 'add row' )
             idx = len ( self.errors )
             self.beginInsertRows( QModelIndex(), idx, idx )
             self.errors.append ( error )

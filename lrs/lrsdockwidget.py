@@ -28,6 +28,7 @@ from qgis.gui import *
 from ui_lrsdockwidget import Ui_LrsDockWidget
 from utils import *
 from error import *
+from layer import *
 from lrs import *
 from combo import *
 from widget import *
@@ -44,8 +45,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs = None # Lrs object
         self.errorHighlight = None 
         self.errorPointLayer = None
+        self.errorPointLayerManager = None
         self.errorLineLayer = None
+        self.errorLineLayerManager = None
         self.qualityLayer = None
+        self.qualityLayerManager = None
  
         super(LrsDockWidget, self).__init__(parent )
         
@@ -115,12 +119,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         ##### set error layers if stored in project
         errorLineLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )[0]
-        if errorLineLayerId: 
-            self.errorLineLayer = registry.mapLayer( errorLineLayerId )
+        self.errorLineLayer = registry.mapLayer( errorLineLayerId )
+        if self.errorLineLayer:
+            self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
 
         errorPointLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )[0]
-        if errorPointLayerId: 
-            self.errorPointLayer = registry.mapLayer( errorPointLayerId )
+        self.errorPointLayer = registry.mapLayer( errorPointLayerId )
+        if self.errorPointLayer:
+            self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
 
         qualityLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )[0]
         if qualityLayerId: 
@@ -135,7 +141,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def close(self):
         print "close"
         if self.lrs:
-            self.lrs.disconnect()
+            #self.lrs.disconnect()
+            del self.lrs
+        self.lrs = None
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect( self.projectRead )
 
@@ -155,14 +163,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     def resetGenerateOptions(self):
-        return
         self.genLineLayerCombo.setCurrentIndex(-1) 
         self.genLineRouteFieldCombo.setCurrentIndex(-1) 
         self.genPointLayerCombo.setCurrentIndex(-1) 
         self.genPointRouteFieldCombo.setCurrentIndex(-1) 
         self.genPointMeasureFieldCombo.setCurrentIndex(-1) 
-        #self.settings.setting('threshold').setWidgetFromValue()
-        #self.settings.setting('mapUnitsPerMeasureUnit').setWidgetFromValue()
+        self.genMapUnitsPerMeasureUnitWM.reset()
+        self.genThresholdWM.reset()
         
         self.writeGenerateOptions()
 
@@ -237,7 +244,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genProgressBar.hide()
 
     def updateErrors( self, errorUpdates):
-        debug ( "updateErrors" )
+        #debug ( "updateErrors" )
         # because SingleSelection does not allow to deselect row, we have to clear selection manually
         index = self.getSelectedErrorIndex()
         if index:
@@ -246,7 +253,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if selected in rows:
                 self.errorView.selectionModel().clear()
         self.errorModel.updateErrors( errorUpdates )
-        self.resetErrorLayers()
+        #self.resetErrorLayers()
+        self.updateErrorLayers( errorUpdates )
         self.resetQualityLayer()
 
     def clearHighlight(self):
@@ -271,7 +279,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorHighlight = QgsHighlight( self.iface.mapCanvas(), error.geo, layer )
         # highlight point size is hardcoded in QgsHighlight
         self.errorHighlight.setWidth( 2 )
-        self.errorHighlight.setColor( Qt.red )
+        self.errorHighlight.setColor( Qt.yellow )
         self.errorHighlight.show()
 
         self.errorZoomButton.setEnabled(True) 
@@ -309,6 +317,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
 
         attributes = [ 
+            #QgsField('fid', QVariant.Int, "int"), # debug, error fid
             QgsField('error', QVariant.String, "string"), # error type, avoid 'type' which could be keyword
             QgsField('route', QVariant.String, "string" ),
             QgsField('measure', QVariant.String, "string"),
@@ -322,6 +331,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             uri = provider.dataSourceUri()
             #debug ( "uri = " + uri )
             self.errorLineLayer = QgsVectorLayer( uri, 'LRS line errors', 'memory')
+            self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
+            self.errorLineLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorLineLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.errorLineLayer,] )
             project.writeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id() )
@@ -331,6 +342,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             provider.addAttributes( attributes )
             uri = provider.dataSourceUri()
             self.errorPointLayer = QgsVectorLayer( uri, 'LRS point errors', 'memory')
+            self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
+            self.errorPointLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorPointLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.errorPointLayer,] )
             project.writeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId", self.errorPointLayer.id() )
@@ -341,44 +354,22 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetErrorPointLayer()
         self.resetErrorLineLayer()
 
+    def updateErrorLayers(self, errorUpdates):
+        self.errorPointLayerManager.updateErrors( errorUpdates )
+        self.errorLineLayerManager.updateErrors( errorUpdates )
+
     def resetErrorPointLayer(self):
         #debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
         if not self.errorPointLayer: return
         clearLayer( self.errorPointLayer )
         errors = self.lrs.getErrors()
-        #self.errorPointLayer.startEditing()
-        fields = self.errorPointLayer.pendingFields()
-        features = []
-        for error in errors:
-            if error.geo.wkbType() != QGis.WKBPoint: continue
-            feature = QgsFeature( fields )
-            feature.setGeometry( error.geo )
-            feature.setAttribute( 'error', error.typeLabel() )
-            feature.setAttribute( 'route', '%s' % error.routeId )
-            feature.setAttribute( 'measure', error.getMeasureString() )
-            #self.errorPointLayer.addFeatures( [ feature ] )
-            features.append( feature )
-        self.errorPointLayer.dataProvider().addFeatures( features )
-        #self.errorPointLayer.commitChanges()            
+        self.errorPointLayerManager.addErrors( errors )
 
     def resetErrorLineLayer(self):
         if not self.errorLineLayer: return
         clearLayer( self.errorLineLayer )
         errors = self.lrs.getErrors()
-        #self.errorLineLayer.startEditing()
-        fields = self.errorLineLayer.pendingFields()
-        features = []
-        for error in errors:
-            if error.geo.wkbType() != QGis.WKBLineString: continue
-            feature = QgsFeature( fields )
-            feature.setGeometry( error.geo )
-            feature.setAttribute( 'error', error.typeLabel() )
-            feature.setAttribute( 'route', '%s' % error.routeId )
-            feature.setAttribute( 'measure', error.getMeasureString() )
-            #self.errorLineLayer.addFeatures( [ feature ] )
-            features.append( feature )
-        #self.errorLineLayer.commitChanges()            
-        self.errorLineLayer.dataProvider().addFeatures( features )
+        self.errorLineLayerManager.addErrors( errors )
 
     def addQualityLayer(self):
         if not self.qualityLayer:
@@ -421,7 +412,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             project.writeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId", self.qualityLayer.id() )
 
     def resetQualityLayer(self):
-        debug ( "resetQualityLayer %s" % self.qualityLayer )
+        #debug ( "resetQualityLayer %s" % self.qualityLayer )
         if not self.qualityLayer: return
         clearLayer( self.qualityLayer )
         segments = self.lrs.getSegments()
@@ -450,9 +441,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         project = QgsProject.instance()
         for id in layerIdList:
             if self.errorPointLayer and self.errorPointLayer.id() == id:
+                self.errorPointLayerManager = None
                 self.errorPointLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )
             if self.errorLineLayer and self.errorLineLayer.id() == id:
+                self.errorLineLayerManager = None
                 self.errorLineLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )
             if self.qualityLayer and self.qualityLayer.id() == id:

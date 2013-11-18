@@ -73,9 +73,14 @@ class Lrs(QObject):
         self.pointLayer.editingStarted.connect( self.pointLayerEditingStarted )
         self.pointLayer.editingStopped.connect( self.pointLayerEditingStopped )
         self.pointEditBuffer = None
+        if self.pointLayer.editBuffer(): # layer is already in editing mode
+            self.pointLayerEditingStarted()
+
         self.lineLayer.editingStarted.connect( self.lineLayerEditingStarted )
         self.lineLayer.editingStopped.connect( self.lineLayerEditingStopped )
         self.lineEditBuffer = None
+        if self.lineLayer.editBuffer():
+            self.lineLayerEditingStarted()
 
         self.lines = {} # dict of LrsLine with fid as key
         self.points = {} # dict of LrsPoint with fid as key
@@ -97,9 +102,17 @@ class Lrs(QObject):
 
         #self.calibrate()
 
+    def __del__(self):
+        self.disconnect()
+
     def disconnect(self):
         self.pointLayerEditingDisconnect()
+        self.pointLayer.editingStarted.disconnect( self.pointLayerEditingStarted )
+        self.pointLayer.editingStopped.disconnect( self.pointLayerEditingStopped )
+
         self.lineLayerEditingDisconnect()
+        self.lineLayer.editingStarted.disconnect( self.lineLayerEditingStarted )
+        self.lineLayer.editingStopped.disconnect( self.lineLayerEditingStopped )
 
     def updateProgressTotal(self):
         cnts = self.progressCounts
@@ -107,13 +120,13 @@ class Lrs(QObject):
         cnts[self.TOTAL] += cnts[self.NPOINTS]
         cnts[self.TOTAL] += cnts[self.NROUTES] # build parts
         cnts[self.TOTAL] += cnts[self.NROUTES] # calibrate routes
-        debug ("%s" % cnts )
+        #debug ("%s" % cnts )
 
     # increase progress, called after each step (line, point...)
     def progressStep(self, state):
         self.progressCounts[self.CURRENT] = self.progressCounts.get(self.CURRENT,0) + 1
         percent = 100 * self.progressCounts[self.CURRENT] / self.progressCounts[self.TOTAL]
-        debug ( "percent = %s %s / %s" % (percent, self.progressCounts[self.CURRENT], self.progressCounts[self.TOTAL] ) ) 
+        #debug ( "percent = %s %s / %s" % (percent, self.progressCounts[self.CURRENT], self.progressCounts[self.TOTAL] ) ) 
         self.progressChanged.emit( self.stateLabels[state], percent )
 
     def calibrate(self):

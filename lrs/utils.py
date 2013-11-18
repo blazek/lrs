@@ -128,6 +128,7 @@ def getLayerFeature( layer, fid ):
 
     # StopIteration is raised if fid does not exist
     feature = layer.getFeatures(request).next()
+    del request
 
     return feature
     
