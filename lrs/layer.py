@@ -35,8 +35,32 @@ class LrsLayerManager(object):
         self.layer = layer
         self.featureIds = {} # dictionary of features with checksum keys
 
+    # remove all features
+    def clear(self):
+        if not self.layer: return
+        fids = []
+        for feature in self.layer.getFeatures():
+            fids.append( feature.id() )
+
+        self.layer.dataProvider().deleteFeatures( fids )
+        
+        for fid in fids:
+            # hack to update attribute table
+            self.layer.featureDeleted.emit( fid )
+
+    # transform features if necessary to layer crs
+    # modifies original feature geometry
+    def transformFeatures(self, features, crs):
+        if crs != self.layer.crs():
+            transform = QgsCoordinateTransform( crs, self.layer.crs())   
+            for feature in features:
+                feature.geometry().transform( transform )
+        return features 
+
     # add features with getChecksum() method
-    def addFeatures(self, features):
+    def addFeatures(self, features, crs):
+        features = self.transformFeatures(features, crs)
+ 
         status, addedFeatures = self.layer.dataProvider().addFeatures( features )
         for feature, addedFeature in zip(features,addedFeatures):
             self.featureIds[feature.getChecksum()] = addedFeature.id()
@@ -58,7 +82,8 @@ class LrsLayerManager(object):
             # hack to update attribute table
             self.layer.featureDeleted.emit( fid )
 
-    def updateFeatures(self, features):
+    def updateFeatures(self, features, crs):
+        features = self.transformFeatures(features, crs)
         changedGeometries = {}
         changedAttributes = {}
         for feature in features:
@@ -89,9 +114,9 @@ class LrsErrorLayerManager(LrsLayerManager):
 
 
     # get errors of layer type (point or line)
-    def addErrors(self, errors):
+    def addErrors(self, errors, crs):
         if not self.layer: return
-    
+
         features = []
         for error in errors:
             if not self.errorTypeMatch( error): continue
@@ -101,12 +126,12 @@ class LrsErrorLayerManager(LrsLayerManager):
             #    feature.setAttribute( name, value )
             features.append( feature )
 
-        self.addFeatures(features)
+        self.addFeatures(features, crs)
 
 
 
     def updateErrors(self, errorUpdates):
-        debug ( "%s" % errorUpdates )
+        #debug ( "%s" % errorUpdates )
         if not self.layer: return
 
         # delete
@@ -119,10 +144,10 @@ class LrsErrorLayerManager(LrsLayerManager):
 
             feature = LrsErrorFeature( error )
             features.append( feature)
-        self.updateFeatures(features)
+        self.updateFeatures(features, errorUpdates['crs'])
 
         # add new
-        self.addErrors( errorUpdates['addedErrors'] ) 
+        self.addErrors( errorUpdates['addedErrors'], errorUpdates['crs'] ) 
 
 class LrsQualityLayerManager(LrsLayerManager):
 
@@ -131,7 +156,7 @@ class LrsQualityLayerManager(LrsLayerManager):
         
 
     def update(self, errorUpdates):
-        debug ( "%s" % errorUpdates )
+        #debug ( "%s" % errorUpdates )
         if not self.layer: return
 
         # delete
@@ -140,4 +165,4 @@ class LrsQualityLayerManager(LrsLayerManager):
         # no update, only remove and add
 
         # add new
-        self.addFeatures( errorUpdates['addedQualityFeatures'] ) 
+        self.addFeatures( errorUpdates['addedQualityFeatures'], errorUpdates['crs'] ) 

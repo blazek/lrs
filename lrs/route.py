@@ -55,8 +55,6 @@ class LrsRoute:
 
     # returns: { removedErrorChecksums:[], updatedErrors:[], addedErrors[] }
     def calibrate(self):
-        oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
-        oldQualityChecksums = list( e.getChecksum() for e in self.getQualityFeatures() )
 
         self.parts = []
         self.milestones = []
@@ -96,6 +94,12 @@ class LrsRoute:
             self.attachMilestones()
             self.calibrateParts()
 
+    def calibrateAndGetUpdates(self):
+        oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
+        oldQualityChecksums = list( e.getChecksum() for e in self.getQualityFeatures() )
+
+        self.calibrate()
+
         newErrors = self.getErrors() 
         newErrorChecksums = list( e.getChecksum() for e in newErrors )
         addedErrors = []
@@ -115,13 +119,21 @@ class LrsRoute:
 
         # simple remove and add for quality
         newQualityFeatures = self.getQualityFeatures() 
+        newQualityChecksums = list ( f.getChecksum() for f in newQualityFeatures )
+        addedQualityFeatures = []
+        removedQualityChecksums = []
+        for checksum in oldQualityChecksums:
+            if not checksum in newQualityChecksums:
+                removedQualityChecksums.append( checksum )
+        for feature in newQualityFeatures:
+            if not feature.getChecksum() in oldQualityChecksums:
+                addedQualityFeatures.append( feature )
 
         return { 'removedErrorChecksums': removedErrorChecksums,
                  'updatedErrors': updatedErrors,
                  'addedErrors': addedErrors,
-                 'removedQualityChecksums': oldQualityChecksums,
-                 'addedQualityFeatures': newQualityFeatures  }
-            
+                 'removedQualityChecksums': removedQualityChecksums,
+                 'addedQualityFeatures': addedQualityFeatures }
  
     # create LrsRoutePart from eometryParts
     def buildParts(self):

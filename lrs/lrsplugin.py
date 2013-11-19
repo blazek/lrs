@@ -29,10 +29,12 @@ import resources_rc
 from lrsdockwidget import LrsDockWidget
 import os.path
 
+from utils import *
 
 class LrsPlugin:
 
     def __init__(self, iface):
+        debug( "LrsPlugin.__init__" )
         # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
@@ -50,6 +52,7 @@ class LrsPlugin:
 
 
     def initGui(self):
+        debug( "LrsPlugin.initGui" )
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/lrsplugin/icon.png"),
@@ -68,7 +71,7 @@ class LrsPlugin:
 
 
     def unload(self):
-        print "unload"
+        debug( "LrsPlugin.unload" )
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
@@ -77,15 +80,8 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        print "run"
+        debug( "LrsPlugin.run" )
 
         # show the dialog
-        #self.dockWidget.show()
+        self.dockWidget.show()
 
-        # Run the dialog event loop
-        #result = self.dock.exec_()
-        # See if OK was pressed
-        #if result == 1:
-            # do something useful (delete the line containing pass and
-            # substitute with your code)
-            #pass

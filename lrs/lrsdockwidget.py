@@ -38,9 +38,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         self.iface = iface
         #self.settings = LrsSettings()
-        self.lrsCrs = None
-        if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
-            self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
         self.mapUnitsPerMeasureUnit = None
         self.lrs = None # Lrs object
         self.errorHighlight = None 
@@ -136,8 +133,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        if self.genLineLayerCM.getLayer():
-            self.generateLrs() # only when reloading!
+        #if self.genLineLayerCM.getLayer():
+        #    self.generateLrs() # only when reloading!
 
     def close(self):
         print "close"
@@ -199,9 +196,15 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         self.writeGenerateOptions()
 
+        crs = self.genLineLayerCM.getLayer().crs()
+        if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
+            self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+
+        #crs = self.genLineLayerCM.getLayer().crs() # debug 
+
         threshold = self.genThresholdSpin.value()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = self.lrsCrs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
 
         self.lrs.progressChanged.connect(self.showProgress)
         self.lrs.calibrate()
@@ -271,13 +274,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         error = self.getSelectedError()
         if not error: return
 
-        print 'error %s' % error.typeLabel()
-        # we have geo in current canvas CRS but QgsHighlight does reprojection
-        # from layer CRS so we have to use fake layer
-        layer = QgsVectorLayer( 'Point?crs=' + self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
-        
-        print error.geo
-        print error.geo.exportToWkt()
+        #debug ( 'error %s' % error.typeLabel() )
+        # QgsHighlight does reprojection from layer CRS
+        #layer = QgsVectorLayer( 'Point?crs=' + self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
+        layer = QgsVectorLayer( 'Point?crs=' + self.lrs.crs.authid(), 'LRS highlight', 'memory' )
+        #debug( 'uri = %s' % layer.dataProvider().dataSourceUri() )
+        #debug( error.geo.exportToWkt() )
         self.errorHighlight = QgsHighlight( self.iface.mapCanvas(), error.geo, layer )
         # highlight point size is hardcoded in QgsHighlight
         self.errorHighlight.setWidth( 2 )
@@ -303,9 +305,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if not error: return
         
         geo = error.geo
+        mapRenderer = self.iface.mapCanvas().mapRenderer()
+        if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != self.lrs.crs:
+            geo = QgsGeometry( error.geo )
+            transform = QgsCoordinateTransform( self.lrs.crs, mapRenderer.destinationCrs() )
+            geo.transform( transform )
+
         if geo.wkbType() == QGis.WKBPoint:
             p = geo.asPoint()
-            b = 2000 # buffer
+            crs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else self.lrs.crs
+            b = 2000 if not crs.geographicFlag() else 2000/100000  # buffer
             extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
         else: #line
             extent = geo.boundingBox()
@@ -321,7 +330,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         project = QgsProject.instance()
 
         if not self.errorLineLayer:
-            provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
+            uri = "LineString?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
             provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
             uri = provider.dataSourceUri()
             #debug ( "uri = " + uri )
@@ -333,7 +343,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             project.writeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id() )
 
         if not self.errorPointLayer:
-            provider = QgsProviderRegistry.instance().provider( 'memory', 'Point' )
+            uri = "Point?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
             provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
             uri = provider.dataSourceUri()
             self.errorPointLayer = QgsVectorLayer( uri, 'LRS point errors', 'memory')
@@ -350,28 +361,32 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetErrorLineLayer()
 
     def updateErrorLayers(self, errorUpdates):
-        self.errorPointLayerManager.updateErrors( errorUpdates )
-        self.errorLineLayerManager.updateErrors( errorUpdates )
+        if self.errorPointLayerManager:
+            self.errorPointLayerManager.updateErrors( errorUpdates )
+        if self.errorLineLayerManager:
+            self.errorLineLayerManager.updateErrors( errorUpdates )
 
     def updateQualityLayer(self, errorUpdates):
-        self.qualityLayerManager.update( errorUpdates )
+        if self.qualityLayerManager:
+            self.qualityLayerManager.update( errorUpdates )
 
     def resetErrorPointLayer(self):
         #debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
-        if not self.errorPointLayer: return
-        clearLayer( self.errorPointLayer )
+        if not self.errorPointLayerManager: return
+        self.errorPointLayerManager.clear()
         errors = self.lrs.getErrors()
-        self.errorPointLayerManager.addErrors( errors )
+        self.errorPointLayerManager.addErrors( errors, self.lrs.crs )
 
     def resetErrorLineLayer(self):
-        if not self.errorLineLayer: return
-        clearLayer( self.errorLineLayer )
+        if not self.errorLineLayerManager: return
+        self.errorLineLayerManager.clear()
         errors = self.lrs.getErrors()
-        self.errorLineLayerManager.addErrors( errors )
+        self.errorLineLayerManager.addErrors( errors, self.lrs.crs )
 
     def addQualityLayer(self):
         if not self.qualityLayer:
-            provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
+            uri = "LineString?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
             provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
             uri = provider.dataSourceUri()
             self.qualityLayer = QgsVectorLayer( uri, 'LRS quality', 'memory')
@@ -402,11 +417,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def resetQualityLayer(self):
         #debug ( "resetQualityLayer %s" % self.qualityLayer )
-        if not self.qualityLayer: return
-        clearLayer( self.qualityLayer )
+        if not self.qualityLayerManager: return
+        self.qualityLayerManager.clear()
         features = self.lrs.getQualityFeatures()
-        #self.qualityLayer.dataProvider().addFeatures( features )
-        self.qualityLayerManager.addFeatures( features )
+        self.qualityLayerManager.addFeatures( features, self.lrs.crs )
             
     def layersWillBeRemoved(self, layerIdList ):
         project = QgsProject.instance()

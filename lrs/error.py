@@ -246,7 +246,7 @@ class LrsErrorModel( QAbstractTableModel ):
         return rows
 
     def updateErrors(self, errorUpdates):
-        debug ( 'errorUpdates: %s' % errorUpdates ) 
+        #debug ( 'errorUpdates: %s' % errorUpdates ) 
         for checksum in errorUpdates['removedErrorChecksums']:
             idx = self.getErrorIndexForChecksum( checksum )
             #debug ( 'remove row %s' % idx )
@@ -345,6 +345,8 @@ class LrsQualityFeature(LrsFeature):
         super(LrsQualityFeature, self).__init__( LRS_QUALITY_FIELDS )
         self.checksum_ = None
     
+    # full checksum, cannot be used to update existing feature because contains
+    # geometry + all attributes
     def getChecksum(self):
         if not self.checksum_:
             m = md5.new( "%s" % self.geometry().asWkb() )

@@ -68,7 +68,7 @@ class Lrs(QObject):
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
         self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
-        self.lrsCrs = kwargs.get('crs')
+        self.crs = kwargs.get('crs')
 
         self.pointLayer.editingStarted.connect( self.pointLayerEditingStarted )
         self.pointLayer.editingStopped.connect( self.pointLayerEditingStopped )
@@ -90,12 +90,12 @@ class Lrs(QObject):
         self.progressCounts = {}
 
         self.lineTransform = None
-        if self.lrsCrs and self.lrsCrs != lineLayer.crs():
-            self.lineTransform = QgsCoordinateTransform( lineLayer.crs(), self.lrsCrs)
+        if self.crs and self.crs != lineLayer.crs():
+            self.lineTransform = QgsCoordinateTransform( lineLayer.crs(), self.crs)
 
         self.pointTransform = None
-        if self.lrsCrs and self.lrsCrs != pointLayer.crs():
-            self.pointTransform = QgsCoordinateTransform( pointLayer.crs(), self.lrsCrs)
+        if self.crs and self.crs != pointLayer.crs():
+            self.pointTransform = QgsCoordinateTransform( pointLayer.crs(), self.crs)
 
         # dictionary of LrsRoute
         self.routes = {} 
@@ -286,6 +286,9 @@ class Lrs(QObject):
 
 
     
+    def emitUpdateErrors(self, errorUpdates):
+        errorUpdates['crs'] = self.crs
+        self.updateErrors.emit ( errorUpdates )
 
     # Warning: featureAdded is called first with temporary (negative fid)
     # then, when changes are commited, featureDeleted is called with that 
@@ -299,8 +302,8 @@ class Lrs(QObject):
         feature = getLayerFeature( self.pointLayer, fid )
         point = self.registerPointFeature ( feature ) # returns LrsPoint
         route = self.getRoute( point.routeId )
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
 
     def pointFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
@@ -308,8 +311,8 @@ class Lrs(QObject):
         point = self.points[fid]
         route = self.getRoute( point.routeId )
         self.unregisterPointByFid(fid)
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
             
     def pointGeometryChanged( self, fid, geo ):
         #debug ( "geometry changed fid %s" % fid )
@@ -323,8 +326,8 @@ class Lrs(QObject):
         feature = getLayerFeature( self.pointLayer, fid )
         self.registerPointFeature ( feature )
 
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
 
     def pointAttributeValueChanged( self, fid, attIdx, value ):
         #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
@@ -342,13 +345,13 @@ class Lrs(QObject):
 
             if attIdx == routeIdx:
                 # recalibrate old
-                errorUpdates = route.calibrate()
-                self.updateErrors.emit ( errorUpdates )
+                errorUpdates = route.calibrateAndGetUpdates()
+                self.emitUpdateErrors( errorUpdates )
 
             point = self.registerPointFeature ( feature ) # returns LrsPoint
             route = self.getRoute( point.routeId )
-            errorUpdates = route.calibrate()
-            self.updateErrors.emit ( errorUpdates )
+            errorUpdates = route.calibrateAndGetUpdates()
+            self.emitUpdateErrors( errorUpdates )
     
     #### line edit ####
     def lineFeatureAdded( self, fid ):
@@ -357,8 +360,8 @@ class Lrs(QObject):
         feature = getLayerFeature( self.lineLayer, fid )
         line = self.registerLineFeature ( feature ) # returns LrsLine
         route = self.getRoute( line.routeId )
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
 
     def lineFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
@@ -366,8 +369,8 @@ class Lrs(QObject):
         line = self.lines[fid]
         route = self.getRoute( line.routeId )
         self.unregisterLineByFid(fid)
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
             
     def lineGeometryChanged( self, fid, geo ):
         #debug ( "geometry changed fid %s" % fid )
@@ -381,8 +384,8 @@ class Lrs(QObject):
         feature = getLayerFeature( self.lineLayer, fid )
         self.registerLineFeature ( feature )
 
-        errorUpdates = route.calibrate()
-        self.updateErrors.emit ( errorUpdates )
+        errorUpdates = route.calibrateAndGetUpdates()
+        self.emitUpdateErrors( errorUpdates )
 
     def lineAttributeValueChanged( self, fid, attIdx, value ):
         #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
@@ -397,10 +400,10 @@ class Lrs(QObject):
             feature = getLayerFeature( self.lineLayer, fid )
 
             self.unregisterLineByFid(fid)
-            errorUpdates = route.calibrate()
-            self.updateErrors.emit ( errorUpdates )
+            errorUpdates = route.calibrateAndGetUpdates()
+            self.emitUpdateErrors( errorUpdates )
 
             line = self.registerLineFeature ( feature ) # returns LrsLine
             route = self.getRoute( line.routeId )
-            errorUpdates = route.calibrate()
-            self.updateErrors.emit ( errorUpdates )
+            errorUpdates = route.calibrateAndGetUpdates()
+            self.emitUpdateErrors( errorUpdates )
