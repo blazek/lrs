@@ -35,12 +35,12 @@ from milestone import *
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId, threshold):
+    def __init__(self, layer, routeId, threshold, mapUnitsPerMeasureUnit):
         #debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId # if None, keeps all lines and points without routeId
         self.threshold = threshold
-        
+        self.mapUnitsPerMeasureUnit = mapUnitsPerMeasureUnit
         self.lines = [] # LrsLine list, may be empty 
         self.points = [] # LrsPoint list, may be empty
 
@@ -56,6 +56,7 @@ class LrsRoute:
     # returns: { removedErrorChecksums:[], updatedErrors:[], addedErrors[] }
     def calibrate(self):
         oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
+        oldQualityChecksums = list( e.getChecksum() for e in self.getQualityFeatures() )
 
         self.parts = []
         self.milestones = []
@@ -112,9 +113,14 @@ class LrsRoute:
                 #debug ( 'added error' )
                 addedErrors.append ( error )
 
+        # simple remove and add for quality
+        newQualityFeatures = self.getQualityFeatures() 
+
         return { 'removedErrorChecksums': removedErrorChecksums,
                  'updatedErrors': updatedErrors,
-                 'addedErrors': addedErrors  }
+                 'addedErrors': addedErrors,
+                 'removedQualityChecksums': oldQualityChecksums,
+                 'addedQualityFeatures': newQualityFeatures  }
             
  
     # create LrsRoutePart from eometryParts
@@ -355,3 +361,24 @@ class LrsRoute:
             segments.extend( part.getSegments() )
         return segments
 
+    def getQualityFeatures(self):
+        features = [] 
+        fields = LrsQualityFields()
+        for segment in self.getSegments():
+            m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
+            length = segment.geo.length()
+            err_abs = m_len - length
+            err_rel = err_abs / length if length > 0 else 0
+            feature = LrsQualityFeature()
+            feature.setGeometry( segment.geo )
+            feature.setAttribute( 'route', '%s' % segment.routeId )
+            feature.setAttribute( 'm_from', segment.record.milestoneFrom )
+            feature.setAttribute( 'm_to', segment.record.milestoneTo )
+            feature.setAttribute( 'm_len', m_len )
+            feature.setAttribute( 'len', length )
+            feature.setAttribute( 'err_abs', err_abs )
+            feature.setAttribute( 'err_rel', err_rel )
+            feature.setAttribute( 'err_perc', err_rel * 100 )
+            features.append( feature )
+
+        return features

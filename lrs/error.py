@@ -269,3 +269,88 @@ class LrsErrorModel( QAbstractTableModel ):
             self.beginInsertRows( QModelIndex(), idx, idx )
             self.errors.append ( error )
             self.endInsertRows()
+
+
+class LrsFeature(QgsFeature):
+
+    def __init__(self, fields ):
+        super(LrsFeature, self).__init__(fields)
+
+    def getAttributeMap(self):
+        attributeMap = {}
+        for i in range(len(self.fields())):
+            name = self.fields()[i].name()
+            attributeMap[i] = self.attribute( name )
+        return attributeMap
+
+class LrsErrorFields(QgsFields):
+
+    def __init__(self):
+        super(LrsErrorFields, self).__init__()
+
+        fields = [
+            QgsField('error', QVariant.String, "string"), # error type, avoid 'type' which could be keyword
+            QgsField('route', QVariant.String, "string" ),
+            QgsField('measure', QVariant.String, "string"),
+        ]
+
+        for field in fields:
+            self.append(field)
+
+LRS_ERROR_FIELDS = LrsErrorFields()
+
+class LrsErrorFeature(LrsFeature):
+
+    def __init__(self, error ):
+        super(LrsErrorFeature, self).__init__( LRS_ERROR_FIELDS )
+        error = error
+        self.setGeometry( error.geo )
+        self.checksum = error.getChecksum()
+
+        values = {
+            'error': error.typeLabel(),
+            'route': '%s' % error.routeId,
+            'measure': error.getMeasureString()
+        }   
+        for name, value in values.iteritems():
+            self.setAttribute( name, value )
+    
+    def getChecksum(self):
+        return self.checksum
+
+
+class LrsQualityFields(QgsFields):
+
+    def __init__(self):
+        super(LrsQualityFields, self).__init__()
+
+        fields = [
+            QgsField('route', QVariant.String, "string"),
+            QgsField('m_from', QVariant.Double, "double"),
+            QgsField('m_to', QVariant.Double, "double"),
+            QgsField('m_len', QVariant.Double, "double"),
+            QgsField('len', QVariant.Double, "double"),
+            QgsField('err_abs', QVariant.Double, "double"),
+            QgsField('err_rel', QVariant.Double, "double"),
+            QgsField('err_perc', QVariant.Double, "double"), # relative in percents
+        ]
+        for field in fields:
+            self.append(field)
+
+LRS_QUALITY_FIELDS = LrsQualityFields()
+
+class LrsQualityFeature(LrsFeature):
+
+    def __init__(self):
+        super(LrsQualityFeature, self).__init__( LRS_QUALITY_FIELDS )
+        self.checksum_ = None
+    
+    def getChecksum(self):
+        if not self.checksum_:
+            m = md5.new( "%s" % self.geometry().asWkb() )
+           
+            for attribute in self.attributes():
+                m.update( '%s' % attribute )
+                 
+            self.checksum_ = m.digest()
+        return self.checksum_

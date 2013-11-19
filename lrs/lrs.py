@@ -157,7 +157,7 @@ class Lrs(QObject):
     # get route by id, create it if does not exist
     def getRoute(self, routeId):
         if not self.routes.has_key(routeId):
-            self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold )
+            self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold, self.mapUnitsPerMeasureUnit )
         return self.routes[routeId]
 
     ####### register / unregister features
@@ -242,6 +242,12 @@ class Lrs(QObject):
         for route in self.routes.values():
             segments.extend( route.getSegments() )
         return segments
+
+    def getQualityFeatures(self):
+        features = []
+        for route in self.routes.values():
+            features.extend( route.getQualityFeatures() )
+        return features
 
     ################## Editing ##################
     def pointLayerEditingStarted(self):

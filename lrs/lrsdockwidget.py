@@ -129,8 +129,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
 
         qualityLayerId = project.readEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )[0]
-        if qualityLayerId: 
-            self.qualityLayer = registry.mapLayer( qualityLayerId )
+        self.qualityLayer = registry.mapLayer( qualityLayerId )
+        if self.qualityLayer:
+            self.qualityLayerManager = LrsQualityLayerManager ( self.qualityLayer )
 
         self.resetGenerateButtons()
 
@@ -255,7 +256,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorModel.updateErrors( errorUpdates )
         #self.resetErrorLayers()
         self.updateErrorLayers( errorUpdates )
-        self.resetQualityLayer()
+        #self.resetQualityLayer()
+        self.updateQualityLayer( errorUpdates )
 
     def clearHighlight(self):
         self.errorZoomButton.setEnabled( False) 
@@ -316,18 +318,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # changes done to vector layer attributes are not store correctly in project file
         # http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
 
-        attributes = [ 
-            #QgsField('fid', QVariant.Int, "int"), # debug, error fid
-            QgsField('error', QVariant.String, "string"), # error type, avoid 'type' which could be keyword
-            QgsField('route', QVariant.String, "string" ),
-            QgsField('measure', QVariant.String, "string"),
-        ]
-
         project = QgsProject.instance()
 
         if not self.errorLineLayer:
             provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
-            provider.addAttributes( attributes )
+            provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
             uri = provider.dataSourceUri()
             #debug ( "uri = " + uri )
             self.errorLineLayer = QgsVectorLayer( uri, 'LRS line errors', 'memory')
@@ -339,7 +334,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         if not self.errorPointLayer:
             provider = QgsProviderRegistry.instance().provider( 'memory', 'Point' )
-            provider.addAttributes( attributes )
+            provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
             uri = provider.dataSourceUri()
             self.errorPointLayer = QgsVectorLayer( uri, 'LRS point errors', 'memory')
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
@@ -358,6 +353,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorPointLayerManager.updateErrors( errorUpdates )
         self.errorLineLayerManager.updateErrors( errorUpdates )
 
+    def updateQualityLayer(self, errorUpdates):
+        self.qualityLayerManager.update( errorUpdates )
+
     def resetErrorPointLayer(self):
         #debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
         if not self.errorPointLayer: return
@@ -373,27 +371,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def addQualityLayer(self):
         if not self.qualityLayer:
-            attributes = [ 
-                QgsField('route', QVariant.String, "string"),
-                QgsField('m_from', QVariant.Double, "double"),
-                QgsField('m_to', QVariant.Double, "double"),
-                QgsField('m_len', QVariant.Double, "double"),
-                QgsField('len', QVariant.Double, "double"),
-                QgsField('err_abs', QVariant.Double, "double"),
-                QgsField('err_rel', QVariant.Double, "double"),
-                QgsField('err_perc', QVariant.Double, "double"), # relative in percents
-            ]
             provider = QgsProviderRegistry.instance().provider( 'memory', 'LineString' )
-            provider.addAttributes( attributes )
+            provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
             uri = provider.dataSourceUri()
             self.qualityLayer = QgsVectorLayer( uri, 'LRS quality', 'memory')
+            self.qualityLayerManager = LrsQualityLayerManager ( self.qualityLayer )
             
             # min, max, color, label
             styles = [ 
                 [ -1000000, -30, QColor(Qt.red), '< -30 %' ],
-                [ -30, -10, QColor(Qt.blue), '-30 -10 %' ],
-                [ -10, 10, QColor(Qt.green), '-10 10 %' ],
-                [ 10, 30, QColor(Qt.blue), '10 30 %' ],
+                [ -30, -10, QColor(Qt.blue), '-30 to -10 %' ],
+                [ -10, 10, QColor(Qt.green), '-10 to 10 %' ],
+                [ 10, 30, QColor(Qt.blue), '10 to 30 %' ],
                 [ 30, 1000000, QColor(Qt.red), '> 30 %' ]
             ]
             ranges = []
@@ -415,27 +404,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #debug ( "resetQualityLayer %s" % self.qualityLayer )
         if not self.qualityLayer: return
         clearLayer( self.qualityLayer )
-        segments = self.lrs.getSegments()
-        fields = self.qualityLayer.pendingFields()
-        features = []
-        for segment in segments:
-            m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
-            length = segment.geo.length()
-            err_abs = m_len - length
-            err_rel = err_abs / length if length > 0 else 0
-            feature = QgsFeature( fields )
-            feature.setGeometry( segment.geo )
-            feature.setAttribute( 'route', '%s' % segment.routeId )
-            feature.setAttribute( 'm_from', segment.record.milestoneFrom )
-            feature.setAttribute( 'm_to', segment.record.milestoneTo )
-            feature.setAttribute( 'm_len', m_len )
-            feature.setAttribute( 'len', length )
-            feature.setAttribute( 'err_abs', err_abs )
-            feature.setAttribute( 'err_rel', err_rel )
-            feature.setAttribute( 'err_perc', err_rel * 100 )
-            self.qualityLayer.addFeatures( [ feature ] )
-            features.append( feature )
-        self.qualityLayer.dataProvider().addFeatures( features )
+        features = self.lrs.getQualityFeatures()
+        #self.qualityLayer.dataProvider().addFeatures( features )
+        self.qualityLayerManager.addFeatures( features )
             
     def layersWillBeRemoved(self, layerIdList ):
         project = QgsProject.instance()
@@ -449,6 +420,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 self.errorLineLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )
             if self.qualityLayer and self.qualityLayer.id() == id:
+                self.qualityLayerManager = None
                 self.qualityLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
             

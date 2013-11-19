@@ -25,102 +25,49 @@ from PyQt4.QtCore import *
 from qgis.core import *
 
 from utils import *
+from error import *
 
 # keeps track of features by checksum
-class LrsErrorLayerManager(object):
+class LrsLayerManager(object):
 
     def __init__(self, layer ):
-        super(LrsErrorLayerManager, self).__init__()
+        super(LrsLayerManager, self).__init__()
         self.layer = layer
         self.featureIds = {} # dictionary of features with checksum keys
-        
-    # test if error geometry type matches this layer
-    def errorTypeMatch(self, error): 
-        if self.layer.geometryType() == QGis.Point and error.geo.wkbType() != QGis.WKBPoint: return False
-        if self.layer.geometryType() == QGis.Line and error.geo.wkbType() != QGis.WKBLineString: return False
-        return True
 
-    def getMaxFid(self):
-        fid = 0
-        for feature in self.layer.getFeatures( QgsFeatureRequest() ):
-            fid = max( fid, feature.id() )
-        return fid 
-
-    # get errors of layer type (point or line)
-    def addErrors(self, errors):
-        if not self.layer: return
-    
-        fields = self.layer.pendingFields()
-        features = []
-        checksums = []
-        for error in errors:
-            if not self.errorTypeMatch( error): continue
-            feature = QgsFeature( fields )
-            feature.setGeometry( error.geo )
-            #feature.setAttribute( 'error', error.typeLabel() )
-            #feature.setAttribute( 'route', '%s' % error.routeId )
-            #feature.setAttribute( 'measure', error.getMeasureString() )
-            for name, value in self.errorAttributesMap( error).iteritems():
-                feature.setAttribute( name, value )
-            features.append( feature )
-            checksums.append( error.getChecksum() )
-
-        self.layer.dataProvider().addFeatures( features )
-
-        # hack to keep track of features in memory provider
-        # we believe that QgsMemoryProvider::addFeatures is processing
-        # features in list in the list order and increases nextFeatureId
-        # which may in theory change in future
-        maxFid = self.getMaxFid()
-        for checksum in reversed(checksums):
-            self.featureIds[checksum] = maxFid
+    # add features with getChecksum() method
+    def addFeatures(self, features):
+        status, addedFeatures = self.layer.dataProvider().addFeatures( features )
+        for feature, addedFeature in zip(features,addedFeatures):
+            self.featureIds[feature.getChecksum()] = addedFeature.id()
             # hack to update attribute table
-            self.layer.featureAdded.emit( maxFid )
-            maxFid -= 1
+            self.layer.featureAdded.emit( addedFeature.id() )
 
-    def errorAttributesMap(self, error):
-        attributesMap = {}
-        fields = self.layer.pendingFields()
-        values = {
-            'error': error.typeLabel(),
-            'route': '%s' % error.routeId,
-            'measure': error.getMeasureString()
-        }
-        for i in range(len(fields)):
-            name = fields[i].name()
-            if values.has_key(name):
-                attributesMap[i] = values.get( name )
-        return attributesMap
-
-    def updateErrors(self, errorUpdates):
-        debug ( "%s" % errorUpdates )
-        if not self.layer: return
-
-        # delete
+    # delete features by checksums
+    def deleteChecksums(self,checksums):
         fids = []
-        for checksum in errorUpdates['removedErrorChecksums']:
+        for checksum in checksums:
             fid = self.featureIds.get( checksum , None )
             if fid:
                 fids.append ( fid )
-                # hack to update attribute table
-                self.layer.featureDeleted.emit( fid )
 
         if len (fids) > 0:
             self.layer.dataProvider().deleteFeatures( fids )
 
-        # update 
+        for fid in fids:
+            # hack to update attribute table
+            self.layer.featureDeleted.emit( fid )
+
+    def updateFeatures(self, features):
         changedGeometries = {}
         changedAttributes = {}
-        for error in errorUpdates['updatedErrors']:
-            if not self.errorTypeMatch( error): continue
-            checksum = error.getChecksum()
-            fid = long ( self.featureIds.get( checksum , None ) )
-            if not fid:
-                raise Exception( "Error feature not found" )
-            debug ( "feature = %s" % getLayerFeature( self.layer, fid ) )
-            changedGeometries[fid] = error.geo
-            changedAttributes[fid] = self.errorAttributesMap( error )
-        debug ( "changedGeometries: %s" % changedGeometries )
+        for feature in features:
+            checksum = feature.getChecksum()
+            fid = self.featureIds.get( checksum , None ) 
+            if not fid: raise Exception( "Error feature not found" )
+            changedGeometries[fid] = feature.geometry()
+            changedAttributes[fid] = feature.getAttributeMap()
+        #debug ( "changedGeometries: %s" % changedGeometries )
         self.layer.dataProvider().changeGeometryValues(changedGeometries)
         self.layer.dataProvider().changeAttributeValues(changedAttributes)
 
@@ -129,5 +76,68 @@ class LrsErrorLayerManager(object):
             for i, value in attr.iteritems():
                 self.layer.attributeValueChanged.emit(fid, i, value )
 
+class LrsErrorLayerManager(LrsLayerManager):
+
+    def __init__(self, layer ):
+        super(LrsErrorLayerManager, self).__init__(layer)
+        
+    # test if error geometry type matches this layer
+    def errorTypeMatch(self, error): 
+        if self.layer.geometryType() == QGis.Point and error.geo.wkbType() != QGis.WKBPoint: return False
+        if self.layer.geometryType() == QGis.Line and error.geo.wkbType() != QGis.WKBLineString: return False
+        return True
+
+
+    # get errors of layer type (point or line)
+    def addErrors(self, errors):
+        if not self.layer: return
+    
+        features = []
+        for error in errors:
+            if not self.errorTypeMatch( error): continue
+            feature = LrsErrorFeature( error )
+            #feature.setGeometry( error.geo )
+            #for name, value in self.errorAttributesMap( error).iteritems():
+            #    feature.setAttribute( name, value )
+            features.append( feature )
+
+        self.addFeatures(features)
+
+
+
+    def updateErrors(self, errorUpdates):
+        debug ( "%s" % errorUpdates )
+        if not self.layer: return
+
+        # delete
+        self.deleteChecksums( errorUpdates['removedErrorChecksums'] )
+
+        # update 
+        features = []
+        for error in errorUpdates['updatedErrors']:
+            if not self.errorTypeMatch( error): continue
+
+            feature = LrsErrorFeature( error )
+            features.append( feature)
+        self.updateFeatures(features)
+
         # add new
         self.addErrors( errorUpdates['addedErrors'] ) 
+
+class LrsQualityLayerManager(LrsLayerManager):
+
+    def __init__(self, layer ):
+        super(LrsQualityLayerManager, self).__init__(layer)
+        
+
+    def update(self, errorUpdates):
+        debug ( "%s" % errorUpdates )
+        if not self.layer: return
+
+        # delete
+        self.deleteChecksums( errorUpdates['removedQualityChecksums'] )
+
+        # no update, only remove and add
+
+        # add new
+        self.addFeatures( errorUpdates['addedQualityFeatures'] ) 
