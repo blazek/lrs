@@ -34,7 +34,7 @@ from utils import *
 class LrsPlugin:
 
     def __init__(self, iface):
-        debug( "LrsPlugin.__init__" )
+        #debug( "LrsPlugin.__init__" )
         # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
@@ -52,7 +52,7 @@ class LrsPlugin:
 
 
     def initGui(self):
-        debug( "LrsPlugin.initGui" )
+        #debug( "LrsPlugin.initGui" )
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/lrsplugin/icon.png"),
@@ -71,7 +71,7 @@ class LrsPlugin:
 
 
     def unload(self):
-        debug( "LrsPlugin.unload" )
+        #debug( "LrsPlugin.unload" )
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
@@ -80,7 +80,7 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        debug( "LrsPlugin.run" )
+        #debug( "LrsPlugin.run" )
 
         # show the dialog
         self.dockWidget.show()

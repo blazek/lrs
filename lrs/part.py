@@ -37,6 +37,20 @@ class LrsRecord:
         self.partFrom = partFrom
         self.partTo = partTo
 
+    # returns true if measure is within open interval (milestoneFrom,milestoneTo)
+    # i.e. milestoneFrom < measure < milestoneTo
+    def measureWithin(self, measure):
+        return self.milestoneFrom < measure < self.milestoneTo
+
+    # returns true if measure at least partialy overlaps with another record
+    def measureOverlaps(self, record ):
+        if self.measureWithin( record.milestoneFrom ): return True
+        if self.measureWithin( record.milestoneTo ): return True
+        if record.measureWithin( self.milestoneFrom ): return True
+        if record.measureWithin( self.milestoneTo ): return True
+        if record.measureWithin( (self.milestoneFrom+self.milestoneTo)/2 ): return True
+        return False
+
 class LrsSegment:
 
     def __init__(self, routeId, record, geo ):
@@ -148,11 +162,21 @@ class LrsRoutePart:
             m2 = milestones[i+1]
             self.records.append ( LrsRecord ( m1.measure, m2.measure, m1.partMeasure, m2.partMeasure ) )
 
+    def getRecords(self):
+        return self.records
+
+    def removeRecord(self, record):
+        self.records.remove( record )
+
+    def getRecordGeometry(self, record):
+        polyline = polylineSegment( self.polyline, record.partFrom, record.partTo )
+        geo = QgsGeometry.fromPolyline( polyline )
+        return geo
+
     def getSegments(self):
         segments = []
         for record in self.records:
-            polyline = polylineSegment( self.polyline, record.partFrom, record.partTo )
-            geo = QgsGeometry.fromPolyline( polyline )
+            geo = self.getRecordGeometry( record )
             segments.append ( LrsSegment( self.routeId, record, geo ) )
         return segments
 

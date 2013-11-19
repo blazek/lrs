@@ -59,6 +59,7 @@ class LrsError(object):
     NO_MEASURE = 8 # missing point measure attribute value
     DIRECTION_GUESS = 9 # cannot guess part direction
     WRONG_MEASURE = 10 # milestones in wrong position
+    DUPLICATE_REFERENCING = 11 # multiple route segments measures overlap
 
     typeLabels = {
         DUPLICATE_LINE: 'Duplicate line',
@@ -71,6 +72,7 @@ class LrsError(object):
         NO_MEASURE: 'Missing measure',
         DIRECTION_GUESS: 'Cannot guess direction',
         WRONG_MEASURE: 'Wrong measure',
+        DUPLICATE_REFERENCING: 'Duplicate referencing',
     }
 
     def __init__(self, type, geo, **kwargs ):
@@ -158,6 +160,10 @@ class LrsError(object):
                 m.update( self.getOriginChecksum() )
             elif self.type == self.WRONG_MEASURE:
                 m.update( self.getOriginChecksum() )
+            elif self.type == self.DUPLICATE_REFERENCING:
+                m.update( '%s' % self.routeId )
+                m.update( self.geo.asWkb() )
+                m.update( self.getMeasureString() )
                  
             self.checksum_ = m.digest()
         return self.checksum_

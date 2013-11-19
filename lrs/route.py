@@ -93,6 +93,7 @@ class LrsRoute:
             self.createMilestones()
             self.attachMilestones()
             self.calibrateParts()
+            self.checkPartOverlaps()
 
     def calibrateAndGetUpdates(self):
         oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
@@ -359,6 +360,27 @@ class LrsRoute:
     def calibrateParts(self):
         for part in self.parts:
             part.calibrate()
+
+    def checkPartOverlaps(self):
+        records = []
+        overlaps = set()
+        recordParts = {}
+        for part in self.parts:
+            for record in part.getRecords():
+                records.append( record )
+                recordParts[record] = part
+        for record in records:
+            for record2 in records:
+                if record2 is record: continue
+                if record.measureOverlaps( record2 ):
+                    overlaps.add( record )
+
+        #debug("overlaps: %s" % overlaps )
+        for record in overlaps:
+            part = recordParts[record]
+            geo = part.getRecordGeometry(record)
+            self.errors.append( LrsError( LrsError.DUPLICATE_REFERENCING, geo, routeId = self.routeId, measure = [ record.milestoneFrom, record.milestoneTo ] ) )
+            part.removeRecord(record)
 
     def getErrors(self):
         if not self.allErrors_:
