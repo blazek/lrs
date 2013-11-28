@@ -25,6 +25,7 @@ import md5
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
+from qgis.gui import *
 
 from utils import *
 
@@ -362,3 +363,53 @@ class LrsQualityFeature(LrsFeature):
                  
             self.checksum_ = m.digest()
         return self.checksum_
+
+# Highlight, zoom errors
+class LrsErrorVisualizer(object):
+
+    def __init__(self, mapCanvas ):
+        self.errorHighlight = None
+        self.mapCanvas = mapCanvas
+        
+
+    def __del__(self):
+        if self.errorHighlight:
+            del self.errorHighlight 
+
+    def clearHighlight(self):
+        if self.errorHighlight:
+            del self.errorHighlight
+            self.errorHighlight = None
+
+    def highlight(self, error, crs):
+        self.clearHighlight()
+        if not error: return
+
+        # QgsHighlight does reprojection from layer CRS
+        layer = QgsVectorLayer( 'Point?crs=' + crs.authid(), 'LRS highlight', 'memory' )   
+        self.errorHighlight = QgsHighlight( self.mapCanvas, error.geo, layer )
+        # highlight point size is hardcoded in QgsHighlight
+        self.errorHighlight.setWidth( 2 )
+        self.errorHighlight.setColor( Qt.yellow )
+        self.errorHighlight.show()
+
+    def zoom(self, error, crs):
+        if not error: return
+        geo = error.geo
+        mapRenderer = self.mapCanvas.mapRenderer()
+        if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != crs:
+            geo = QgsGeometry( error.geo )
+            transform = QgsCoordinateTransform( crs, mapRenderer.destinationCrs() )
+            geo.transform( transform )
+
+        if geo.wkbType() == QGis.WKBPoint:
+            p = geo.asPoint()
+            bufferCrs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else crs
+            b = 2000 if not bufferCrs.geographicFlag() else 2000/100000  # buffer
+            extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
+        else: #line
+            extent = geo.boundingBox()
+            extent.scale(2)
+        self.mapCanvas.setExtent( extent )
+        self.mapCanvas.refresh();
+

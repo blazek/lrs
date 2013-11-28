@@ -21,13 +21,67 @@
 """
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
-#from PyQt4.QtGui import *
+from PyQt4.QtGui import *
 from qgis.core import *
 
 from utils import *
 from error import *
 
-# keeps track of features by checksum
+# To add methods on layers, we must use manager, not extended QgsVectorLayer, 
+# because layers may be stored in project and created by QGIS.
+# Inherited layers are only used to create layer with type and attributes
+class LrsErrorLayer(QgsVectorLayer):
+
+    def __init__(self, uri, baseName ):
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
+        uri = provider.dataSourceUri()
+        super(LrsErrorLayer, self).__init__( uri, baseName, 'memory')
+
+# changes done to vector layer attributes are not store correctly in project file
+# http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
+
+class LrsErrorPointLayer(LrsErrorLayer):
+
+    def __init__(self, crs ):
+        uri = "Point?crs=%s" %  crs.authid()
+        super(LrsErrorPointLayer, self).__init__( uri, 'LRS point errors' )
+        
+class LrsErrorLineLayer(LrsErrorLayer):
+
+    def __init__(self, crs ):
+        uri = "LineString?crs=%s" %  crs.authid()
+        super(LrsErrorLineLayer, self).__init__( uri, 'LRS line errors' )
+
+class LrsQualityLayer(QgsVectorLayer):
+
+    def __init__(self, crs ):
+        uri = "LineString?crs=%s" %  crs.authid()
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
+        uri = provider.dataSourceUri()
+        super(LrsQualityLayer, self).__init__( uri, 'LRS quality', 'memory')
+
+        # min, max, color, label
+        styles = [
+            [ -1000000, -30, QColor(Qt.red), '< -30 %' ],
+            [ -30, -10, QColor(Qt.blue), '-30 to -10 %' ],
+            [ -10, 10, QColor(Qt.green), '-10 to 10 %' ],
+            [ 10, 30, QColor(Qt.blue), '10 to 30 %' ],
+            [ 30, 1000000, QColor(Qt.red), '> 30 %' ]
+        ]
+        ranges = []
+        for style in styles:
+            symbol = QgsSymbolV2.defaultSymbol(  QGis.Line )
+            symbol.setColor( style[2] )
+            range = QgsRendererRangeV2 ( style[0], style[1], symbol, style[3] )
+            ranges.append(range)
+
+        renderer = QgsGraduatedSymbolRendererV2( 'err_perc', ranges)
+        self.setRendererV2 ( renderer )
+
+
+# Keeps track of features by checksum.
 class LrsLayerManager(object):
 
     def __init__(self, layer ):

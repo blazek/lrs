@@ -33,14 +33,11 @@ from lrs import *
 from combo import *
 from widget import *
 
-#class LrsDockWidget(QDockWidget):
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         self.iface = iface
-        #self.settings = LrsSettings()
         self.mapUnitsPerMeasureUnit = None
         self.lrs = None # Lrs object
-        self.errorHighlight = None 
         self.errorPointLayer = None
         self.errorPointLayerManager = None
         self.errorLineLayer = None
@@ -80,6 +77,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptions)
 
         ##### errorTab
+        self.errorVisualizer = LrsErrorVisualizer ( self.iface.mapCanvas() )
         self.errorModel = None
         self.errorView.horizontalHeader().setStretchLastSection ( True )
         self.errorZoomButton.setEnabled( False) 
@@ -91,6 +89,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         ##### error / quality layers
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
         self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
+
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
         
@@ -151,8 +150,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         del self.genPointLayerCM
         del self.genPointRouteFieldCM
         del self.genPointMeasureFieldCM
-        if self.errorHighlight:
-            del self.errorHighlight
+        del self.errorVisualizer
         super(LrsDockWidget, self).close()
 
     def resetGenerateButtons(self):
@@ -192,7 +190,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def generateLrs(self):
         #debug ( 'generateLrs')
-        self.clearHighlight()
+        self.errorVisualizer.clearHighlight()
         
         self.writeGenerateOptions()
 
@@ -257,36 +255,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if selected in rows:
                 self.errorView.selectionModel().clear()
         self.errorModel.updateErrors( errorUpdates )
-        #self.resetErrorLayers()
         self.updateErrorLayers( errorUpdates )
-        #self.resetQualityLayer()
         self.updateQualityLayer( errorUpdates )
 
-    def clearHighlight(self):
-        self.errorZoomButton.setEnabled( False) 
-        if self.errorHighlight:
-            del self.errorHighlight
-            self.errorHighlight = None
-
     def errorSelectionChanged(self, selected, deselected ):
-        self.clearHighlight()
-
         error = self.getSelectedError()
-        if not error: return
-
-        #debug ( 'error %s' % error.typeLabel() )
-        # QgsHighlight does reprojection from layer CRS
-        #layer = QgsVectorLayer( 'Point?crs=' + self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
-        layer = QgsVectorLayer( 'Point?crs=' + self.lrs.crs.authid(), 'LRS highlight', 'memory' )
-        #debug( 'uri = %s' % layer.dataProvider().dataSourceUri() )
-        #debug( error.geo.exportToWkt() )
-        self.errorHighlight = QgsHighlight( self.iface.mapCanvas(), error.geo, layer )
-        # highlight point size is hardcoded in QgsHighlight
-        self.errorHighlight.setWidth( 2 )
-        self.errorHighlight.setColor( Qt.yellow )
-        self.errorHighlight.show()
-
-        self.errorZoomButton.setEnabled(True) 
+        self.errorVisualizer.highlight( error, self.lrs.crs )
+        self.errorZoomButton.setEnabled( error is not None ) 
 
     def getSelectedErrorIndex(self):
         sm = self.errorView.selectionModel()
@@ -303,39 +278,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def errorZoom(self):
         error = self.getSelectedError()
         if not error: return
-        
-        geo = error.geo
-        mapRenderer = self.iface.mapCanvas().mapRenderer()
-        if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != self.lrs.crs:
-            geo = QgsGeometry( error.geo )
-            transform = QgsCoordinateTransform( self.lrs.crs, mapRenderer.destinationCrs() )
-            geo.transform( transform )
-
-        if geo.wkbType() == QGis.WKBPoint:
-            p = geo.asPoint()
-            crs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else self.lrs.crs
-            b = 2000 if not crs.geographicFlag() else 2000/100000  # buffer
-            extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
-        else: #line
-            extent = geo.boundingBox()
-            extent.scale(2)
-        self.iface.mapCanvas().setExtent( extent )
-        self.iface.mapCanvas().refresh();
+        self.errorVisualizer.zoom( error, self.lrs.crs )       
 
     # add new error layers to map
     def addErrorLayers(self):
-        # changes done to vector layer attributes are not store correctly in project file
-        # http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
-
         project = QgsProject.instance()
 
         if not self.errorLineLayer:
-            uri = "LineString?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
-            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-            provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
-            uri = provider.dataSourceUri()
-            #debug ( "uri = " + uri )
-            self.errorLineLayer = QgsVectorLayer( uri, 'LRS line errors', 'memory')
+            self.errorLineLayer = LrsErrorLineLayer( self.iface.mapCanvas().mapRenderer().destinationCrs() )
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
             self.errorLineLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorLineLayer()
@@ -343,11 +293,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             project.writeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id() )
 
         if not self.errorPointLayer:
-            uri = "Point?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
-            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-            provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
-            uri = provider.dataSourceUri()
-            self.errorPointLayer = QgsVectorLayer( uri, 'LRS point errors', 'memory')
+            self.errorPointLayer = LrsErrorPointLayer( self.iface.mapCanvas().mapRenderer().destinationCrs() )
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
             self.errorPointLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorPointLayer()
@@ -385,30 +331,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def addQualityLayer(self):
         if not self.qualityLayer:
-            uri = "LineString?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
-            provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-            provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
-            uri = provider.dataSourceUri()
-            self.qualityLayer = QgsVectorLayer( uri, 'LRS quality', 'memory')
+            self.qualityLayer = LrsQualityLayer(self.iface.mapCanvas().mapRenderer().destinationCrs())
             self.qualityLayerManager = LrsQualityLayerManager ( self.qualityLayer )
-            
-            # min, max, color, label
-            styles = [ 
-                [ -1000000, -30, QColor(Qt.red), '< -30 %' ],
-                [ -30, -10, QColor(Qt.blue), '-30 to -10 %' ],
-                [ -10, 10, QColor(Qt.green), '-10 to 10 %' ],
-                [ 10, 30, QColor(Qt.blue), '10 to 30 %' ],
-                [ 30, 1000000, QColor(Qt.red), '> 30 %' ]
-            ]
-            ranges = []
-            for style in styles:
-                symbol = QgsSymbolV2.defaultSymbol(  QGis.Line )
-                symbol.setColor( style[2] )
-                range = QgsRendererRangeV2 ( style[0], style[1], symbol, style[3] )
-                ranges.append(range)
-
-            renderer = QgsGraduatedSymbolRendererV2( 'err_perc', ranges)
-            self.qualityLayer.setRendererV2 ( renderer )
 
             self.resetQualityLayer()
             QgsMapLayerRegistry.instance().addMapLayers( [self.qualityLayer,] )
