@@ -100,19 +100,37 @@ class Lrs(QObject):
         # dictionary of LrsRoute
         self.routes = {} 
 
-        #self.calibrate()
+        QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)        
 
     def __del__(self):
         self.disconnect()
 
-    def disconnect(self):
+    def pointLayerDisconnect(self):
+        if not self.pointLayer: return
         self.pointLayerEditingDisconnect()
         self.pointLayer.editingStarted.disconnect( self.pointLayerEditingStarted )
         self.pointLayer.editingStopped.disconnect( self.pointLayerEditingStopped )
-
+        
+    def lineLayerDisconnect(self):
+        if not self.lineLayer: return
         self.lineLayerEditingDisconnect()
         self.lineLayer.editingStarted.disconnect( self.lineLayerEditingStarted )
         self.lineLayer.editingStopped.disconnect( self.lineLayerEditingStopped )
+
+    def disconnect(self):
+        QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
+        self.pointLayerDisconnect()
+        self.lineLayerDisconnect()
+
+    def layersWillBeRemoved(self, layerIdList ):
+        project = QgsProject.instance()
+        for id in layerIdList:
+            if self.pointLayer and self.pointLayer.id() == id:
+                self.pointLayerDisconnect()
+                self.pointLayer = None
+            if self.lineLayer and self.lineLayer.id() == id:
+                self.lineLayerDisconnect()
+                self.lineLayer = None
 
     def updateProgressTotal(self):
         cnts = self.progressCounts
@@ -283,8 +301,6 @@ class Lrs(QObject):
             self.lineEditBuffer.featureDeleted.disconnect( self.lineFeatureDeleted )
             self.lineEditBuffer.geometryChanged.disconnect( self.lineGeometryChanged )
             self.lineEditBuffer.attributeValueChanged.disconnect( self.lineAttributeValueChanged )
-
-
     
     def emitUpdateErrors(self, errorUpdates):
         errorUpdates['crs'] = self.crs
