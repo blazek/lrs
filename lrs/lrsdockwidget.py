@@ -74,7 +74,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
 
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
-        self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptions)
+        self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
 
         ##### errorTab
         self.errorVisualizer = LrsErrorVisualizer ( self.iface.mapCanvas() )
@@ -86,10 +86,26 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorZoomButton.clicked.connect( self.errorZoom )
         self.errorFilterLineEdit.textChanged.connect( self.errorFilterChanged )
 
-        ##### error / quality layers
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
         self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
 
+        #### eventsTab
+        self.eventsLayerCM = LrsLayerComboManager( self.eventsLayerCombo, settingsName = 'eventsLayerId' )
+        self.eventsRouteFieldCM = LrsFieldComboManager( self.eventsRouteFieldCombo, self.eventsLayerCM, settingsName = 'eventsRouteField' )
+        self.eventsMeasureStartFieldCM = LrsFieldComboManager( self.eventsMeasureStartFieldCombo, self.eventsLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'eventsMeasureStartField' )
+        self.eventsMeasureEndFieldCM = LrsFieldComboManager( self.eventsMeasureEndFieldCombo, self.eventsLayerCM, types = [ QVariant.Int, QVariant.Double ], allowNone = True, settingsName = 'eventsMeasureEndField' )
+
+        self.eventsOutputNameLineEditWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
+
+        self.eventsButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.createEvents)
+        self.eventsButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetEventsOptionsAndWrite)
+        self.eventsLayerCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        self.eventsRouteFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        self.eventsMeasureStartFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        self.eventsMeasureEndFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        self.eventsOutputNameLineEdit.textEdited.connect(self.resetEventsButtons)
+        self.resetEventsOptions()
+        self.resetEventsButtons()
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
         
@@ -103,13 +119,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.sortErrorModel.setFilterWildcard( text )
 
     def projectRead(self):
-        #debug("projectRead")
+        debug("projectRead")
         if not QgsProject: return
 
         project = QgsProject.instance()
         if not project: return
 
         self.readGenerateOptions()
+        self.readEventsOptions()
 
         registry = QgsMapLayerRegistry.instance()
 
@@ -151,6 +168,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         del self.genPointRouteFieldCM
         del self.genPointMeasureFieldCM
         del self.errorVisualizer
+
+        del self.eventsLayerCM
+        del self.eventsRouteFieldCM
+        del self.eventsMeasureStartFieldCM
+        del self.eventsMeasureEndFieldCM
+
+        self.eventsOutputNameLineEditWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
+
         super(LrsDockWidget, self).close()
 
     def resetGenerateButtons(self):
@@ -159,14 +184,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     def resetGenerateOptions(self):
-        self.genLineLayerCombo.setCurrentIndex(-1) 
-        self.genLineRouteFieldCombo.setCurrentIndex(-1) 
-        self.genPointLayerCombo.setCurrentIndex(-1) 
-        self.genPointRouteFieldCombo.setCurrentIndex(-1) 
-        self.genPointMeasureFieldCombo.setCurrentIndex(-1) 
+        self.genLineLayerCM.reset() 
+        self.genLineRouteFieldCM.reset() 
+        self.genPointLayerCM.reset() 
+        self.genPointRouteFieldCM.reset() 
+        self.genPointMeasureFieldCM.reset() 
         self.genMapUnitsPerMeasureUnitWM.reset()
         self.genThresholdWM.reset()
         
+    def resetGenerateOptionsAndWrite(self):
+        self.resetGenerateOptions()
         self.writeGenerateOptions()
 
     # save settings in project
@@ -234,6 +261,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
             self.iface.mapCanvas().refresh()
+
+        self.resetEventsButtons()
 
     def showProgress(self, label, percent):
         self.genProgressLabel.show()
@@ -362,3 +391,40 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 self.qualityLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
             
+############################# EVENTS ###############################################
+
+    def resetEventsOptions(self):
+        self.eventsLayerCM.reset() 
+        self.eventsRouteFieldCM.reset() 
+        self.eventsMeasureStartFieldCM.reset() 
+        self.eventsMeasureEndFieldCM.reset() 
+        self.eventsOutputNameLineEdit.setText("Lrs events")
+
+    def resetEventsOptionsAndWrite(self):
+        self.resetEventsOptions()
+        self.writeEventsOptions()
+
+    def resetEventsButtons(self):
+        enabled = bool(self.lrs) and self.eventsLayerCombo.currentIndex() != -1 and self.eventsRouteFieldCombo.currentIndex() != -1 and self.eventsMeasureStartFieldCombo.currentIndex() != -1 and bool(self.eventsOutputNameLineEdit.text())
+
+        self.eventsButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+
+    # save settings in project
+    def writeEventsOptions(self):
+        self.eventsLayerCM.writeToProject()
+        self.eventsRouteFieldCM.writeToProject()
+        self.eventsMeasureStartFieldCM.writeToProject()
+        self.eventsMeasureEndFieldCM.writeToProject()
+        self.eventsOutputNameLineEditWM.writeToProject()
+
+    def readEventsOptions(self):
+        debug ('readEventsOptions')
+        self.eventsLayerCM.readFromProject()
+        self.eventsRouteFieldCM.readFromProject()
+        self.eventsMeasureStartFieldCM.readFromProject()
+        self.eventsMeasureEndFieldCM.readFromProject()
+        self.eventsOutputNameLineEditWM.readFromProject()
+
+    def createEvents(self):
+        debug ('createEvents')
+        self.writeEventsOptions()

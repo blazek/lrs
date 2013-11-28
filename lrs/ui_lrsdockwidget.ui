@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="genTab">
        <attribute name="title">
@@ -32,7 +32,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <layout class="QGridLayout" name="gridLayout">
+         <layout class="QGridLayout" name="genGridLayout">
           <item row="2" column="0" colspan="2">
            <widget class="Line" name="line">
             <property name="orientation">
@@ -292,6 +292,102 @@
          </layout>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="eventsTab">
+       <attribute name="title">
+        <string>Events</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QGridLayout" name="eventsGridLayout">
+          <item row="1" column="0">
+           <widget class="QLabel" name="eventsRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="eventsRouteFieldCombo"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="eventsMeasureStartFieldCombo"/>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="eventsMeasureEndFieldCombo"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="eventsMeasureStartFieldLabel">
+            <property name="text">
+             <string>Start measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="eventsLayerLabel">
+            <property name="text">
+             <string>Events layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="eventsLayerCombo"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="eventsMeasureEndFieldLabel">
+            <property name="text">
+             <string>End measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="eventsOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="eventsOutputNameLineEdit">
+            <property name="text">
+             <string>LRS events</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QDialogButtonBox" name="eventsButtonBox">
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+       <zorder>eventsButtonBox</zorder>
+       <zorder>gridLayoutWidget</zorder>
+       <zorder>eventsOutputNameLabel</zorder>
+       <zorder>verticalSpacer_2</zorder>
       </widget>
      </widget>
     </item>

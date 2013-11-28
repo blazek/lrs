@@ -42,6 +42,9 @@ class LrsWidgetManager(QObject):
         if issubclass(self.widget.__class__, QDoubleSpinBox):
             val = self.widget.value()
             project.writeEntryDouble(PROJECT_PLUGIN_NAME, self.settingsName, val )
+        elif issubclass(self.widget.__class__, QLineEdit):
+            val = self.widget.text()
+            project.writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val )
         else:
             raise Exception("not supported widget")
 
@@ -52,6 +55,9 @@ class LrsWidgetManager(QObject):
         if issubclass(self.widget.__class__, QDoubleSpinBox):
             val = project.readDoubleEntry(PROJECT_PLUGIN_NAME, self.settingsName, self.defaultValue )[0]
             self.widget.setValue( val )
+        elif issubclass(self.widget.__class__, QLineEdit):
+            val = project.readEntry(PROJECT_PLUGIN_NAME, self.settingsName, self.defaultValue )[0]
+            self.widget.setText( val )
         else:
             raise Exception("not supported widget")
 

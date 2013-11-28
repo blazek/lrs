@@ -35,14 +35,12 @@ class LrsComboManager(QObject):
         super(LrsComboManager, self).__init__()
         self.combo = combo # QComboBox
         self.settingsName = kwargs.get('settingsName')
+        self.allowNone = kwargs.get('allowNone', False) # allow select none
     
-        #QgsProject.instance().readProject.connect( self.projectRead )
-
-        #self.combo.currentIndexChanged.connect( self.indexChanged )
-
-    #def __del__(self):
-        #QgsProject.instance().readProject.disconnect( self.projectRead )
-        #self.combo.currentIndexChanged.disconnect( self.indexChanged )
+        self.proxy = QSortFilterProxyModel(self)
+        self.model = QStandardItemModel(0, 1, self)
+        self.proxy.setSourceModel(self.model)
+        self.combo.setModel(self.proxy);
 
     def writeToProject(self):
         idx = self.combo.currentIndex()
@@ -51,20 +49,30 @@ class LrsComboManager(QObject):
 
     def readFromProject(self):
         val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+        if val == '': val = None # to set correctly none
+
         idx = self.combo.findData(val, Qt.UserRole)
+        debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
         self.combo.setCurrentIndex(idx)
+
+    # reset to index -1
+    def reset(self):
+        self.combo.setCurrentIndex(-1)
+
+    def findItemByData(self, data, flags = Qt.MatchFixedString ):
+        start = self.model.index(0,0, QModelIndex())
+        indexes = self.model.match( start, Qt.UserRole, data, flags )
+        if len(indexes) == 0: return None
+        index = indexes[0]
+        return self.model.item( index.row(), index.column())
 
 class LrsLayerComboManager(LrsComboManager):
     layerChanged = pyqtSignal()
 
     def __init__(self, combo, **kwargs ):
         super(LrsLayerComboManager, self).__init__(combo,**kwargs)
-        self.geometryType = kwargs.get('geometryType') # QGis.GeometryType
+        self.geometryType = kwargs.get('geometryType', None) # QGis.GeometryType
 
-        self.proxy = QSortFilterProxyModel(self)
-        self.model = QStandardItemModel(0, 1, self)
-        self.proxy.setSourceModel(self.model)
-        self.combo.setModel(self.proxy);
         self.combo.currentIndexChanged.connect(self.currentIndexChanged)
 
         self.canvasLayersChanged()
@@ -95,7 +103,7 @@ class LrsLayerComboManager(LrsComboManager):
         layerIds = []
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
             if layer.type() != QgsMapLayer.VectorLayer: continue
-            if layer.geometryType() != self.geometryType: continue
+            if self.geometryType and layer.geometryType() != self.geometryType: continue
             layerIds.append(layerId)
 
         # delete removed layers
@@ -107,7 +115,7 @@ class LrsLayerComboManager(LrsComboManager):
         # add new layers
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
             if layer.type() != QgsMapLayer.VectorLayer: continue
-            if layer.geometryType() != self.geometryType: continue
+            if self.geometryType and layer.geometryType() != self.geometryType: continue
 
             start = self.model.index(0,0, QModelIndex())
             indexes = self.model.match( start, Qt.UserRole, layerId, Qt.MatchFixedString )
@@ -130,10 +138,6 @@ class LrsFieldComboManager(LrsComboManager):
         self.types = kwargs.get('types', None) # QVariant.type
         self.layerComboManager = layerComboManager
 
-        self.proxy = QSortFilterProxyModel(self)
-        self.model = QStandardItemModel(0, 1, self)
-        self.proxy.setSourceModel(self.model)
-        self.combo.setModel(self.proxy);
 
         self.layerChanged()
 
@@ -145,8 +149,9 @@ class LrsFieldComboManager(LrsComboManager):
             return self.combo.itemData(idx, Qt.UserRole )
         return None
 
+
     def layerChanged(self):
-        #debug ("layerChanged")
+        debug ("layerChanged settingsName = %s" % self.settingsName )
         if not QgsMapLayerRegistry: return
 
         layerId = self.layerComboManager.layerId()
@@ -157,6 +162,14 @@ class LrsFieldComboManager(LrsComboManager):
             self.combo.clear()
             return            
 
+        # Add none item
+        if self.allowNone:
+            item = self.findItemByData(None)
+            if not item:
+                item = QStandardItem( "-----" )
+                item.setData( None, Qt.UserRole )
+                self.model.appendRow( item )
+
         fieldsNames = []
         for idx, field in enumerate(layer.pendingFields()):
             if self.types and not field.type() in self.types: continue
@@ -165,6 +178,7 @@ class LrsFieldComboManager(LrsComboManager):
         # delete removed
         for i in range( self.model.rowCount()-1, -1, -1):
             fieldName = self.model.item(i).data( Qt.UserRole )
+            if self.allowNone and fieldName is None: continue
             if not fieldName in fieldsNames:
                 self.model.removeRows(i,1)
         
@@ -175,15 +189,12 @@ class LrsFieldComboManager(LrsComboManager):
             fieldName = field.name()
             fieldLabel = layer.attributeDisplayName(idx)
 
-            start = self.model.index(0,0, QModelIndex())
-            indexes = self.model.match( start, Qt.UserRole, fieldName, Qt.MatchFixedString )
-            if len(indexes) == 0: # add new
+            item = self.findItemByData(fieldName)
+            if not item: # add new
                 item = QStandardItem( fieldLabel )
                 item.setData( fieldName, Qt.UserRole )
                 self.model.appendRow( item )
             else: # update text
-                index = indexes[0]
-                item = self.model.item( index.row(), index.column())
                 item.setText( fieldLabel )
         
         self.proxy.sort(0)
