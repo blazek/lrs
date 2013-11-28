@@ -96,6 +96,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsMeasureEndFieldCM = LrsFieldComboManager( self.eventsMeasureEndFieldCombo, self.eventsLayerCM, types = [ QVariant.Int, QVariant.Double ], allowNone = True, settingsName = 'eventsMeasureEndField' )
 
         self.eventsOutputNameLineEditWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
+        self.eventsErrorFieldLineEditWM = LrsWidgetManager( self.eventsErrorFieldLineEdit, settingsName = 'eventsErrorField', defaultValue = 'lrs_err' )
+        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ) )
+        self.eventsErrorFieldLineEdit.setValidator( validator )
 
         self.eventsButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.createEvents)
         self.eventsButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetEventsOptionsAndWrite)
@@ -119,7 +122,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.sortErrorModel.setFilterWildcard( text )
 
     def projectRead(self):
-        debug("projectRead")
+        #debug("projectRead")
         if not QgsProject: return
 
         project = QgsProject.instance()
@@ -153,9 +156,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             self.generateLrs() # only when reloading!
 
     def close(self):
-        print "close"
         if self.lrs:
-            #self.lrs.disconnect()
             del self.lrs
         self.lrs = None
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
@@ -174,9 +175,25 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         del self.eventsMeasureStartFieldCM
         del self.eventsMeasureEndFieldCM
 
-        self.eventsOutputNameLineEditWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
-
         super(LrsDockWidget, self).close()
+            
+    def layersWillBeRemoved(self, layerIdList ):
+        project = QgsProject.instance()
+        for id in layerIdList:
+            if self.errorPointLayer and self.errorPointLayer.id() == id:
+                self.errorPointLayerManager = None
+                self.errorPointLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )
+            if self.errorLineLayer and self.errorLineLayer.id() == id:
+                self.errorLineLayerManager = None
+                self.errorLineLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )
+            if self.qualityLayer and self.qualityLayer.id() == id:
+                self.qualityLayerManager = None
+                self.qualityLayer = None
+                project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
+
+############################ GENERATE (CALIBRATE) ###############################
 
     def resetGenerateButtons(self):
         enabled = self.genLineLayerCombo.currentIndex() != -1 and self.genLineRouteFieldCombo.currentIndex() != -1 and self.genPointLayerCombo.currentIndex() != -1 and self.genPointRouteFieldCombo.currentIndex() != -1 and self.genPointMeasureFieldCombo.currentIndex() != -1
@@ -273,6 +290,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def hideProgress(self):
         self.genProgressLabel.hide()
         self.genProgressBar.hide()
+
+############################### ERRORS ##########################################
 
     def updateErrors( self, errorUpdates):
         #debug ( "updateErrors" )
@@ -375,22 +394,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         features = self.lrs.getQualityFeatures()
         self.qualityLayerManager.addFeatures( features, self.lrs.crs )
             
-    def layersWillBeRemoved(self, layerIdList ):
-        project = QgsProject.instance()
-        for id in layerIdList:
-            if self.errorPointLayer and self.errorPointLayer.id() == id:
-                self.errorPointLayerManager = None
-                self.errorPointLayer = None
-                project.removeEntry( PROJECT_PLUGIN_NAME, "errorPointLayerId" )
-            if self.errorLineLayer and self.errorLineLayer.id() == id:
-                self.errorLineLayerManager = None
-                self.errorLineLayer = None
-                project.removeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId" )
-            if self.qualityLayer and self.qualityLayer.id() == id:
-                self.qualityLayerManager = None
-                self.qualityLayer = None
-                project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
-            
 ############################# EVENTS ###############################################
 
     def resetEventsOptions(self):
@@ -398,7 +401,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsRouteFieldCM.reset() 
         self.eventsMeasureStartFieldCM.reset() 
         self.eventsMeasureEndFieldCM.reset() 
-        self.eventsOutputNameLineEdit.setText("Lrs events")
+        self.eventsOutputNameLineEditWM.reset()
+        self.eventsErrorFieldLineEditWM.reset()
 
     def resetEventsOptionsAndWrite(self):
         self.resetEventsOptions()
@@ -416,15 +420,60 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsMeasureStartFieldCM.writeToProject()
         self.eventsMeasureEndFieldCM.writeToProject()
         self.eventsOutputNameLineEditWM.writeToProject()
+        self.eventsErrorFieldLineEditWM.writeToProject()
 
     def readEventsOptions(self):
-        debug ('readEventsOptions')
         self.eventsLayerCM.readFromProject()
         self.eventsRouteFieldCM.readFromProject()
         self.eventsMeasureStartFieldCM.readFromProject()
         self.eventsMeasureEndFieldCM.readFromProject()
         self.eventsOutputNameLineEditWM.readFromProject()
+        self.eventsErrorFieldLineEditWM.readFromProject()
 
     def createEvents(self):
-        debug ('createEvents')
         self.writeEventsOptions()
+
+        layer = self.eventsLayerCM.getLayer()
+        routeFieldName = self.eventsRouteFieldCM.getFieldName()
+        startFieldName = self.eventsMeasureStartFieldCM.getFieldName()
+        endFieldName = self.eventsMeasureEndFieldCM.getFieldName()
+        errorFieldName = self.eventsErrorFieldLineEdit.text()
+ 
+        # create new layer
+        uri = "LineString" if endFieldName else "Point"
+        uri += "?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        provider.addAttributes( layer.pendingFields().toList() )
+        if errorFieldName:
+            provider.addAttributes( [ QgsField( errorFieldName, QVariant.String, "string"), ]) 
+        uri = provider.dataSourceUri()
+        outputName = self.eventsOutputNameLineEdit.text()
+        if not outputName: outputName = self.eventsOutputNameLineEditWM.defaultValue()
+        outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
+
+        eventFeatures = []
+        fields = outputLayer.pendingFields()
+        for feature in layer.getFeatures():
+            routeId = feature[routeFieldName]
+            start = feature[startFieldName]
+            end = feature[endFieldName] if endFieldName else None
+            debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
+
+            eventFeature = QgsFeature( fields ) # fields must exist during feature life!
+            for field in layer.pendingFields():
+                eventFeature[field.name()] = feature[field.name()]
+
+            linear = endFieldName is not None
+            geo, error = self.lrs.eventGeometry ( routeId, start, end, linear )  
+            
+            if not geo: geo = QgsGeometry()
+            if geo:
+                eventFeature.setGeometry( geo )
+            if errorFieldName and error:
+                eventFeature[errorFieldName] = error
+
+            eventFeatures.append( eventFeature )
+
+        outputLayer.dataProvider().addFeatures( eventFeatures )
+
+        QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )

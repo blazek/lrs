@@ -132,6 +132,8 @@ class Lrs(QObject):
                 self.lineLayerDisconnect()
                 self.lineLayer = None
 
+##################### GENERATE (CALIBRATE) #################################
+
     def updateProgressTotal(self):
         cnts = self.progressCounts
         cnts[self.TOTAL] = cnts[self.NLINES]
@@ -204,9 +206,7 @@ class Lrs(QObject):
 
     def registerLines (self):
         self.routes = {}
-        feature = QgsFeature()
-        iterator = self.lineLayer.getFeatures()
-        while iterator.nextFeature(feature):
+        for feature in self.lineLayer.getFeatures():
             self.registerLineFeature(feature)
             self.progressStep(self.REGISTERING_LINES) 
         # precise number of routes
@@ -238,9 +238,7 @@ class Lrs(QObject):
         del self.points[fid]
 
     def registerPoints (self):
-        feature = QgsFeature()
-        iterator = self.pointLayer.getFeatures()
-        while iterator.nextFeature(feature):
+        for feature in self.pointLayer.getFeatures():
             self.registerPointFeature ( feature )
             self.progressStep(self.REGISTERING_POINTS) 
         # route total may increase (e.g. orphans)
@@ -423,3 +421,22 @@ class Lrs(QObject):
             route = self.getRoute( line.routeId )
             errorUpdates = route.calibrateAndGetUpdates()
             self.emitUpdateErrors( errorUpdates )
+
+
+##################### EVENTS ######################################
+
+    # returns ( geometry, error )
+    def eventGeometry(self, routeId, start, end, linear):
+        error = None
+        
+        if routeId is None: return None, 'missing route'
+        if start is None: return None, 'missing start measure'
+        if linear and end is None: return None, 'missing end measure'
+
+        if not self.routes.has_key(routeId):
+            return None, 'route not available'
+
+        route = self.routes[routeId]
+        geo, error = route.eventGeometry( start, end, linear )
+        return geo, error
+        

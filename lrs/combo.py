@@ -52,7 +52,7 @@ class LrsComboManager(QObject):
         if val == '': val = None # to set correctly none
 
         idx = self.combo.findData(val, Qt.UserRole)
-        debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
+        #debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
         self.combo.setCurrentIndex(idx)
 
     # reset to index -1
@@ -151,7 +151,7 @@ class LrsFieldComboManager(LrsComboManager):
 
 
     def layerChanged(self):
-        debug ("layerChanged settingsName = %s" % self.settingsName )
+        #debug ("layerChanged settingsName = %s" % self.settingsName )
         if not QgsMapLayerRegistry: return
 
         layerId = self.layerComboManager.layerId()

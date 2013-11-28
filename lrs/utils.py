@@ -88,7 +88,24 @@ def pointOnLine( point1, point2, distance ):
     y = point1.y() + k * dy
     return QgsPoint( x, y )
 
-# returns new polyline 'from - to' measured along original oplyline
+# returns new QgsPoint on polyline in distance along original polyline
+def polylinePoint( polyline, distance ):
+    geo = QgsGeometry.fromPolyline( polyline )
+    length = geo.length()
+
+    length = 0
+    for i in range(len(polyline)-1):
+        p1 = polyline[i]
+        p2 = polyline[i+1]
+        l = pointsDistance( p1, p2 )
+
+        if distance >= length and distance <= length + l:
+            d = distance - length
+            return pointOnLine ( p1, p2, d )
+
+    return None
+
+# returns new polyline 'from - to' measured along original polyline
 def polylineSegment( polyline, frm, to ):
     geo = QgsGeometry.fromPolyline( polyline )
     length = geo.length()

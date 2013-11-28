@@ -51,6 +51,13 @@ class LrsRecord:
         if record.measureWithin( (self.milestoneFrom+self.milestoneTo)/2 ): return True
         return False
 
+    # get distance from part beginning
+    def partMeasure(self, measure):
+        md = self.milestoneTo - self.milestoneFrom
+        pd = self.partTo - self.partFrom
+        k = ( measure - self.milestoneFrom ) / md
+        return self.partFrom + k * pd
+
 class LrsSegment:
 
     def __init__(self, routeId, record, geo ):
@@ -182,4 +189,18 @@ class LrsRoutePart:
 
     def getErrors(self):
         return self.errors
+
+    def getPoint(self, partMeasure):
+        self.polyline
+
+    # returns ( geometry, error )
+    def eventGeometry(self, start, end, linear):
+        for record in self.records:
+            if record.measureWithin( start ):
+                m = record.partMeasure( start )
+                point = polylinePoint ( self.polyline, m )
+                geo = QgsGeometry.fromPoint( point )
+                return geo, None
+
+        return None, 'measure not available'
 

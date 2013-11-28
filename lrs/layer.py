@@ -175,9 +175,6 @@ class LrsErrorLayerManager(LrsLayerManager):
         for error in errors:
             if not self.errorTypeMatch( error): continue
             feature = LrsErrorFeature( error )
-            #feature.setGeometry( error.geo )
-            #for name, value in self.errorAttributesMap( error).iteritems():
-            #    feature.setAttribute( name, value )
             features.append( feature )
 
         self.addFeatures(features, crs)

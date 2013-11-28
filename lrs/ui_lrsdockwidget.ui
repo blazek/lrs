@@ -357,9 +357,19 @@
           <item row="5" column="1">
            <widget class="QLineEdit" name="eventsOutputNameLineEdit">
             <property name="text">
-             <string>LRS events</string>
+             <string/>
             </property>
            </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="eventsErrorFieldLabel">
+            <property name="text">
+             <string>Output error field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="eventsErrorFieldLineEdit"/>
           </item>
          </layout>
         </item>

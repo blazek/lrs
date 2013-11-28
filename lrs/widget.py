@@ -34,8 +34,17 @@ class LrsWidgetManager(QObject):
         self.settingsName = kwargs.get('settingsName')
         self.defaultValue = kwargs.get('defaultValue')
 
+    def defaultValue(self):
+        return self.defaultValue
+
     def reset(self):
-        self.widget.setValue( self.defaultValue )
+        if issubclass(self.widget.__class__, QDoubleSpinBox):
+            self.widget.setValue( self.defaultValue )
+        elif issubclass(self.widget.__class__, QLineEdit):
+            self.widget.setText( self.defaultValue )
+        else:
+            raise Exception("not supported widget")
+        
 
     def writeToProject(self):
         project = QgsProject.instance()

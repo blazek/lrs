@@ -416,3 +416,12 @@ class LrsRoute:
             features.append( feature )
 
         return features
+
+    # returns ( geometry, error )
+    def eventGeometry(self, start, end, linear):
+        for part in self.parts:
+            geo, error = part.eventGeometry( start, end, linear )
+            if geo:
+                return geo, error
+
+        return None, 'measure not available'
