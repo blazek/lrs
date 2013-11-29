@@ -417,11 +417,22 @@ class LrsRoute:
 
         return features
 
-    # returns ( geometry, error )
-    def eventGeometry(self, start, end, linear):
+    # returns ( QgsPoint, error )
+    def eventPoint(self, start):
         for part in self.parts:
-            geo, error = part.eventGeometry( start, end, linear )
-            if geo:
-                return geo, error
-
+            point = part.eventPoint( start )
+            if point: return point, None
         return None, 'measure not available'
+
+    # returns ( QgsMultiPolyline, error )
+    def eventMultiPolyLine(self, start, end):
+        multipolyline = []
+        measures = []
+        for part in self.parts:
+            segments = part.eventSegments( start, end )
+            for polyline, measure_from, measure_to in segments:
+                multipolyline.append( polyline )
+                measures.append( (measure_from, measure_to ))
+
+        debug( '%s' % measures )
+        return multipolyline if multipolyline else None, ''

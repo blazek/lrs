@@ -33,6 +33,10 @@ def debug(msg):
     print "LRSDEBUG: %s" % msg
     sys.stdout.flush()
 
+# compare 2 doubles
+def doubleNear( d1, d2 ):
+    return abs(d1-d2) < 1e-10
+
 # test if two QgsPolyline are identical including reverse order
 # return False - not identical
 #        True - identical

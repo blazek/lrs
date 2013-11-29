@@ -58,6 +58,11 @@ class LrsRecord:
         k = ( measure - self.milestoneFrom ) / md
         return self.partFrom + k * pd
 
+    # True if nextRecord continues measure without gap in both milestone
+    # and part measures
+    def continues(self, nextRecord ):
+        return nextRecord.milestoneFrom == self.milestoneTo and nextRecord.partFrom == self.partTo
+
 class LrsSegment:
 
     def __init__(self, routeId, record, geo ):
@@ -193,14 +198,55 @@ class LrsRoutePart:
     def getPoint(self, partMeasure):
         self.polyline
 
-    # returns ( geometry, error )
-    def eventGeometry(self, start, end, linear):
+    # returns QgsPoint or None
+    def eventPoint(self, start):
         for record in self.records:
             if record.measureWithin( start ):
                 m = record.partMeasure( start )
                 point = polylinePoint ( self.polyline, m )
-                geo = QgsGeometry.fromPoint( point )
-                return geo, None
+                return point
+        return None
 
-        return None, 'measure not available'
+    # returns [ ( QgsPolyline, measure_from, measure_to ) ]
+    def eventSegments(self, start, end):
+        segments = []
+        # segment values
+        seg = LrsRecord(None,None,None,None)
+        nrecords = len(self.records)
+        for i in range(nrecords):
+            record = self.records[i]
+            nextRecord = self.records[i+1] if i < nrecords -1 else None
 
+            if end < record.milestoneFrom: break
+
+            if seg.milestoneFrom is None:
+                if start <= record.milestoneFrom:
+                    seg.milestoneFrom = record.milestoneFrom
+                    seg.partFrom = record.partFrom
+                elif record.measureWithin( start ):
+                    seg.milestoneFrom = start
+                    seg.partFrom = record.partMeasure( start )
+
+            if seg.milestoneFrom:
+                if end == record.milestoneTo:
+                    seg.milestoneTo = record.milestoneTo
+                    seg.partTo = record.partTo
+                elif record.measureWithin( end ):
+                    seg.milestoneTo = end
+                    seg.partTo = record.partMeasure( end )
+                elif nextRecord and record.continues( nextRecord ):
+                    pass
+                else:
+                    seg.milestoneTo = record.milestoneTo
+                    seg.partTo = record.partTo
+                    
+            if seg.milestoneTo:
+                polyline = polylineSegment( self.polyline, seg.partFrom, seg.partTo )
+                segments.append( ( polyline, seg.milestoneFrom, seg.milestoneTo ) )
+                
+                start = seg.milestoneTo 
+                seg = LrsRecord(None,None,None,None)
+
+
+            if doubleNear ( start, end ): break
+        return segments

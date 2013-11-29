@@ -425,18 +425,36 @@ class Lrs(QObject):
 
 ##################### EVENTS ######################################
 
-    # returns ( geometry, error )
-    def eventGeometry(self, routeId, start, end, linear):
+    def eventValuesError(self, routeId, start, end = None, linear = False):
         error = None
-        
-        if routeId is None: return None, 'missing route'
-        if start is None: return None, 'missing start measure'
-        if linear and end is None: return None, 'missing end measure'
+        missing = []
+        if routeId is None: missing.append( 'route' )
+        if start is None: missing.append( 'start measure' )
+        if linear and end is None: missing.append( 'end measure' )
 
-        if not self.routes.has_key(routeId):
-            return None, 'route not available'
+        if missing:
+            error = 'missing %s value' % ' and '.join( missing )
+
+        if routeId and not self.routes.has_key(routeId):
+            error = error + ', ' if error else ''
+            error += 'route not available'
+
+        return error
+
+    # returns ( QgsPoint, error )
+    def eventPoint(self, routeId, start):
+        error = self.eventValuesError( routeId, start)
+        if error: return None, error
 
         route = self.routes[routeId]
-        geo, error = route.eventGeometry( start, end, linear )
+        geo, error = route.eventPoint( start )
         return geo, error
         
+    # returns ( QgsMultiPolyline, error )
+    def eventMultiPolyLine(self, routeId, start, end):
+        error = self.eventValuesError( routeId, start, end, True)
+        if error: return None, error
+
+        route = self.routes[routeId]
+        geo, error = route.eventMultiPolyLine( start, end)
+        return geo, error

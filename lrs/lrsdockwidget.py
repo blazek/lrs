@@ -440,7 +440,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         errorFieldName = self.eventsErrorFieldLineEdit.text()
  
         # create new layer
-        uri = "LineString" if endFieldName else "Point"
+        uri = "MultiLineString" if endFieldName else "Point"
         uri += "?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( layer.pendingFields().toList() )
@@ -462,9 +462,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             eventFeature = QgsFeature( fields ) # fields must exist during feature life!
             for field in layer.pendingFields():
                 eventFeature[field.name()] = feature[field.name()]
-
-            linear = endFieldName is not None
-            geo, error = self.lrs.eventGeometry ( routeId, start, end, linear )  
+            
+            geo = QgsGeometry()
+            if endFieldName:
+                line, error = self.lrs.eventMultiPolyLine ( routeId, start, end )
+                if line:
+                    geo = QgsGeometry.fromMultiPolyline( line )
+            else:
+                point, error = self.lrs.eventPoint ( routeId, start )
+                if point:
+                    geo = QgsGeometry.fromPoint( point )
             
             if not geo: geo = QgsGeometry()
             if geo:
