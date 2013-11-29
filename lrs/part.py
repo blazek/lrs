@@ -42,6 +42,9 @@ class LrsRecord:
     def measureWithin(self, measure):
         return self.milestoneFrom < measure < self.milestoneTo
 
+    def partMeasureWithin(self, measure):
+        return self.partFrom < measure < self.partTo
+
     # returns true if measure at least partialy overlaps with another record
     def measureOverlaps(self, record ):
         if self.measureWithin( record.milestoneFrom ): return True
@@ -50,6 +53,13 @@ class LrsRecord:
         if record.measureWithin( self.milestoneTo ): return True
         if record.measureWithin( (self.milestoneFrom+self.milestoneTo)/2 ): return True
         return False
+
+    # get measure for part measure
+    def measure(self, partMeasure):
+        md = self.milestoneTo - self.milestoneFrom
+        pd = self.partTo - self.partFrom
+        k = ( partMeasure - self.partFrom ) / pd
+        return self.milestoneFrom + k * md
 
     # get distance from part beginning
     def partMeasure(self, measure):
@@ -251,3 +261,18 @@ class LrsRoutePart:
             if doubleNear ( start, end ): break
 
         return segments
+
+    # get measure for nearest point on polyline
+    # returns None if there is no record for the nearest point
+    def pointMeasure ( self, point ):
+        geo = QgsGeometry.fromPolyline( self.polyline )
+        ( sqDist, nearestPoint, afterVertex ) = geo.closestSegmentWithContext( point )
+        segment = afterVertex-1
+        partMeasure = measureAlongPolyline( self.polyline, segment, nearestPoint )
+
+        for record in self.records:
+            if record.partMeasureWithin( partMeasure ):
+                measure = record.measure( partMeasure )
+                return measure 
+
+        return None

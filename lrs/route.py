@@ -147,7 +147,7 @@ class LrsRoute:
             if line.geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
                 #polylines.append( line.geo.asPolyline() )
                 polys = [ line.geo.asPolyline() ]
-            else: # multiline
+            elif line.geo.wkbType() in [ QGis.WKBMultiLineString, QGis.WKBMultiLineString25D]:
                 #polylines.extend ( line.geo.asMultiPolyline() )
                 polys = line.geo.asMultiPolyline()
 
@@ -283,7 +283,8 @@ class LrsRoute:
             pts = []
             if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
                 pts = [ point.geo.asPoint() ]
-            else: # multi (makes little sense)
+            elif point.geo.wkbType() in [ QGis.WKBMultiPoint, QGis.WKBMultiPoint25D]: 
+                # multi (makes little sense)
                 pts = point.geo.asMultiPoint()
 
             pnts = [] # list of { point:, geoPart: }
@@ -460,8 +461,8 @@ class LrsRoute:
 
             if gaps:
                 error = 'segments %s not available' % ', '.join(gaps)            
-                debug( error )
+                #debug( error )
 
-        debug( '%s' % measures )
+        #debug( '%s' % measures )
 
         return multipolyline, error

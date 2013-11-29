@@ -95,8 +95,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsMeasureStartFieldCM = LrsFieldComboManager( self.eventsMeasureStartFieldCombo, self.eventsLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'eventsMeasureStartField' )
         self.eventsMeasureEndFieldCM = LrsFieldComboManager( self.eventsMeasureEndFieldCombo, self.eventsLayerCM, types = [ QVariant.Int, QVariant.Double ], allowNone = True, settingsName = 'eventsMeasureEndField' )
 
-        self.eventsOutputNameLineEditWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
-        self.eventsErrorFieldLineEditWM = LrsWidgetManager( self.eventsErrorFieldLineEdit, settingsName = 'eventsErrorField', defaultValue = 'lrs_err' )
+        self.eventsOutputNameWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
+        self.eventsErrorFieldWM = LrsWidgetManager( self.eventsErrorFieldLineEdit, settingsName = 'eventsErrorField', defaultValue = 'lrs_err' )
         validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ) )
         self.eventsErrorFieldLineEdit.setValidator( validator )
 
@@ -109,6 +109,29 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsOutputNameLineEdit.textEdited.connect(self.resetEventsButtons)
         self.resetEventsOptions()
         self.resetEventsButtons()
+
+        #### measureTab
+        self.measureLayerCM = LrsLayerComboManager( self.measureLayerCombo, geometryType = QGis.Point, settingsName = 'measureLayerId' )
+        self.measureThresholdWM = LrsWidgetManager( self.measureThresholdSpin, settingsName = 'measureThreshold', defaultValue = 200.0 )
+        self.measureOutputNameWM = LrsWidgetManager( self.measureOutputNameLineEdit, settingsName = 'measureOutputName', defaultValue = 'LRS measure' )
+
+        self.measureRouteFieldWM = LrsWidgetManager( self.measureRouteFieldLineEdit, settingsName = 'measureRouteField', defaultValue = 'route' )
+        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ) )
+        self.measureRouteFieldLineEdit.setValidator( validator )
+
+        self.measureMeasureFieldWM = LrsWidgetManager( self.measureMeasureFieldLineEdit, settingsName = 'measureMeasureField', defaultValue = 'measure' )
+        self.measureMeasureFieldLineEdit.setValidator( validator )
+
+
+        self.measureButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.calculateMeasures)
+        self.measureButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetMeasureOptionsAndWrite)
+        self.measureLayerCombo.currentIndexChanged.connect(self.resetMeasureButtons)
+        self.measureOutputNameLineEdit.textEdited.connect(self.resetMeasureButtons)
+        self.measureRouteFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
+        self.measureMeasureFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
+        self.resetMeasureOptions()
+        self.resetMeasureButtons()
+
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
         
@@ -130,6 +153,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.readGenerateOptions()
         self.readEventsOptions()
+        self.readMeasureOptions()
 
         registry = QgsMapLayerRegistry.instance()
 
@@ -280,6 +304,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             self.iface.mapCanvas().refresh()
 
         self.resetEventsButtons()
+        self.resetMeasureButtons()
 
     def showProgress(self, label, percent):
         self.genProgressLabel.show()
@@ -401,8 +426,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsRouteFieldCM.reset() 
         self.eventsMeasureStartFieldCM.reset() 
         self.eventsMeasureEndFieldCM.reset() 
-        self.eventsOutputNameLineEditWM.reset()
-        self.eventsErrorFieldLineEditWM.reset()
+        self.eventsOutputNameWM.reset()
+        self.eventsErrorFieldWM.reset()
 
     def resetEventsOptionsAndWrite(self):
         self.resetEventsOptions()
@@ -419,16 +444,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsRouteFieldCM.writeToProject()
         self.eventsMeasureStartFieldCM.writeToProject()
         self.eventsMeasureEndFieldCM.writeToProject()
-        self.eventsOutputNameLineEditWM.writeToProject()
-        self.eventsErrorFieldLineEditWM.writeToProject()
+        self.eventsOutputNameWM.writeToProject()
+        self.eventsErrorFieldWM.writeToProject()
 
     def readEventsOptions(self):
         self.eventsLayerCM.readFromProject()
         self.eventsRouteFieldCM.readFromProject()
         self.eventsMeasureStartFieldCM.readFromProject()
         self.eventsMeasureEndFieldCM.readFromProject()
-        self.eventsOutputNameLineEditWM.readFromProject()
-        self.eventsErrorFieldLineEditWM.readFromProject()
+        self.eventsOutputNameWM.readFromProject()
+        self.eventsErrorFieldWM.readFromProject()
 
     def createEvents(self):
         self.writeEventsOptions()
@@ -437,6 +462,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         routeFieldName = self.eventsRouteFieldCM.getFieldName()
         startFieldName = self.eventsMeasureStartFieldCM.getFieldName()
         endFieldName = self.eventsMeasureEndFieldCM.getFieldName()
+        outputName = self.eventsOutputNameLineEdit.text()
+        if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
  
         # create new layer
@@ -447,21 +474,19 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if errorFieldName:
             provider.addAttributes( [ QgsField( errorFieldName, QVariant.String, "string"), ]) 
         uri = provider.dataSourceUri()
-        outputName = self.eventsOutputNameLineEdit.text()
-        if not outputName: outputName = self.eventsOutputNameLineEditWM.defaultValue()
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
 
-        eventFeatures = []
+        outputFeatures = []
         fields = outputLayer.pendingFields()
         for feature in layer.getFeatures():
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None
-            debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
+            #debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
 
-            eventFeature = QgsFeature( fields ) # fields must exist during feature life!
+            outputFeature = QgsFeature( fields ) # fields must exist during feature life!
             for field in layer.pendingFields():
-                eventFeature[field.name()] = feature[field.name()]
+                outputFeature[field.name()] = feature[field.name()]
             
             geo = QgsGeometry()
             if endFieldName:
@@ -475,12 +500,104 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             
             if not geo: geo = QgsGeometry()
             if geo:
-                eventFeature.setGeometry( geo )
+                outputFeature.setGeometry( geo )
             if errorFieldName and error:
-                eventFeature[errorFieldName] = error
+                outputFeature[errorFieldName] = error
 
-            eventFeatures.append( eventFeature )
+            outputFeatures.append( outputFeature )
 
-        outputLayer.dataProvider().addFeatures( eventFeatures )
+        outputLayer.dataProvider().addFeatures( outputFeatures )
+
+        QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )
+
+############################# MEASURE ####################################
+
+    def resetMeasureOptions(self):
+        #debug('resetMeasureOptions')
+        self.measureLayerCM.reset() 
+        self.measureThresholdWM.reset()
+        self.measureOutputNameWM.reset()
+        self.measureRouteFieldWM.reset()
+        self.measureMeasureFieldWM.reset()
+
+    def resetMeasureOptionsAndWrite(self):
+        self.resetMeasureOptions()
+        self.writeMeasureOptions()
+
+    def resetMeasureButtons(self):
+        #debug('resetMeasureButtons')
+        enabled = bool(self.lrs) and self.measureLayerCombo.currentIndex() != -1 and bool(self.measureOutputNameLineEdit.text()) and bool(self.measureRouteFieldLineEdit.text()) and bool(self.measureMeasureFieldLineEdit.text())
+
+        self.measureButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+
+    # save settings in project
+    def writeMeasureOptions(self):
+        self.measureLayerCM.writeToProject()
+        self.measureThresholdWM.writeToProject()
+        self.measureOutputNameWM.writeToProject()
+        self.measureRouteFieldWM.writeToProject()
+        self.measureMeasureFieldWM.writeToProject()
+
+    def readMeasureOptions(self):
+        self.measureLayerCM.readFromProject()
+        self.measureThresholdWM.readFromProject()
+        self.measureOutputNameWM.readFromProject()
+        self.measureRouteFieldWM.readFromProject()
+        self.measureMeasureFieldWM.readFromProject()
+
+    def calculateMeasures(self):
+        #debug('calculateMeasures')
+        self.writeMeasureOptions()
+
+        layer = self.measureLayerCM.getLayer()
+        threshold = self.measureThresholdSpin.value()
+        outputName = self.measureOutputNameLineEdit.text()
+        if not outputName: outputName = self.measureOutputNameWM.defaultValue()
+        routeFieldName = self.measureRouteFieldLineEdit.text()
+        measureFieldName = self.measureMeasureFieldLineEdit.text()
+ 
+        # create new layer
+        uri = "Point?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        provider.addAttributes( layer.pendingFields().toList() )
+        provider.addAttributes( [ 
+            QgsField( routeFieldName, QVariant.String, "string"), 
+            QgsField( measureFieldName, QVariant.Double, "double"), 
+        ]) 
+
+        uri = provider.dataSourceUri()
+        outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
+
+        outputFeatures = []
+        fields = outputLayer.pendingFields()
+        for feature in layer.getFeatures():
+            points = []
+            
+            geo = feature.geometry()
+            if geo:
+                if geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+                    points = [ geo.asPoint() ]
+                elif geo.wkbType() in [ QGis.WKBMultiPoint, QGis.WKBMultiPoint25D]:
+                    points = geo.asMultiPoint()
+
+            # TODO: reprojection
+
+            for point in points:
+                outputFeature = QgsFeature( fields ) # fields must exist during feature life!
+                outputFeature.setGeometry( QgsGeometry.fromPoint( point ) )
+                
+                for field in layer.pendingFields():
+                    outputFeature[field.name()] = feature[field.name()]
+                
+                routeId, measure = self.lrs.pointMeasure ( point, threshold )
+                debug ( "routeId = %s merasure = %s" % (routeId, measure) )
+
+                if routeId is not None:
+                    outputFeature[routeFieldName] = '%s' % routeId
+                outputFeature[measureFieldName] = measure
+
+                outputFeatures.append( outputFeature )
+
+        outputLayer.dataProvider().addFeatures( outputFeatures )
 
         QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )

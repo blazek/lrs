@@ -103,7 +103,7 @@ class LrsLayerComboManager(LrsComboManager):
         layerIds = []
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
             if layer.type() != QgsMapLayer.VectorLayer: continue
-            if self.geometryType and layer.geometryType() != self.geometryType: continue
+            if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
             layerIds.append(layerId)
 
         # delete removed layers
@@ -115,7 +115,7 @@ class LrsLayerComboManager(LrsComboManager):
         # add new layers
         for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
             if layer.type() != QgsMapLayer.VectorLayer: continue
-            if self.geometryType and layer.geometryType() != self.geometryType: continue
+            if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
 
             start = self.model.index(0,0, QModelIndex())
             indexes = self.model.match( start, Qt.UserRole, layerId, Qt.MatchFixedString )

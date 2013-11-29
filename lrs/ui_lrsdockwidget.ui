@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="genTab">
        <attribute name="title">
@@ -398,6 +398,120 @@
        <zorder>gridLayoutWidget</zorder>
        <zorder>eventsOutputNameLabel</zorder>
        <zorder>verticalSpacer_2</zorder>
+      </widget>
+      <widget class="QWidget" name="measureTab">
+       <attribute name="title">
+        <string>Measure</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="1">
+           <widget class="QComboBox" name="measureLayerCombo"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="measureLayerLabel">
+            <property name="text">
+             <string>Layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="measureRouteFieldLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="measureOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="measureRouteFieldLabel">
+            <property name="text">
+             <string>Output route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="measureOutputNameLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="measureMeasureFieldLabel">
+            <property name="text">
+             <string>Output route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="measureMeasureFieldLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="measureThresholdSpin">
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="measureThresholdLabel">
+            <property name="text">
+             <string>Threshold</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="Line" name="line_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QDialogButtonBox" name="measureButtonBox">
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

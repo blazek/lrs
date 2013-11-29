@@ -100,6 +100,9 @@ class Lrs(QObject):
         # dictionary of LrsRoute
         self.routes = {} 
 
+        self.partSpatialIndex = None
+        self.partSpatialIndexRoutePart = None
+
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)        
 
     def __del__(self):
@@ -458,3 +461,69 @@ class Lrs(QObject):
         route = self.routes[routeId]
         geo, error = route.eventMultiPolyLine( start, end)
         return geo, error
+
+############################# MEASURE ####################################
+
+    def deletePartSpatialIndex(self):
+        if self.partSpatialIndex:
+            del self.partSpatialIndex
+        self.partSpatialIndex = None
+        self.partSpatialIndexRoutePart = None
+
+    def createPartSpatialIndex(self):
+        self.deletePartSpatialIndex()
+        self.partSpatialIndex = QgsSpatialIndex()
+        self.partSpatialIndexRoutePart = {}
+        fid = 1
+        for route in self.routes.values():
+            for i in range(len(route.parts)):
+                feature = QgsFeature(fid)
+                geo = QgsGeometry.fromPolyline( route.parts[i].polyline )
+                feature.setGeometry( geo )
+                self.partSpatialIndex.insertFeature( feature )
+                self.partSpatialIndexRoutePart[fid] = [ route.routeId, i ]
+                fid += 1
+
+    # returns nearest routeId, partIdx within threshold 
+    def nearestRoutePart(self, point, threshold ):
+        if not self.partSpatialIndex:
+            self.createPartSpatialIndex()
+        rect = QgsRectangle( point.x()-threshold, point.y()-threshold, point.x()+threshold, point.y()+threshold )
+        ids = self.partSpatialIndex.intersects( rect )
+        #debug ( '%s' % ids )
+        nearestRouteId = None
+        nearestPartIdx = None
+        nearestDist = sys.float_info.max
+        for id in ids:
+            routeId, partIdx = self.partSpatialIndexRoutePart[id]
+            route = self.routes[routeId]
+            part = route.parts[partIdx]
+            geo = QgsGeometry.fromPolyline( part.polyline )
+            ( sqDist, nearestPnt, afterVertex ) = geo.closestSegmentWithContext( point )
+            dist = math.sqrt( sqDist )
+            if dist < nearestDist:
+                nearestDist = dist
+                nearestRouteId = routeId
+                nearestPartIdx = partIdx
+    
+        if nearestDist <= threshold:
+            return nearestRouteId, nearestPartIdx
+
+        return None, None
+
+    # return routeId, measure
+    # Note: it may happen that nearest point (projected) has no record on part,
+    # in that case is returned None even if another record may be in threshold,
+    # this is currently feature
+    # TODO: search for nearest available referenced segments (records) instead 
+    # of part polylines?
+    def pointMeasure ( self, point, threshold ):
+        routeId, partIdx = self.nearestRoutePart( point, threshold)
+        if routeId is not None and partIdx is not None:
+            route = self.routes[routeId]
+            part = route.parts[partIdx]
+            measure = part.pointMeasure( point )
+            if measure is not None:
+                return routeId, measure
+        return None, None
+
