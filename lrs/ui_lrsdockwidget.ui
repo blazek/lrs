@@ -300,6 +300,13 @@
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <layout class="QGridLayout" name="eventsGridLayout">
+          <item row="6" column="0">
+           <widget class="QLabel" name="eventsErrorFieldLabel">
+            <property name="text">
+             <string>Output error field</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="eventsRouteFieldLabel">
             <property name="text">
@@ -337,6 +344,13 @@
             </property>
            </widget>
           </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="eventsOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="1">
            <widget class="QComboBox" name="eventsLayerCombo"/>
           </item>
@@ -347,24 +361,10 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="eventsOutputNameLabel">
-            <property name="text">
-             <string>Output layer name</string>
-            </property>
-           </widget>
-          </item>
           <item row="5" column="1">
            <widget class="QLineEdit" name="eventsOutputNameLineEdit">
             <property name="text">
              <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="eventsErrorFieldLabel">
-            <property name="text">
-             <string>Output error field</string>
             </property>
            </widget>
           </item>

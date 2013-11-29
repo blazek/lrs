@@ -432,7 +432,36 @@ class LrsRoute:
             segments = part.eventSegments( start, end )
             for polyline, measure_from, measure_to in segments:
                 multipolyline.append( polyline )
-                measures.append( (measure_from, measure_to ))
+                measures.append( [measure_from, measure_to ])
+
+        
+        error = None
+        if len(multipolyline) == 0:
+            multipolyline = None
+            error = 'segment not available'
+        else:
+            # make error message  for gaps
+            measures.sort()
+            #debug( '%s' % measures )
+            for i in range(len(measures)-1,0,-1):
+                if doubleNear( measures[i][0], measures[i-1][1] ):
+                    measures[i-1][1] = measures[i][1]
+                    del measures[i]
+
+            if start < measures[0][0]:
+                measures.insert(0,[start,start]) 
+
+            if end > measures[-1][1]:
+                measures.append([end,end]) 
+
+            gaps = []
+            for i in range(len(measures)-1):
+                gaps.append( '%s-%s' % ( measures[i][1], measures[i+1][0] ) )
+
+            if gaps:
+                error = 'segments %s not available' % ', '.join(gaps)            
+                debug( error )
 
         debug( '%s' % measures )
-        return multipolyline if multipolyline else None, ''
+
+        return multipolyline, error

@@ -207,7 +207,7 @@ class LrsRoutePart:
                 return point
         return None
 
-    # returns [ ( QgsPolyline, measure_from, measure_to ) ]
+    # returns [ [ QgsPolyline, measure_from, measure_to ], ... ]
     def eventSegments(self, start, end):
         segments = []
         # segment values
@@ -242,11 +242,12 @@ class LrsRoutePart:
                     
             if seg.milestoneTo:
                 polyline = polylineSegment( self.polyline, seg.partFrom, seg.partTo )
-                segments.append( ( polyline, seg.milestoneFrom, seg.milestoneTo ) )
+                segments.append( [ polyline, seg.milestoneFrom, seg.milestoneTo ] )
                 
                 start = seg.milestoneTo 
                 seg = LrsRecord(None,None,None,None)
 
 
             if doubleNear ( start, end ): break
+
         return segments
