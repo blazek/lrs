@@ -132,6 +132,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetMeasureOptions()
         self.resetMeasureButtons()
 
+        #####
+        self.enableTabs()
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
         
@@ -176,8 +178,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        if self.genLineLayerCM.getLayer():
-            self.generateLrs() # only when reloading!
+        #if self.genLineLayerCM.getLayer():
+        #    self.generateLrs() # only when reloading!
 
     def close(self):
         if self.lrs:
@@ -216,6 +218,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 self.qualityLayerManager = None
                 self.qualityLayer = None
                 project.removeEntry( PROJECT_PLUGIN_NAME, "qualityLayerId" )
+
+    def enableTabs(self):
+        enable = bool(self.lrs)
+        self.errorTab.setEnabled( enable )
+        self.eventsTab.setEnabled( enable )
+        self.measureTab.setEnabled( enable )
 
 ############################ GENERATE (CALIBRATE) ###############################
 
@@ -305,6 +313,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.resetEventsButtons()
         self.resetMeasureButtons()
+        self.enableTabs()
 
     def showProgress(self, label, percent):
         self.genProgressLabel.show()

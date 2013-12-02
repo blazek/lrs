@@ -525,5 +525,6 @@ class Lrs(QObject):
             measure = part.pointMeasure( point )
             if measure is not None:
                 return routeId, measure
-        return None, None
+            
+        return routeId, None
 

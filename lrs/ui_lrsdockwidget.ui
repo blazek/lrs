@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="genTab">
        <attribute name="title">
@@ -318,7 +318,11 @@
            <widget class="QComboBox" name="eventsRouteFieldCombo"/>
           </item>
           <item row="2" column="1">
-           <widget class="QComboBox" name="eventsMeasureStartFieldCombo"/>
+           <widget class="QComboBox" name="eventsMeasureStartFieldCombo">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
+           </widget>
           </item>
           <item row="4" column="0" colspan="2">
            <widget class="Line" name="line_3">
@@ -328,10 +332,17 @@
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QComboBox" name="eventsMeasureEndFieldCombo"/>
+           <widget class="QComboBox" name="eventsMeasureEndFieldCombo">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="eventsMeasureStartFieldLabel">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
             <property name="text">
              <string>Start measure field</string>
             </property>
@@ -356,6 +367,9 @@
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="eventsMeasureEndFieldLabel">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
             <property name="text">
              <string>End measure field</string>
             </property>
@@ -395,8 +409,6 @@
         </item>
        </layout>
        <zorder>eventsButtonBox</zorder>
-       <zorder>gridLayoutWidget</zorder>
-       <zorder>eventsOutputNameLabel</zorder>
        <zorder>verticalSpacer_2</zorder>
       </widget>
       <widget class="QWidget" name="measureTab">
