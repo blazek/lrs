@@ -413,7 +413,7 @@ class LrsRoute:
             feature.setAttribute( 'len', length )
             feature.setAttribute( 'err_abs', err_abs )
             feature.setAttribute( 'err_rel', err_rel )
-            feature.setAttribute( 'err_perc', err_rel * 100 )
+            feature.setAttribute( 'err_perc', abs(err_rel) * 100 )
             features.append( feature )
 
         return features

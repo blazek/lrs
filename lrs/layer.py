@@ -64,11 +64,9 @@ class LrsQualityLayer(QgsVectorLayer):
 
         # min, max, color, label
         styles = [
-            [ -1000000, -30, QColor(Qt.red), '< -30 %' ],
-            [ -30, -10, QColor(Qt.blue), '-30 to -10 %' ],
-            [ -10, 10, QColor(Qt.green), '-10 to 10 %' ],
-            [ 10, 30, QColor(Qt.blue), '10 to 30 %' ],
-            [ 30, 1000000, QColor(Qt.red), '> 30 %' ]
+            [ 0, 10, QColor(Qt.green), '0 - 10 % error' ],
+            [ 10, 30, QColor(Qt.blue), '10 - 30 % error' ],
+            [ 30, 1000000, QColor(Qt.red), '> 30 % error' ]
         ]
         ranges = []
         for style in styles:
