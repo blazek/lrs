@@ -178,8 +178,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        if self.genLineLayerCM.getLayer():
-            self.generateLrs() # only when reloading!
+        #if self.genLineLayerCM.getLayer():
+        #    self.generateLrs() # only when reloading!
 
     def close(self):
         if self.lrs:
@@ -599,7 +599,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                     outputFeature[field.name()] = feature[field.name()]
                 
                 routeId, measure = self.lrs.pointMeasure ( point, threshold )
-                debug ( "routeId = %s merasure = %s" % (routeId, measure) )
+                #debug ( "routeId = %s merasure = %s" % (routeId, measure) )
 
                 if routeId is not None:
                     outputFeature[routeFieldName] = '%s' % routeId

@@ -29,12 +29,14 @@ TRANSLATIONS =
 
 # global
 
-PLUGINNAME = lrsplugin
+PLUGINNAME = lrs
 
 PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 
 #EXTRAS = icon.png metadata.txt
 EXTRAS = icon.svg metadata.txt
+
+PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py utils.py widget.py icon.svg
 
 UI_FILES = ui_lrsdockwidget.py
 
@@ -57,41 +59,51 @@ compile: $(UI_FILES) $(RESOURCE_FILES)
 
 # The deploy  target only works on unix like operating system where
 # the Python plugin directory is located at:
-# $HOME/.qgis/python/plugins
+# $HOME/.qgis2/python/plugins
 deploy: compile doc transcompile
-	mkdir -p $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vf $(PY_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vf $(UI_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vf $(EXTRAS) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vfr i18n $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
-	cp -vfr $(HELP) $(HOME)/.qgis/python/plugins/$(PLUGINNAME)/help
+	mkdir -p $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vf $(PY_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vf $(UI_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vf $(EXTRAS) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vfr i18n $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	cp -vfr $(HELP) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)/help
 
 # The dclean target removes compiled python files from plugin directory
 # also delets any .svn entry
 dclean:
-	find $(HOME)/.qgis/python/plugins/$(PLUGINNAME) -iname "*.pyc" -delete
-	find $(HOME)/.qgis/python/plugins/$(PLUGINNAME) -iname ".svn" -prune -exec rm -Rf {} \;
+	find $(HOME)/.qgis2/python/plugins/$(PLUGINNAME) -iname "*.pyc" -delete
+	find $(HOME)/.qgis2/python/plugins/$(PLUGINNAME) -iname ".svn" -prune -exec rm -Rf {} \;
 
 # The derase deletes deployed plugin
 derase:
-	rm -Rf $(HOME)/.qgis/python/plugins/$(PLUGINNAME)
+	rm -Rf $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
 
 # The zip target deploys the plugin and creates a zip file with the deployed
 # content. You can then upload the zip file on http://plugins.qgis.org
 zip: deploy dclean 
 	rm -f $(PLUGINNAME).zip
-	cd $(HOME)/.qgis/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
+	cd $(HOME)/.qgis2/python/plugins; zip -9r $(CURDIR)/$(PLUGINNAME).zip $(PLUGINNAME)
 
 # Create a zip package of the plugin named $(PLUGINNAME).zip. 
 # This requires use of git (your plugin development directory must be a 
 # git repository).
 # To use, pass a valid commit or tag as follows:
 #   make package VERSION=Version_0.3.2
+#package: compile
+#		rm -f $(PLUGINNAME).zip
+#		git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
+#		echo "Created package: $(PLUGINNAME).zip"
+
+# How to add directory path in zip?
 package: compile
-		rm -f $(PLUGINNAME).zip
-		git archive --prefix=$(PLUGINNAME)/ -o $(PLUGINNAME).zip $(VERSION)
-		echo "Created package: $(PLUGINNAME).zip"
+	rm -f lrs.zip
+	rm -rf lrs/
+	mkdir lrs
+	cp $(PACKAGE_FILES) lrs/
+	zip -9r lrs.zip lrs/
+	rm -rf lrs/
+	echo "Created package: lrs.zip"
 
 upload: zip
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip
