@@ -55,7 +55,7 @@ class LrsPlugin:
         #debug( "LrsPlugin.initGui" )
         # Create action that will start plugin configuration
         self.action = QAction(
-            QIcon(":/plugins/lrsplugin/icon.png"),
+            QIcon(":/plugins/lrs/icon.svg"),
             u"LRS", self.iface.mainWindow())
         # connect the action to the run method
         self.action.triggered.connect(self.run)

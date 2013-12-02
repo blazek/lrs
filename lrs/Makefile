@@ -33,7 +33,8 @@ PLUGINNAME = lrsplugin
 
 PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 
-EXTRAS = icon.png metadata.txt
+#EXTRAS = icon.png metadata.txt
+EXTRAS = icon.svg metadata.txt
 
 UI_FILES = ui_lrsdockwidget.py
 
@@ -43,9 +44,9 @@ HELP = help/build/html
 
 default: compile
 
-compile: $(UI_FILES) $(RESOURCE_FILES)
+compile: $(UI_FILES) $(RESOURCE_FILES) 
 
-%_rc.py : %.qrc
+%_rc.py : %.qrc $(EXTRAS)
 	pyrcc4 -o $*_rc.py  $<
 
 %.py : %.ui

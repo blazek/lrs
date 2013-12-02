@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<!-- Created using Karbon, part of Calligra: http://www.calligra.org/karbon -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25.6pt" height="25.6pt">
+<defs/>
+<g id="layer2">
+  <rect id="shape0" transform="translate(0.0583181, 0.0583181)" fill="#2e8b57" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="2.00000000000" width="25.51999401627pt" height="25.56664848430pt"/>
+  <path id="shape1" transform="translate(-6.93889e-17, -0.00474085)" fill="#a9a9a9" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="bevel" d="M0 32.068L12.585 32.068L32 11.402L32 0L23.9452 0.00474085L6.93889e-17 13.7582Z"/>
+  <path id="shape2" transform="translate(0.989691, 16.0825)" fill="#ffffff" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="bevel" d="M0 6.02062L8.70103 0L10.2268 0.453608L1.85567 6.5567Z"/>
+  <path id="shape3" transform="translate(16.6598, 7.54639)" fill="#ffffff" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="bevel" d="M0 3.6701L5.36082 0L6.67066 0.160991L1.40206 3.91753Z"/>
+  <path id="shape4" transform="translate(26.1443, 2.10309)" fill="#ffffff" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="bevel" d="M0 2.51546L3.6701 0L4.57732 0.164948L1.07216 2.72165Z"/>
+  <path id="shape5" transform="translate(18.4868, 14.1011)" fill="#ffffff" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="2.00000000000" d="M0 15.8744C0.0816263 12.7865 0.178823 9.05412 0.29159 4.67732C0.460741 -1.88788 9.94077 -1.20299 9.85576 4.619C9.79908 8.50033 9.74076 12.2716 9.6808 15.9327Z"/>
+  <path id="shape6" transform="translate(21.249, 17.7075)" fill="#000000" fill-rule="evenodd" stroke="#000000" stroke-width="0.08503951740" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="2.00000000000" d="M0 3.85771L2.78261 0L3.92095 0L3.85771 9.42292L2.71937 9.35968C2.71937 6.99868 2.65613 4.63768 2.65613 2.27668L0.885375 4.42688Z"/>
+ </g>
+</svg>

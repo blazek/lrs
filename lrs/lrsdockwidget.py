@@ -178,8 +178,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateButtons()
 
         # debug
-        #if self.genLineLayerCM.getLayer():
-        #    self.generateLrs() # only when reloading!
+        if self.genLineLayerCM.getLayer():
+            self.generateLrs() # only when reloading!
 
     def close(self):
         if self.lrs:
