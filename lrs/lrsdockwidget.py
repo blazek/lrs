@@ -139,6 +139,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         QgsProject.instance().readProject.connect( self.projectRead )
 
+        # newProject is currently missing in sip
+        #QgsProject.instance().newProject.connect( self.projectNew )
+
         # read project if plugin was reloaded
         self.projectRead()
 
@@ -181,10 +184,19 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #if self.genLineLayerCM.getLayer():
         #    self.generateLrs() # only when reloading!
 
-    def close(self):
-        if self.lrs:
-            del self.lrs
+    def projectNew(self):
+        self.deleteLrs()
+        self.resetGenerateOptions()
+        self.resetEventsOptions()
+        self.resetMeasureOptions()
+        self.enableTabs()
+
+    def deleteLrs(self):
+        if self.lrs: del self.lrs
         self.lrs = None
+
+    def close(self):
+        self.deleteLrs()
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect( self.projectRead )
 
@@ -240,6 +252,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.reset() 
         self.genMapUnitsPerMeasureUnitWM.reset()
         self.genThresholdWM.reset()
+
+        self.resetGenerateButtons()
         
     def resetGenerateOptionsAndWrite(self):
         self.resetGenerateOptions()
@@ -338,10 +352,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             if selected in rows:
                 self.errorView.selectionModel().clear()
         self.errorModel.updateErrors( errorUpdates )
+        self.errorSelectionChanged()
         self.updateErrorLayers( errorUpdates )
         self.updateQualityLayer( errorUpdates )
 
-    def errorSelectionChanged(self, selected, deselected ):
+    #def errorSelectionChanged(self, selected, deselected ):
+    def errorSelectionChanged(self):
         error = self.getSelectedError()
         self.errorVisualizer.highlight( error, self.lrs.crs )
         self.errorZoomButton.setEnabled( error is not None ) 
@@ -439,6 +455,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsOutputNameWM.reset()
         self.eventsErrorFieldWM.reset()
 
+        self.resetEventsButtons()
+
     def resetEventsOptionsAndWrite(self):
         self.resetEventsOptions()
         self.writeEventsOptions()
@@ -529,6 +547,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.measureOutputNameWM.reset()
         self.measureRouteFieldWM.reset()
         self.measureMeasureFieldWM.reset()
+
+        self.resetMeasureButtons()
 
     def resetMeasureOptionsAndWrite(self):
         self.resetMeasureOptions()

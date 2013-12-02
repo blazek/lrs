@@ -273,7 +273,9 @@ class Lrs(QObject):
         self.pointEditBuffer = self.pointLayer.editBuffer()
         self.pointEditBuffer.featureAdded.connect( self.pointFeatureAdded )
         self.pointEditBuffer.featureDeleted.connect( self.pointFeatureDeleted )
-        self.pointEditBuffer.geometryChanged.connect( self.pointGeometryChanged )
+        # some versions of PyQt fail (Win build) with new style connection if the signal has multiple params
+        #self.pointEditBuffer.geometryChanged.connect( self.pointGeometryChanged )
+        QObject.connect(self.pointEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"), self.pointGeometryChanged )
         self.pointEditBuffer.attributeValueChanged.connect( self.pointAttributeValueChanged )
 
     def pointLayerEditingStopped(self):
@@ -290,7 +292,8 @@ class Lrs(QObject):
         self.lineEditBuffer = self.lineLayer.editBuffer()
         self.lineEditBuffer.featureAdded.connect( self.lineFeatureAdded )
         self.lineEditBuffer.featureDeleted.connect( self.lineFeatureDeleted )
-        self.lineEditBuffer.geometryChanged.connect( self.lineGeometryChanged )
+        #self.lineEditBuffer.geometryChanged.connect( self.lineGeometryChanged )
+        QObject.connect(self.lineEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"), self.lineGeometryChanged )
         self.lineEditBuffer.attributeValueChanged.connect( self.lineAttributeValueChanged )
 
     def lineLayerEditingStopped(self):
