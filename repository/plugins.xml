@@ -1,0 +1,11 @@
+<?xml version = "1.0"?>
+<plugins>
+   <pyqgis_plugin name = "LRS Plugin" version = "0.1.0">
+     <description>LRS plugin</description>
+     <homepage>https://github.com/blazek/lrs</homepage>
+     <qgis_minimum_version>2.0</qgis_minimum_version>
+     <file_name>lrs.0.1.0.zip </file_name>
+     <author_name>Radim Blazek</author_name>
+     <download_url>https://raw.github.com/blazek/lrs/master/repository/lrs.0.1.0.zip</download_url>
+   </pyqgis_plugin>
+</plugins> 
