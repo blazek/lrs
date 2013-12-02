@@ -97,7 +97,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.eventsOutputNameWM = LrsWidgetManager( self.eventsOutputNameLineEdit, settingsName = 'eventsOutputName', defaultValue = 'LRS events' )
         self.eventsErrorFieldWM = LrsWidgetManager( self.eventsErrorFieldLineEdit, settingsName = 'eventsErrorField', defaultValue = 'lrs_err' )
-        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ) )
+        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ), None )
         self.eventsErrorFieldLineEdit.setValidator( validator )
 
         self.eventsButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.createEvents)
@@ -116,7 +116,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.measureOutputNameWM = LrsWidgetManager( self.measureOutputNameLineEdit, settingsName = 'measureOutputName', defaultValue = 'LRS measure' )
 
         self.measureRouteFieldWM = LrsWidgetManager( self.measureRouteFieldLineEdit, settingsName = 'measureRouteField', defaultValue = 'route' )
-        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ) )
+        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ), None )
         self.measureRouteFieldLineEdit.setValidator( validator )
 
         self.measureMeasureFieldWM = LrsWidgetManager( self.measureMeasureFieldLineEdit, settingsName = 'measureMeasureField', defaultValue = 'measure' )
@@ -271,10 +271,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.writeGenerateOptions()
 
         crs = self.genLineLayerCM.getLayer().crs()
+        #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
         if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
-            self.lrsCrs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
 
-        #crs = self.genLineLayerCM.getLayer().crs() # debug 
+            crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
 
         threshold = self.genThresholdSpin.value()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
@@ -367,7 +368,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         project = QgsProject.instance()
 
         if not self.errorLineLayer:
-            self.errorLineLayer = LrsErrorLineLayer( self.iface.mapCanvas().mapRenderer().destinationCrs() )
+            self.errorLineLayer = LrsErrorLineLayer( self.lrs.crs )
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
             self.errorLineLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorLineLayer()
@@ -375,7 +376,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             project.writeEntry( PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id() )
 
         if not self.errorPointLayer:
-            self.errorPointLayer = LrsErrorPointLayer( self.iface.mapCanvas().mapRenderer().destinationCrs() )
+            self.errorPointLayer = LrsErrorPointLayer( self.lrs.crs )
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
             self.errorPointLayer.rendererV2().symbol().setColor( QColor(Qt.red) )
             self.resetErrorPointLayer()
@@ -413,7 +414,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def addQualityLayer(self):
         if not self.qualityLayer:
-            self.qualityLayer = LrsQualityLayer(self.iface.mapCanvas().mapRenderer().destinationCrs())
+            self.qualityLayer = LrsQualityLayer( self.lrs.crs )
             self.qualityLayerManager = LrsQualityLayerManager ( self.qualityLayer )
 
             self.resetQualityLayer()
@@ -477,7 +478,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
  
         # create new layer
         uri = "MultiLineString" if endFieldName else "Point"
-        uri += "?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+        uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapRenderer().destinationCrs() )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( layer.pendingFields().toList() )
         if errorFieldName:
@@ -566,7 +567,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         measureFieldName = self.measureMeasureFieldLineEdit.text()
  
         # create new layer
-        uri = "Point?crs=%s" %  self.iface.mapCanvas().mapRenderer().destinationCrs().authid()
+        uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapRenderer().destinationCrs() )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( layer.pendingFields().toList() )
         provider.addAttributes( [ 

@@ -314,7 +314,7 @@ class LrsRoute:
                     nodes[ ph ]['origins'].append( origin )
 
         for node in nodes.values():
-            print "npoints = %s" % node['npoints']
+            #debug ( "npoints = %s" % node['npoints'] )
             if node['npoints'] > 1:
                 geo = QgsGeometry.fromPoint( node['pnt'] )
                 self.errors.append( LrsError( LrsError.DUPLICATE_POINT, geo, routeId = self.routeId, measure = node['measures'], origins = node['origins'] ) )    

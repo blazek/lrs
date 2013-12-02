@@ -94,8 +94,8 @@ def pointOnLine( point1, point2, distance ):
 
 # returns new QgsPoint on polyline in distance along original polyline
 def polylinePoint( polyline, distance ):
-    geo = QgsGeometry.fromPolyline( polyline )
-    length = geo.length()
+    #geo = QgsGeometry.fromPolyline( polyline )
+    #length = geo.length()
 
     length = 0
     for i in range(len(polyline)-1):
@@ -106,7 +106,8 @@ def polylinePoint( polyline, distance ):
         if distance >= length and distance <= length + l:
             d = distance - length
             return pointOnLine ( p1, p2, d )
-
+        length += l
+    #debug ( 'point in distance %s not found on line length = %s' % ( distance, length ) )
     return None
 
 # returns new polyline 'from - to' measured along original polyline
@@ -149,4 +150,11 @@ def getLayerFeature( layer, fid ):
     del request
 
     return feature
-    
+   
+# QgsCoordinateReferenceSystem.createFromString() does not accept value from authid()
+# if it is type 'USER:'
+def crsString ( crs ):
+    string = crs.authid()
+    if not string.lower().startswith('epsg'):
+        string = 'internal:%s' % crs.srsid()
+    return string

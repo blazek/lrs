@@ -36,6 +36,7 @@ class LrsErrorLayer(QgsVectorLayer):
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
         uri = provider.dataSourceUri()
+        #debug ( 'uri = %s' % uri )
         super(LrsErrorLayer, self).__init__( uri, baseName, 'memory')
 
 # changes done to vector layer attributes are not store correctly in project file
@@ -44,19 +45,19 @@ class LrsErrorLayer(QgsVectorLayer):
 class LrsErrorPointLayer(LrsErrorLayer):
 
     def __init__(self, crs ):
-        uri = "Point?crs=%s" %  crs.authid()
+        uri = "Point?crs=%s" %  crsString( crs )
         super(LrsErrorPointLayer, self).__init__( uri, 'LRS point errors' )
         
 class LrsErrorLineLayer(LrsErrorLayer):
 
     def __init__(self, crs ):
-        uri = "LineString?crs=%s" %  crs.authid()
+        uri = "LineString?crs=%s" %  crsString( crs )
         super(LrsErrorLineLayer, self).__init__( uri, 'LRS line errors' )
 
 class LrsQualityLayer(QgsVectorLayer):
 
     def __init__(self, crs ):
-        uri = "LineString?crs=%s" %  crs.authid()
+        uri = "LineString?crs=%s" %  crsString( crs )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
         uri = provider.dataSourceUri()
