@@ -1,0 +1,7 @@
+Release steps:
+
+* set new version in metadata.txt
+* tag new version in git
+* create package in lrs/ by 'make package'
+* move created lrs.zip to release/lrs.x.x.x.zip
+* upload package

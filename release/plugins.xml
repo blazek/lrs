@@ -4,7 +4,7 @@
      <description>LRS plugin</description>
      <homepage>https://github.com/blazek/lrs</homepage>
      <qgis_minimum_version>2.0</qgis_minimum_version>
-     <file_name>lrs.0.1.0.zip </file_name>
+     <file_name>lrs.0.1.1.zip </file_name>
      <author_name>Radim Blazek</author_name>
      <download_url>lrs.0.1.1.zip</download_url>
    </pyqgis_plugin>
