@@ -174,18 +174,24 @@
            <item>
             <widget class="QLabel" name="genProgressLabel">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Progress</string>
+              <string>Progress label</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QProgressBar" name="genProgressBar">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="value">
               <number>24</number>
              </property>
@@ -395,6 +401,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QProgressBar" name="eventsProgressBar">
+          <property name="value">
+           <number>24</number>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -410,6 +423,7 @@
        </layout>
        <zorder>eventsButtonBox</zorder>
        <zorder>verticalSpacer_2</zorder>
+       <zorder>eventsProgressBar</zorder>
       </widget>
       <widget class="QWidget" name="measureTab">
        <attribute name="title">
@@ -507,6 +521,13 @@
          <widget class="QDialogButtonBox" name="measureButtonBox">
           <property name="standardButtons">
            <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="measureProgressBar">
+          <property name="value">
+           <number>24</number>
           </property>
          </widget>
         </item>

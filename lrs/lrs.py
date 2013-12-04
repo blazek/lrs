@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import time
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -153,6 +154,8 @@ class Lrs(QObject):
         self.progressChanged.emit( self.stateLabels[state], percent )
 
     def calibrate(self):
+        self.progressChanged.emit( self.stateLabels[self.REGISTERING_LINES], 0 )
+
         self.points = {}
         self.lines = {} 
         self.errors = [] # reset

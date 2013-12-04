@@ -52,7 +52,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         # keep progress frame height
         self.genProgressFrame.setMinimumHeight( self.genProgressFrame.height() )
-        self.hideProgress()
+        self.hideGenProgress()
 
         ##### getTab 
         # initLayer, initField, fieldType did not work, fixed and created pull request
@@ -109,6 +109,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsOutputNameLineEdit.textEdited.connect(self.resetEventsButtons)
         self.resetEventsOptions()
         self.resetEventsButtons()
+        self.eventsProgressBar.hide()
 
         #### measureTab
         self.measureLayerCM = LrsLayerComboManager( self.measureLayerCombo, geometryType = QGis.Point, settingsName = 'measureLayerId' )
@@ -131,6 +132,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.measureMeasureFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
         self.resetMeasureOptions()
         self.resetMeasureButtons()
+        self.measureProgressBar.hide()
 
         #####
         self.enableTabs()
@@ -295,9 +297,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
         self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
 
-        self.lrs.progressChanged.connect(self.showProgress)
+        self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
-        self.hideProgress()
+        self.hideGenProgress()
     
         self.errorZoomButton.setEnabled( False)
         self.errorModel = LrsErrorModel()
@@ -330,13 +332,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetMeasureButtons()
         self.enableTabs()
 
-    def showProgress(self, label, percent):
+    def showGenProgress(self, label, percent):
         self.genProgressLabel.show()
         self.genProgressBar.show()
         self.genProgressLabel.setText( label )
         self.genProgressBar.setValue( percent)
 
-    def hideProgress(self):
+    def hideGenProgress(self):
         self.genProgressLabel.hide()
         self.genProgressBar.hide()
 
@@ -485,6 +487,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def createEvents(self):
         self.writeEventsOptions()
+        self.eventsProgressBar.show()
 
         layer = self.eventsLayerCM.getLayer()
         routeFieldName = self.eventsRouteFieldCM.getFieldName()
@@ -506,6 +509,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
+        total = layer.featureCount()
+        count = 0
         for feature in layer.getFeatures():
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
@@ -534,9 +539,15 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
             outputFeatures.append( outputFeature )
 
+            count += 1
+            percent = 100 * count / total;
+            self.eventsProgressBar.setValue( percent)
+
         outputLayer.dataProvider().addFeatures( outputFeatures )
 
         QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )
+            
+        self.eventsProgressBar.hide()
 
 ############################# MEASURE ####################################
 
@@ -579,6 +590,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #debug('calculateMeasures')
         self.writeMeasureOptions()
 
+        self.measureProgressBar.show()
+
         layer = self.measureLayerCM.getLayer()
         threshold = self.measureThresholdSpin.value()
         outputName = self.measureOutputNameLineEdit.text()
@@ -600,6 +613,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
+        total = layer.featureCount()
+        count = 0
         for feature in layer.getFeatures():
             points = []
             
@@ -628,6 +643,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
                 outputFeatures.append( outputFeature )
 
+            count += 1
+            percent = 100 * count / total;
+            self.measureProgressBar.setValue( percent)
+
         outputLayer.dataProvider().addFeatures( outputFeatures )
 
         QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )
+
+        self.measureProgressBar.hide()
