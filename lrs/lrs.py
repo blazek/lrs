@@ -68,6 +68,8 @@ class Lrs(QObject):
         self.pointMeasureField = pointMeasureField
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
+        # extrapolate LRS before/after calibration points
+        self.extrapolate = kwargs.get('extrapolate', False)
         self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
         self.crs = kwargs.get('crs')
 
@@ -172,8 +174,7 @@ class Lrs(QObject):
         self.registerPoints()
         self.buildParts()
         for route in self.routes.values():
-            route.calibrate()
-            self.progressStep(self.CALIBRATING_ROUTES) 
+            route.calibrate(self.extrapolate)
 
     def buildParts(self):
         for route in self.routes.values():
@@ -325,7 +326,7 @@ class Lrs(QObject):
         feature = getLayerFeature( self.pointLayer, fid )
         point = self.registerPointFeature ( feature ) # returns LrsPoint
         route = self.getRoute( point.routeId )
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
 
     def pointFeatureDeleted( self, fid ):
@@ -334,7 +335,7 @@ class Lrs(QObject):
         point = self.points[fid]
         route = self.getRoute( point.routeId )
         self.unregisterPointByFid(fid)
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
             
     def pointGeometryChanged( self, fid, geo ):
@@ -349,7 +350,7 @@ class Lrs(QObject):
         feature = getLayerFeature( self.pointLayer, fid )
         self.registerPointFeature ( feature )
 
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
 
     def pointAttributeValueChanged( self, fid, attIdx, value ):
@@ -368,12 +369,12 @@ class Lrs(QObject):
 
             if attIdx == routeIdx:
                 # recalibrate old
-                errorUpdates = route.calibrateAndGetUpdates()
+                errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors( errorUpdates )
 
             point = self.registerPointFeature ( feature ) # returns LrsPoint
             route = self.getRoute( point.routeId )
-            errorUpdates = route.calibrateAndGetUpdates()
+            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
             self.emitUpdateErrors( errorUpdates )
     
     #### line edit ####
@@ -383,7 +384,7 @@ class Lrs(QObject):
         feature = getLayerFeature( self.lineLayer, fid )
         line = self.registerLineFeature ( feature ) # returns LrsLine
         route = self.getRoute( line.routeId )
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
 
     def lineFeatureDeleted( self, fid ):
@@ -392,7 +393,7 @@ class Lrs(QObject):
         line = self.lines[fid]
         route = self.getRoute( line.routeId )
         self.unregisterLineByFid(fid)
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
             
     def lineGeometryChanged( self, fid, geo ):
@@ -407,7 +408,7 @@ class Lrs(QObject):
         feature = getLayerFeature( self.lineLayer, fid )
         self.registerLineFeature ( feature )
 
-        errorUpdates = route.calibrateAndGetUpdates()
+        errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
 
     def lineAttributeValueChanged( self, fid, attIdx, value ):
@@ -423,12 +424,12 @@ class Lrs(QObject):
             feature = getLayerFeature( self.lineLayer, fid )
 
             self.unregisterLineByFid(fid)
-            errorUpdates = route.calibrateAndGetUpdates()
+            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
             self.emitUpdateErrors( errorUpdates )
 
             line = self.registerLineFeature ( feature ) # returns LrsLine
             route = self.getRoute( line.routeId )
-            errorUpdates = route.calibrateAndGetUpdates()
+            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
             self.emitUpdateErrors( errorUpdates )
 
 

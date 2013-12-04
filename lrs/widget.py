@@ -42,6 +42,8 @@ class LrsWidgetManager(QObject):
             self.widget.setValue( self.defaultValue )
         elif issubclass(self.widget.__class__, QLineEdit):
             self.widget.setText( self.defaultValue )
+        elif issubclass(self.widget.__class__, QCheckBox):
+            self.widget.setChecked( self.defaultValue )
         else:
             raise Exception("not supported widget")
         
@@ -53,6 +55,9 @@ class LrsWidgetManager(QObject):
             project.writeEntryDouble(PROJECT_PLUGIN_NAME, self.settingsName, val )
         elif issubclass(self.widget.__class__, QLineEdit):
             val = self.widget.text()
+            project.writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val )
+        elif issubclass(self.widget.__class__, QCheckBox):
+            val = self.widget.isChecked()
             project.writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val )
         else:
             raise Exception("not supported widget")
@@ -67,6 +72,9 @@ class LrsWidgetManager(QObject):
         elif issubclass(self.widget.__class__, QLineEdit):
             val = project.readEntry(PROJECT_PLUGIN_NAME, self.settingsName, self.defaultValue )[0]
             self.widget.setText( val )
+        elif issubclass(self.widget.__class__, QCheckBox):
+            val = project.readBoolEntry(PROJECT_PLUGIN_NAME, self.settingsName, self.defaultValue )[0]
+            self.widget.setChecked( val )
         else:
             raise Exception("not supported widget")
 

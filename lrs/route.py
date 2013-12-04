@@ -54,7 +54,7 @@ class LrsRoute:
         self.lines.append( line )
 
     # returns: { removedErrorChecksums:[], updatedErrors:[], addedErrors[] }
-    def calibrate(self):
+    def calibrate(self, extrapolate):
 
         self.parts = []
         self.milestones = []
@@ -93,13 +93,15 @@ class LrsRoute:
             self.createMilestones()
             self.attachMilestones()
             self.calibrateParts()
+            if extrapolate:
+                self.extrapolateParts()
             self.checkPartOverlaps()
 
-    def calibrateAndGetUpdates(self):
+    def calibrateAndGetUpdates(self, extrapolate):
         oldErrorChecksums = list( e.getChecksum() for e in self.getErrors() )
         oldQualityChecksums = list( e.getChecksum() for e in self.getQualityFeatures() )
 
-        self.calibrate()
+        self.calibrate(extrapolate)
 
         newErrors = self.getErrors() 
         newErrorChecksums = list( e.getChecksum() for e in newErrors )
@@ -249,7 +251,7 @@ class LrsRoute:
                 if not connected: # no more parts can be connected
                     break
 
-            self.parts.append( LrsRoutePart( polyline, self.routeId, origins) )
+            self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.mapUnitsPerMeasureUnit) )
 
     def addPoint( self, point ):
        self.points.append ( point )
@@ -361,6 +363,10 @@ class LrsRoute:
     def calibrateParts(self):
         for part in self.parts:
             part.calibrate()
+
+    def extrapolateParts(self):
+        for part in self.parts:
+            part.extrapolate()
 
     def checkPartOverlaps(self):
         records = []

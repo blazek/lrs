@@ -66,6 +66,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
+        self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -254,6 +255,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.reset() 
         self.genMapUnitsPerMeasureUnitWM.reset()
         self.genThresholdWM.reset()
+        self.genExtrapolateWM.reset()
 
         self.resetGenerateButtons()
         
@@ -270,6 +272,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.writeToProject()
         self.genMapUnitsPerMeasureUnitWM.writeToProject()
         self.genThresholdWM.writeToProject() 
+        self.genExtrapolateWM.writeToProject()
 
     def readGenerateOptions(self):
         self.genLineLayerCM.readFromProject()
@@ -279,6 +282,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.readFromProject()
         self.genMapUnitsPerMeasureUnitWM.readFromProject()
         self.genThresholdWM.readFromProject()
+        self.genExtrapolateWM.readFromProject()
 
     def generateLrs(self):
         #debug ( 'generateLrs')
@@ -294,8 +298,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
 
         threshold = self.genThresholdSpin.value()
+        extrapolate = self.genExtrapolateCheckBox.isChecked()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, threshold = threshold, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, threshold = threshold, extrapolate = extrapolate, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
 
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()

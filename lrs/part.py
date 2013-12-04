@@ -89,17 +89,20 @@ class LrsSegment:
 # Chain of connected geometries
 class LrsRoutePart:
 
-    def __init__(self, polyline, routeId, origins):
+    def __init__(self, polyline, routeId, origins, mapUnitsPerMeasureUnit):
         #debug ('init route part' )
         self.polyline = polyline
         self.routeId = routeId
         self.origins = origins # list of LrsOrigin
+        self.mapUnitsPerMeasureUnit = mapUnitsPerMeasureUnit
+        self.length = None # polyline length
         self.milestones = [] # LrsMilestone list, all input milestones
         self.records = [] # LrsRecord list
         self.errors = [] # LrsError list
 
     def calibrate(self):
         polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
+        self.length = polylineGeo.length()
 
         if len ( self.milestones ) < 2:
             self.errors.append( LrsError( LrsError.NOT_ENOUGH_MILESTONES, polylineGeo, routeId = self.routeId, origins = self.origins ))
@@ -189,6 +192,25 @@ class LrsRoutePart:
             m1 = milestones[i]
             m2 = milestones[i+1]
             self.records.append ( LrsRecord ( m1.measure, m2.measure, m1.partMeasure, m2.partMeasure ) )
+
+    # extrapolate before and after (add calculated records)
+    def extrapolate(self):
+        #debug ('extrapolate part')
+        if not self.records: return # direction unknown
+        
+        record = self.records[0]
+        if record.partFrom > 0 and not doubleNear(record.partFrom,0):
+            measure = record.milestoneFrom - record.partFrom / self.mapUnitsPerMeasureUnit 
+            #debug ('routeId = %s measure = %s' % (self.routeId,measure) )
+            self.records.insert( 0, LrsRecord ( measure, record.milestoneFrom, 0, record.partFrom ) )
+
+        record = self.records[-1]
+        #debug ('routeId = %s partTo = %s length = %s' % (self.routeId,record.partTo,self.length) )
+        if record.partTo < self.length and not doubleNear(record.partTo,self.length):
+            measure = record.milestoneTo + (self.length - record.partTo) / self.mapUnitsPerMeasureUnit 
+            #debug ('routeId = %s measure = %s' % (self.routeId,measure) )
+            self.records.append( LrsRecord ( record.milestoneTo, measure, record.partTo, self.length ) )
+        
 
     def getRecords(self):
         return self.records
