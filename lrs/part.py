@@ -101,6 +101,7 @@ class LrsRoutePart:
         self.errors = [] # LrsError list
 
     def calibrate(self):
+        #debug ( 'calibrate part routeId = %s' % self.routeId )
         polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
         self.length = polylineGeo.length()
 
@@ -112,6 +113,9 @@ class LrsRoutePart:
         milestones = list ( self.milestones )
         # sort by partMeasure and measure
         milestones.sort ( key=lambda milestone: ( milestone.partMeasure, milestone.measure) )
+
+        #for milestone in milestones:
+        #    debug ( 'partMeasure = %s measure = %s' % ( milestone.partMeasure, milestone.measure ) )
 
         # find direction
         up = down = 0

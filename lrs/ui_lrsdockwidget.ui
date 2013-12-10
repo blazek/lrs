@@ -103,6 +103,9 @@
           </item>
           <item row="9" column="1">
            <widget class="QDoubleSpinBox" name="genThresholdSpin">
+            <property name="decimals">
+             <number>6</number>
+            </property>
             <property name="maximum">
              <double>1000000.000000000000000</double>
             </property>
@@ -117,7 +120,7 @@
           <item row="6" column="1">
            <widget class="QDoubleSpinBox" name="genMapUnitsPerMeasureUnitSpin">
             <property name="decimals">
-             <number>3</number>
+             <number>6</number>
             </property>
             <property name="maximum">
              <double>1000000.000000000000000</double>
@@ -513,6 +516,9 @@
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="measureThresholdSpin">
+            <property name="decimals">
+             <number>6</number>
+            </property>
             <property name="maximum">
              <double>1000000.000000000000000</double>
             </property>

@@ -57,6 +57,7 @@ class LrsPlugin:
         self.action = QAction(
             QIcon(":/plugins/lrs/icon.svg"),
             u"LRS", self.iface.mainWindow())
+        self.action.setObjectName("lrsAction")
         # connect the action to the run method
         self.action.triggered.connect(self.run)
 

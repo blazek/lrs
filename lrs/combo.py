@@ -80,6 +80,7 @@ class LrsLayerComboManager(LrsComboManager):
         QgsMapLayerRegistry.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsMapLayerRegistry.instance().layersRemoved.connect(self.canvasLayersChanged)
     def __del__(self):
+        if not QgsMapLayerRegistry: return
         QgsMapLayerRegistry.instance().layersAdded.disconnect(self.canvasLayersChanged)
         QgsMapLayerRegistry.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
