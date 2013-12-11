@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>381</width>
-    <height>376</height>
+    <width>434</width>
+    <height>361</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -67,12 +67,12 @@
           <item row="1" column="0">
            <widget class="QLabel" name="genLineRouteFieldLabel">
             <property name="text">
-             <string>Route field</string>
+             <string>Lines route field</string>
             </property>
            </widget>
           </item>
           <item row="9" column="0">
-           <widget class="QLabel" name="getThresholdLabel">
+           <widget class="QLabel" name="genThresholdLabel">
             <property name="text">
              <string>Threshold</string>
             </property>
@@ -94,7 +94,7 @@
           <item row="4" column="0">
            <widget class="QLabel" name="genPointRouteFieldLabel">
             <property name="text">
-             <string>Route field</string>
+             <string>Points route field</string>
             </property>
            </widget>
           </item>
@@ -120,7 +120,7 @@
           <item row="6" column="1">
            <widget class="QDoubleSpinBox" name="genMapUnitsPerMeasureUnitSpin">
             <property name="decimals">
-             <number>6</number>
+             <number>2</number>
             </property>
             <property name="maximum">
              <double>1000000.000000000000000</double>
@@ -172,7 +172,7 @@
         <item>
          <widget class="QDialogButtonBox" name="genButtonBox">
           <property name="standardButtons">
-           <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
           </property>
          </widget>
         </item>
@@ -279,12 +279,9 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QToolButton" name="errorZoomButton">
-            <property name="text">
-             <string>Zoom</string>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextBesideIcon</enum>
+           <widget class="QDialogButtonBox" name="errorButtonBox">
+            <property name="standardButtons">
+             <set>QDialogButtonBox::Help</set>
             </property>
            </widget>
           </item>
@@ -302,19 +299,29 @@
            </spacer>
           </item>
           <item>
+           <widget class="QToolButton" name="errorZoomButton">
+            <property name="text">
+             <string>Zoom</string>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="addErrorLayersButton">
             <property name="toolTip">
              <string>Add layers of errors to map view</string>
             </property>
             <property name="text">
-             <string>Add error layers</string>
+             <string>Error layers</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="addQualityLayerButton">
             <property name="text">
-             <string>Add quality layer</string>
+             <string>Quality layer</string>
             </property>
            </widget>
           </item>
@@ -419,7 +426,7 @@
         <item>
          <widget class="QDialogButtonBox" name="eventsButtonBox">
           <property name="standardButtons">
-           <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
           </property>
          </widget>
         </item>
@@ -503,7 +510,7 @@
           <item row="7" column="0">
            <widget class="QLabel" name="measureMeasureFieldLabel">
             <property name="text">
-             <string>Output route field</string>
+             <string>Output measure field</string>
             </property>
            </widget>
           </item>
@@ -546,7 +553,7 @@
         <item>
          <widget class="QDialogButtonBox" name="measureButtonBox">
           <property name="standardButtons">
-           <set>QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
           </property>
          </widget>
         </item>

@@ -1,8 +1,10 @@
 Release steps:
 
-* set new version in metadata.txt
+* set new version in lrs/metadata.txt
+* set new version and release in lrs/help/source/conf.py
+* generate documentation in lrs/: make doc
+* create package in lrs/: make package VERSION=x.x.x
+* set link to latest help in index.html
 * git commit
 * tag new version in git
-* create package in lrs/ by 'make package'
-* move created lrs.zip to release/lrs.x.x.x.zip
-* upload packaget 
+* upload package 

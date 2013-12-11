@@ -36,7 +36,7 @@ PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 #EXTRAS = icon.png metadata.txt
 EXTRAS = icon.svg metadata.txt
 
-PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py utils.py widget.py icon.svg
+PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py utils.py widget.py icon.svg 
 
 UI_FILES = ui_lrsdockwidget.py
 
@@ -96,14 +96,20 @@ zip: deploy dclean
 #		echo "Created package: $(PLUGINNAME).zip"
 
 # How to add directory path in zip?
+# To use, pass a version which has to be given to zip and help:
+#   make package VERSION=0.1.0
 package: compile
-	rm -f lrs.zip
+	rm -f lrs*.zip
 	rm -rf lrs/
 	mkdir lrs
 	cp $(PACKAGE_FILES) lrs/
-	zip -9r lrs.zip lrs/
+	mkdir -p lrs/help/build/
+	cp -r help/build/html lrs/help/build/
+	cp -r help/build/html ../release/help.$(VERSION)
+	zip -9r ../release/lrs.$(VERSION).zip lrs/
 	rm -rf lrs/
-	echo "Created package: lrs.zip"
+	echo "Created package: ../release/lrs.$(VERSION).zip"
+	echo "Created help: ../release/help.$(VERSION)"
 
 upload: zip
 	$(PLUGIN_UPLOAD) $(PLUGINNAME).zip

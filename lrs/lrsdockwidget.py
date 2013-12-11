@@ -44,6 +44,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorLineLayerManager = None
         self.qualityLayer = None
         self.qualityLayerManager = None
+
+        self.pluginDir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "python/plugins/lrs"
  
         super(LrsDockWidget, self).__init__(parent )
         
@@ -69,6 +71,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
+        self.genLineLayerCombo.currentIndexChanged.connect(self.updateGenerateUnits)
         self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genPointLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genPointRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -76,6 +79,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
+        self.genButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
+        self.updateGenerateUnits()
 
         ##### errorTab
         self.errorVisualizer = LrsErrorVisualizer ( self.iface.mapCanvas() )
@@ -89,6 +94,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
         self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
+        self.errorButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
 
         #### eventsTab
         self.eventsLayerCM = LrsLayerComboManager( self.eventsLayerCombo, settingsName = 'eventsLayerId' )
@@ -103,6 +109,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.eventsButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.createEvents)
         self.eventsButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetEventsOptionsAndWrite)
+        self.eventsButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
         self.eventsLayerCombo.currentIndexChanged.connect(self.resetEventsButtons)
         self.eventsRouteFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
         self.eventsMeasureStartFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
@@ -127,6 +134,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.measureButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.calculateMeasures)
         self.measureButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetMeasureOptionsAndWrite)
+        self.measureButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
         self.measureLayerCombo.currentIndexChanged.connect(self.resetMeasureButtons)
         self.measureOutputNameLineEdit.textEdited.connect(self.resetMeasureButtons)
         self.measureRouteFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
@@ -141,6 +149,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
         
         QgsProject.instance().readProject.connect( self.projectRead )
+
+        self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect(self.mapRendererCrsChanged)
+        self.iface.mapCanvas().mapRenderer().destinationSrsChanged.connect(self.mapRendererCrsChanged)
 
         # newProject is currently missing in sip
         #QgsProject.instance().newProject.connect( self.projectNew )
@@ -240,6 +251,23 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
 
+    def mapRendererCrsChanged(self):
+        self.updateGenerateUnits()
+
+    def getThresholdLabel(self, crs):
+        label = "Threshold"
+        units = { QGis.Meters: 'meters', QGis.Feet: 'feets', QGis.Degrees: 'degrees' }
+        if crs and units.has_key( crs.mapUnits() ):
+            label += " (%s)" % units[crs.mapUnits()]
+        #debug ( 'label = %s' % label )
+        return label
+
+    def showHelp(self,anchor=None):
+        helpFile = "file:///"+ self.pluginDir + "/help/build/html/index.html"
+        #debug ( helpFile )
+        QDesktopServices.openUrl(QUrl(helpFile))
+        
+
 ############################ GENERATE (CALIBRATE) ###############################
 
     def resetGenerateButtons(self):
@@ -284,18 +312,31 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genThresholdWM.readFromProject()
         self.genExtrapolateWM.readFromProject()
 
+    def getGenerateCrs(self):
+        crs = None
+        lineLayer = self.genLineLayerCM.getLayer()
+        if lineLayer:
+            crs = lineLayer.crs()
+
+        #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
+        if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
+            #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
+            crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+        return crs
+
+    # set threshold units according to current crs
+    def updateGenerateUnits(self):
+        crs = self.getGenerateCrs()
+        label = self.getThresholdLabel(crs)
+        self.genThresholdLabel.setText(label)
+
     def generateLrs(self):
         #debug ( 'generateLrs')
         self.errorVisualizer.clearHighlight()
         
         self.writeGenerateOptions()
 
-        crs = self.genLineLayerCM.getLayer().crs()
-        #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
-        if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
-            #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
-
-            crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+        crs = self.getGenerateCrs()
 
         threshold = self.genThresholdSpin.value()
         extrapolate = self.genExtrapolateCheckBox.isChecked()
@@ -335,6 +376,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.resetEventsButtons()
         self.resetMeasureButtons()
+        self.updateMeasureUnits()
         self.enableTabs()
 
     def showGenProgress(self, label, percent):
@@ -590,6 +632,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.measureOutputNameWM.readFromProject()
         self.measureRouteFieldWM.readFromProject()
         self.measureMeasureFieldWM.readFromProject()
+
+    # set threshold units according to current crs
+    def updateMeasureUnits(self):
+        crs = self.lrs.crs if self.lrs.crs else None
+        label = self.getThresholdLabel(crs)
+        self.measureThresholdLabel.setText(label)
 
     def calculateMeasures(self):
         #debug('calculateMeasures')

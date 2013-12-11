@@ -23,6 +23,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+lrs/*.zip
 
 # Installer logs
 pip-log.txt
@@ -39,6 +40,3 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-
-# Packages
-lrs/*.zip
