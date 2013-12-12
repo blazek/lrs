@@ -100,7 +100,7 @@ class Lrs(QObject):
         if self.crs and self.crs != pointLayer.crs():
             self.pointTransform = QgsCoordinateTransform( pointLayer.crs(), self.crs)
 
-        # dictionary of LrsRoute
+        # dictionary of LrsRoute, key is normalized route id
         self.routes = {} 
 
         self.partSpatialIndex = None
@@ -182,10 +182,19 @@ class Lrs(QObject):
             self.progressStep(self.BUILDING_PARTS) 
 
     # get route by id, create it if does not exist
+    # routeId does not have to be normalized
     def getRoute(self, routeId):
-        if not self.routes.has_key(routeId):
-            self.routes[routeId] = LrsRoute(self.lineLayer, routeId, self.threshold, self.mapUnitsPerMeasureUnit )
-        return self.routes[routeId]
+        normalId = normalizeRouteId( routeId )
+        if not self.routes.has_key( normalId ):
+            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.threshold, self.mapUnitsPerMeasureUnit )
+        return self.routes[normalId]
+
+    # get route by id if exists otherwise returns None
+    # routeId does not have to be normalized
+    def getRouteIfExists(self, routeId):
+        normalId = normalizeRouteId( routeId )
+        if not self.routes.has_key( normalId ): return None
+        return self.routes[normalId]
 
     ####### register / unregister features
 
@@ -445,7 +454,8 @@ class Lrs(QObject):
         if missing:
             error = 'missing %s value' % ' and '.join( missing )
 
-        if routeId and not self.routes.has_key(routeId):
+        route = self.getRouteIfExists( routeId )
+        if not route:
             error = error + ', ' if error else ''
             error += 'route not available'
 
@@ -456,7 +466,7 @@ class Lrs(QObject):
         error = self.eventValuesError( routeId, start)
         if error: return None, error
 
-        route = self.routes[routeId]
+        route = self.getRoute( routeId )
         geo, error = route.eventPoint( start )
         return geo, error
         
@@ -465,7 +475,7 @@ class Lrs(QObject):
         error = self.eventValuesError( routeId, start, end, True)
         if error: return None, error
 
-        route = self.routes[routeId]
+        route = self.getRoute( routeId )
         geo, error = route.eventMultiPolyLine( start, end)
         return geo, error
 
@@ -503,7 +513,7 @@ class Lrs(QObject):
         nearestDist = sys.float_info.max
         for id in ids:
             routeId, partIdx = self.partSpatialIndexRoutePart[id]
-            route = self.routes[routeId]
+            route = self.getRoute( routeId )
             part = route.parts[partIdx]
             geo = QgsGeometry.fromPolyline( part.polyline )
             ( sqDist, nearestPnt, afterVertex ) = geo.closestSegmentWithContext( point )
@@ -527,7 +537,7 @@ class Lrs(QObject):
     def pointMeasure ( self, point, threshold ):
         routeId, partIdx = self.nearestRoutePart( point, threshold)
         if routeId is not None and partIdx is not None:
-            route = self.routes[routeId]
+            route = self.getRoute( routeId )
             part = route.parts[partIdx]
             measure = part.pointMeasure( point )
             if measure is not None:

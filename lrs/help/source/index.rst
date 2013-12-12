@@ -148,6 +148,8 @@ The output is created as memory layer which can be later stored in a persistent 
 General notes
 =============
 
+Routes id matching (e.g. finding points for line or route for event) is case insensitive in case of strings and it also accepts integers in fields of type string (e.g. lines may have route id field type integer and points type string).
+
 All options in all tabs are stored in project. The options of each tab are written to project when *OK* button is pressed (i.e. options are confirmed).
 
 Reset buttons in tabs will reset all options to **default** values.
