@@ -66,6 +66,8 @@ class Lrs(QObject):
         self.pointLayer = pointLayer
         self.pointRouteField = pointRouteField
         self.pointMeasureField = pointMeasureField
+        # max lines gaps snap
+        self.snap = kwargs.get('snap', 0.0)
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
         # extrapolate LRS before/after calibration points
@@ -186,7 +188,7 @@ class Lrs(QObject):
     def getRoute(self, routeId):
         normalId = normalizeRouteId( routeId )
         if not self.routes.has_key( normalId ):
-            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.threshold, self.mapUnitsPerMeasureUnit )
+            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.mapUnitsPerMeasureUnit )
         return self.routes[normalId]
 
     # get route by id if exists otherwise returns None

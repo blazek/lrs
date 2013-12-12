@@ -68,6 +68,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
+        self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 5.0 )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -254,11 +255,15 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def mapRendererCrsChanged(self):
         self.updateGenerateUnits()
 
-    def getThresholdLabel(self, crs):
-        label = "Threshold"
+    def getUnitsLabel(self, crs):
+        label = ""
         units = { QGis.Meters: 'meters', QGis.Feet: 'feets', QGis.Degrees: 'degrees' }
         if crs and units.has_key( crs.mapUnits() ):
-            label += " (%s)" % units[crs.mapUnits()]
+            label = " (%s)" % units[crs.mapUnits()]
+        return label
+
+    def getThresholdLabel(self, crs):
+        label = "Max point distance" + self.getUnitsLabel(crs)
         #debug ( 'label = %s' % label )
         return label
 
@@ -283,6 +288,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.reset() 
         self.genMapUnitsPerMeasureUnitWM.reset()
         self.genThresholdWM.reset()
+        self.genSnapWM.reset()
         self.genExtrapolateWM.reset()
 
         self.resetGenerateButtons()
@@ -300,6 +306,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.writeToProject()
         self.genMapUnitsPerMeasureUnitWM.writeToProject()
         self.genThresholdWM.writeToProject() 
+        self.genSnapWM.writeToProject() 
         self.genExtrapolateWM.writeToProject()
 
     def readGenerateOptions(self):
@@ -310,6 +317,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointMeasureFieldCM.readFromProject()
         self.genMapUnitsPerMeasureUnitWM.readFromProject()
         self.genThresholdWM.readFromProject()
+        self.genSnapWM.readFromProject()
         self.genExtrapolateWM.readFromProject()
 
     def getGenerateCrs(self):
@@ -329,6 +337,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         crs = self.getGenerateCrs()
         label = self.getThresholdLabel(crs)
         self.genThresholdLabel.setText(label)
+        label = "Max lines snap" + self.getUnitsLabel(crs)
+        self.genSnapLabel.setText(label)
 
     def generateLrs(self):
         #debug ( 'generateLrs')
@@ -338,10 +348,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         crs = self.getGenerateCrs()
 
+        snap = self.genSnapSpin.value()
         threshold = self.genThresholdSpin.value()
         extrapolate = self.genExtrapolateCheckBox.isChecked()
         self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, threshold = threshold, extrapolate = extrapolate, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
 
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()

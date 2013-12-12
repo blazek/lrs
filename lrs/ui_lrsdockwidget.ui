@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>434</width>
-    <height>361</height>
+    <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,6 +33,16 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QGridLayout" name="genGridLayout">
+          <item row="10" column="0">
+           <widget class="QLabel" name="genSnapLabel">
+            <property name="toolTip">
+             <string>Maximum gap between lies to be snapped.</string>
+            </property>
+            <property name="text">
+             <string>Max lines snap</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0" colspan="2">
            <widget class="Line" name="line">
             <property name="orientation">
@@ -71,10 +81,13 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
+          <item row="11" column="0">
            <widget class="QLabel" name="genThresholdLabel">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
             <property name="text">
-             <string>Threshold</string>
+             <string>Max point distance</string>
             </property>
            </widget>
           </item>
@@ -101,8 +114,11 @@
           <item row="3" column="1">
            <widget class="QComboBox" name="genPointLayerCombo"/>
           </item>
-          <item row="9" column="1">
+          <item row="11" column="1">
            <widget class="QDoubleSpinBox" name="genThresholdSpin">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
             <property name="decimals">
              <number>6</number>
             </property>
@@ -147,7 +163,7 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="0">
+          <item row="12" column="0">
            <widget class="QLabel" name="genExtrapolateLabel">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
@@ -157,13 +173,26 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="1">
+          <item row="12" column="1">
            <widget class="QCheckBox" name="genExtrapolateCheckBox">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
             </property>
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QDoubleSpinBox" name="genSnapSpin">
+            <property name="toolTip">
+             <string>Maximum gap between lies to be snapped.</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -523,6 +552,9 @@
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="measureThresholdSpin">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
             <property name="decimals">
              <number>6</number>
             </property>
@@ -536,8 +568,11 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="measureThresholdLabel">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
             <property name="text">
-             <string>Threshold</string>
+             <string>Max point distance</string>
             </property>
            </widget>
           </item>

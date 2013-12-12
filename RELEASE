@@ -8,5 +8,5 @@ Release steps:
 * set link to latest help in README.md
 * git commit
 * tag new version in git
-* git push; git push --tags; git push origin gh-pages
+* git push; git push --tags; git push origin gh-pages:gh-pages
 * upload package 

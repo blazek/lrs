@@ -35,10 +35,11 @@ from milestone import *
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId, threshold, mapUnitsPerMeasureUnit):
+    def __init__(self, layer, routeId, snap, threshold, mapUnitsPerMeasureUnit):
         #debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId # if None, keeps all lines and points without routeId
+        self.snap = snap
         self.threshold = threshold
         self.mapUnitsPerMeasureUnit = mapUnitsPerMeasureUnit
         self.lines = [] # LrsLine list, may be empty 
@@ -138,7 +139,7 @@ class LrsRoute:
                  'removedQualityChecksums': removedQualityChecksums,
                  'addedQualityFeatures': addedQualityFeatures }
  
-    # create LrsRoutePart from eometryParts
+    # create LrsRoutePart objects from geometryParts
     def buildParts(self):
         self.parts = []
         polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
@@ -160,6 +161,35 @@ class LrsRoute:
                     'geoPart': i,
                     'nGeoParts': len(polys),
                 })
+
+        ##### snap ends
+        if self.snap > 0:
+            for i in range(len(polylines)):
+                p1 = polylines[i]['polyline']
+                # indexed by coor index:
+                snapped = { 0: False, -1: False } 
+                nearest = { 0: None, -1: None }
+                nearest_dist = { 0: sys.float_info.max, -1: sys.float_info.max }
+                for j in range(len(polylines)):
+                    if j == i: continue
+                    p2 = polylines[j]['polyline']
+                    debug ( '%s x %s' % (p1,p2) )
+                    for ic in [0,-1]:
+                        if not snapped[ic]:
+                            if p1[ic] == p2[0] or p1[ic] == p2[-1]:
+                                snapped[ic] = True
+                            else:
+                                for jc in [0,-1]:
+                                    d = pointsDistance(p1[ic], p2[jc])
+                                    if d <= self.snap and d < nearest_dist[ic]:
+                                        nearest[ic] = [j,jc]
+                                        nearest_dist[ic] = d
+                # snap if not yet snapped and nearest found
+                for ic in [0,-1]:
+                    if not snapped[ic] and nearest[ic] is not None:
+                        p2 = polylines[ nearest[ic][0] ]['polyline']
+                        p1[ic] = p2[ nearest[ic][1] ]
+            
 
         ##### check for duplicates
         duplicates = set()

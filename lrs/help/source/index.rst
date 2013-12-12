@@ -63,8 +63,9 @@ Options:
 * **Points layer:** Layer with points. It may contain points and multi-points (multi-points make no sense in LRS however).
 * **Points route field:** Route id field in points layer. The field type may be string or integer.
 * **Measure field:** Measure field in points layer. The field type may be integer or float.
-* **Map units / measure unit:** Number of map units per measure unit. For example, if project CRS units are meters and measure units are kilometers this values has to be set to 1000 (1000 meters per kilometer). 
-* **Threshold:** Maximum distance of point from route to be used.
+* **Map units / measure unit:** Number of map units per measure unit. For example, if project CRS units are meters and measure units are kilometers this values has to be set to 1000 (1000 meters per kilometer).
+* **Max lines snap:** Maximum gap between route lines to be snapped.
+* **Max point distance:** Maximum distance of point from route to be used.
 * **Extrapolate:** If checked, measures are extrapolated before first and after last point on route part. Otherwise segments before/after first/last point are not calibrated.
 
 When all oprions are set correctly, calibration may be launched by *OK* button. The process may take a while, progress bar with status label is indicating current state. When calibration is finished all tabs are enabled and LRS may be used or edited.
@@ -73,7 +74,7 @@ Measures are always interpolated between two poins. This may be made optional in
 
 The generated LRS is not stored in a new output layer but it is kept in memory and it can be used immediately to generate events or acquire measures. This may change in future but currently QGIS vector core API does not support measure value in vector geometry. We hope that rebuilding the LRS when needed should not be disturbing because all options are stored in project for the case when a task has to be repeated and calibration is *relatively* fast.
 
-The LRS plugin in QGIS works similarly as ArcGIS CalibrateRoutes_lr() with parameters calibrate_method=DISTANCE, search_radius=<**Threshold**> and interpolate_between=BETWEEN. If **Extrapolate** is checked it means plus parameters extrapolate_before=BEFORE and extrapolate_after=AFTER.
+The LRS plugin in QGIS works similarly as ArcGIS CalibrateRoutes_lr() with parameters calibrate_method=DISTANCE, search_radius=<**Max distance**> and interpolate_between=BETWEEN. If **Extrapolate** is checked it means plus parameters extrapolate_before=BEFORE and extrapolate_after=AFTER.
 
 Data errors
 ===========
@@ -83,7 +84,19 @@ When calibration phase is finished it is possible to browse data inconsistencies
 .. image:: images/errors.png
    :align: center
    
-Tha tab contains list of all errors which can be filtered over all columns by entering a string in **Filter** entry.
+Tha tab contains list of all errors which can be filtered over all columns by entering a string in **Filter** entry. The plugin is able to identify following data errors:
+
+* **Duplicate line**
+* **Duplicate point**
+* **Fork**
+* **Orphan point**
+* **Out of threshold**
+* **Not enough points**
+* **Missing route id**
+* **Missing measure**
+* **Cannot guess direction**
+* **Wrong measure**
+* **Duplicate referencing**
 
 When an error is selected in the list, it is highlighted in map and it is possible to **Zoom** to the feature by the button under the list.
 
@@ -136,7 +149,7 @@ Route id and measures may be acquired for existing points from *Measures* tab.
 Measures tab options:
 
 * **Layer:** Existing layer of points for which measures have to be found.
-* **Threshold:** Maximum distance of point from nearest line.
+* **Max point distance:** Maximum distance of point from nearest line.
 * **Output layer name:** Name of output layer used in legend.
 * **Output route field:** Name of output field in which route id will be stored.
 * **Output measure field:** Name of output field in which measure will be store.
