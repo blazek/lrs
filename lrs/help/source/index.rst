@@ -63,7 +63,7 @@ Options:
 * **Points layer:** Layer with points. It may contain points and multi-points (multi-points make no sense in LRS however).
 * **Points route field:** Route id field in points layer. The field type may be string or integer.
 * **Measure field:** Measure field in points layer. The field type may be integer or float.
-* **Map units / measure unit:** Number of map units per measure unit. For example, if project CRS units are meters and measure units are kilometers this values has to be set to 1000 (1000 meters per kilometer).
+* **Measure units:** Measure field values units.
 * **Max lines snap:** Maximum gap between route lines to be snapped.
 * **Max point distance:** Maximum distance of point from route to be used.
 * **Extrapolate:** If checked, measures are extrapolated before first and after last point on route part. Otherwise segments before/after first/last point are not calibrated.
@@ -108,7 +108,7 @@ It is also possible to add a new layer quality layer by **Quality layer** button
 * **m_from:** Measure of point at the beginning of a segment.
 * **m_to:** Measure of point at the end of a segment.
 * **m_len:** Length calculated from point measures as **(m_to-m_from) *map_units_per_measure_unit**.
-* **len:** Distance along line between thw points in map units.
+* **len:** Distance along line between two points in measure units.
 * **err_abs:** Absolute difference between m_len and len: **m_len-len**.
 * **err_rel:** Relative error calculated as: **err_abs/len**.
 * **err_perc:** Absolute value of relative error in percents: **abs(err_rel)*100**.

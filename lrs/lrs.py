@@ -70,10 +70,24 @@ class Lrs(QObject):
         self.snap = kwargs.get('snap', 0.0)
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
+        self.crs = kwargs.get('crs')
+        #self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
+        self.measureUnit = kwargs.get('measureUnit', LrsUnits.UNKNOWN)
+        if self.measureUnit == LrsUnits.UNKNOWN:
+            raise Exception( "measureUnit not set" )
+
+        self.distanceArea = QgsDistanceArea()
+        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP
+        #self.distanceArea.setSourceCrs( self.crs )
+        self.distanceArea.setSourceCrs( self.crs.srsid() )
+        if self.crs.mapUnits() == QGis.Degrees:
+            self.distanceArea.setEllipsoidalMode( True )
+            ellipsoid = self.crs.ellipsoidAcronym()
+            if not ellipsoid: ellipsoid = "WGS84"
+            self.distanceArea.setEllipsoid( ellipsoid )
+        
         # extrapolate LRS before/after calibration points
         self.extrapolate = kwargs.get('extrapolate', False)
-        self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
-        self.crs = kwargs.get('crs')
 
         self.pointLayer.editingStarted.connect( self.pointLayerEditingStarted )
         self.pointLayer.editingStopped.connect( self.pointLayerEditingStopped )
@@ -188,7 +202,7 @@ class Lrs(QObject):
     def getRoute(self, routeId):
         normalId = normalizeRouteId( routeId )
         if not self.routes.has_key( normalId ):
-            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.mapUnitsPerMeasureUnit )
+            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs, self.measureUnit, self.distanceArea )
         return self.routes[normalId]
 
     # get route by id if exists otherwise returns None

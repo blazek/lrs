@@ -200,3 +200,49 @@ class LrsFieldComboManager(LrsComboManager):
         
         self.proxy.sort(0)
 
+class LrsUnitComboManager(QObject):
+
+    def __init__(self, combo, **kwargs ):
+        super(LrsUnitComboManager, self).__init__()
+        self.combo = combo # QComboBox
+        self.settingsName = kwargs.get('settingsName')
+        self.defaultValue = kwargs.get('defaultValue', LrsUnits.KILOMETER)
+    
+        self.model = QStandardItemModel(0, 1, self)
+        self.combo.setModel(self.model);
+
+        for unit in [ LrsUnits.METER, LrsUnits.KILOMETER, LrsUnits.FEET, LrsUnits.MILE]:
+            item = QStandardItem( LrsUnits.unitName( unit ) )
+            item.setData( unit, Qt.UserRole )
+            self.model.appendRow( item )
+
+        self.reset()
+
+    def __del__(self):
+        pass
+
+    def reset(self):
+        idx = self.combo.findData( self.defaultValue, Qt.UserRole )
+        #debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
+        self.combo.setCurrentIndex( idx )
+
+    def unit(self):
+        idx = self.combo.currentIndex()
+        if idx != -1:
+            return self.combo.itemData(idx, Qt.UserRole )
+        return LrsUnits.UNKNOWN
+
+    def writeToProject(self):
+        name = LrsUnits.unitName( self.unit() )
+        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, name )
+
+    def readFromProject(self):
+        name = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+
+        unit = LrsUnits.unitFromName( name )
+        idx = self.combo.findData( unit, Qt.UserRole)
+        #debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
+        if idx != -1:
+            self.combo.setCurrentIndex(idx)
+        else:
+            self.reset()

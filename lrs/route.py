@@ -35,13 +35,15 @@ from milestone import *
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId, snap, threshold, mapUnitsPerMeasureUnit):
+    def __init__(self, layer, routeId, snap, threshold, crs, measureUnit, distanceArea):
         #debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId # if None, keeps all lines and points without routeId
         self.snap = snap
         self.threshold = threshold
-        self.mapUnitsPerMeasureUnit = mapUnitsPerMeasureUnit
+        self.crs = crs
+        self.measureUnit = measureUnit
+        self.distanceArea = distanceArea
         self.lines = [] # LrsLine list, may be empty 
         self.points = [] # LrsPoint list, may be empty
 
@@ -173,7 +175,7 @@ class LrsRoute:
                 for j in range(len(polylines)):
                     if j == i: continue
                     p2 = polylines[j]['polyline']
-                    debug ( '%s x %s' % (p1,p2) )
+                    #debug ( '%s x %s' % (p1,p2) )
                     for ic in [0,-1]:
                         if not snapped[ic]:
                             if p1[ic] == p2[0] or p1[ic] == p2[-1]:
@@ -281,7 +283,7 @@ class LrsRoute:
                 if not connected: # no more parts can be connected
                     break
 
-            self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.mapUnitsPerMeasureUnit) )
+            self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea) )
 
     def addPoint( self, point ):
        self.points.append ( point )
@@ -436,8 +438,12 @@ class LrsRoute:
         features = [] 
         fields = LrsQualityFields()
         for segment in self.getSegments():
-            m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
-            length = segment.geo.length()
+            #m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
+            m_len = segment.record.milestoneTo - segment.record.milestoneFrom
+            #length = segment.geo.length()
+            length = self.distanceArea.measure( segment.geo )
+            qgisUnit = QGis.Meters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
+            length = convertDistanceUnits( length, qgisUnit, self.measureUnit )
             err_abs = m_len - length
             err_rel = err_abs / length if length > 0 else 0
             feature = LrsQualityFeature()

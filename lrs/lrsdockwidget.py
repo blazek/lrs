@@ -36,7 +36,6 @@ from widget import *
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         self.iface = iface
-        self.mapUnitsPerMeasureUnit = None
         self.lrs = None # Lrs object
         self.errorPointLayer = None
         self.errorPointLayerManager = None
@@ -66,7 +65,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM = LrsFieldComboManager( self.genPointRouteFieldCombo, self.genPointLayerCM, settingsName = 'pointRouteField' )
         self.genPointMeasureFieldCM = LrsFieldComboManager( self.genPointMeasureFieldCombo, self.genPointLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'pointMeasureField' )
 
-        self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
+        #self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
+        self.genMeasureUnitCM = LrsUnitComboManager( self.genMeasureUnitCombo, settingsName = 'measureUnit', defaultValue = LrsUnits.KILOMETER )
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
         self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 5.0 )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
@@ -286,7 +286,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointLayerCM.reset() 
         self.genPointRouteFieldCM.reset() 
         self.genPointMeasureFieldCM.reset() 
-        self.genMapUnitsPerMeasureUnitWM.reset()
+        self.genMeasureUnitCM.reset()
         self.genThresholdWM.reset()
         self.genSnapWM.reset()
         self.genExtrapolateWM.reset()
@@ -304,7 +304,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointLayerCM.writeToProject()
         self.genPointRouteFieldCM.writeToProject()
         self.genPointMeasureFieldCM.writeToProject()
-        self.genMapUnitsPerMeasureUnitWM.writeToProject()
+        self.genMeasureUnitCM.writeToProject()
         self.genThresholdWM.writeToProject() 
         self.genSnapWM.writeToProject() 
         self.genExtrapolateWM.writeToProject()
@@ -315,7 +315,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointLayerCM.readFromProject()
         self.genPointRouteFieldCM.readFromProject()
         self.genPointMeasureFieldCM.readFromProject()
-        self.genMapUnitsPerMeasureUnitWM.readFromProject()
+        self.genMeasureUnitCM.readFromProject()
         self.genThresholdWM.readFromProject()
         self.genSnapWM.readFromProject()
         self.genExtrapolateWM.readFromProject()
@@ -351,8 +351,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         snap = self.genSnapSpin.value()
         threshold = self.genThresholdSpin.value()
         extrapolate = self.genExtrapolateCheckBox.isChecked()
-        self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, mapUnitsPerMeasureUnit = self.mapUnitsPerMeasureUnit )
+
+        #self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
+        measureUnit = self.genMeasureUnitCM.unit()
+
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, measureUnit = measureUnit )
 
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
@@ -664,7 +667,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         measureFieldName = self.measureMeasureFieldLineEdit.text()
  
         # create new layer
-        uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapRenderer().destinationCrs() )
+        #uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapRenderer().destinationCrs() )
+        uri = "Point?crs=%s" %  crsString ( layer.crs() )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( layer.pendingFields().toList() )
         provider.addAttributes( [ 
@@ -679,6 +683,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         fields = outputLayer.pendingFields()
         total = layer.featureCount()
         count = 0
+        transform = None
+        if layer.crs() != self.lrs.crs:
+            transform = QgsCoordinateTransform( layer.crs(), self.lrs.crs)
         for feature in layer.getFeatures():
             points = []
             
@@ -689,8 +696,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 elif geo.wkbType() in [ QGis.WKBMultiPoint, QGis.WKBMultiPoint25D]:
                     points = geo.asMultiPoint()
 
-            # TODO: reprojection
-
             for point in points:
                 outputFeature = QgsFeature( fields ) # fields must exist during feature life!
                 outputFeature.setGeometry( QgsGeometry.fromPoint( point ) )
@@ -698,6 +703,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 for field in layer.pendingFields():
                     outputFeature[field.name()] = feature[field.name()]
                 
+                if transform:
+                    point = transform.transform( point )
                 routeId, measure = self.lrs.pointMeasure ( point, threshold )
                 #debug ( "routeId = %s merasure = %s" % (routeId, measure) )
 

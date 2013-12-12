@@ -89,12 +89,14 @@ class LrsSegment:
 # Chain of connected geometries
 class LrsRoutePart:
 
-    def __init__(self, polyline, routeId, origins, mapUnitsPerMeasureUnit):
+    def __init__(self, polyline, routeId, origins, crs, measureUnit, distanceArea):
         #debug ('init route part' )
         self.polyline = polyline
         self.routeId = routeId
         self.origins = origins # list of LrsOrigin
-        self.mapUnitsPerMeasureUnit = mapUnitsPerMeasureUnit
+        self.crs = crs
+        self.measureUnit = measureUnit
+        self.distanceArea = distanceArea
         self.length = None # polyline length
         self.milestones = [] # LrsMilestone list, all input milestones
         self.records = [] # LrsRecord list
@@ -195,7 +197,23 @@ class LrsRoutePart:
         for i in range(len(milestones)-1):
             m1 = milestones[i]
             m2 = milestones[i+1]
+            # usually should not happen, report as error?
+            if doubleNear( m1.measure, m2.measure ): continue
+            if doubleNear( m1.partMeasure, m2.partMeasure ): continue
             self.records.append ( LrsRecord ( m1.measure, m2.measure, m1.partMeasure, m2.partMeasure ) )
+
+    # calculate segment measure in measure units, used for extrapolate
+    def segmentLengthInMeasureUnits(self, partFrom, partTo ):
+        if self.distanceArea.ellipsoidalEnabled():
+            polyline = polylineSegment( self.polyline, partFrom, partTo )
+            geo = QgsGeometry.fromPolyline( polyline )
+            length = self.distanceArea.measure( geo )
+            qgisUnit = QGis.Meters
+        else:
+            length = partTo - partFrom    
+            qgisUnit = self.crs.mapUnits()
+        length = convertDistanceUnits( length, qgisUnit, self.measureUnit )
+        return length
 
     # extrapolate before and after (add calculated records)
     def extrapolate(self):
@@ -204,14 +222,19 @@ class LrsRoutePart:
         
         record = self.records[0]
         if record.partFrom > 0 and not doubleNear(record.partFrom,0):
-            measure = record.milestoneFrom - record.partFrom / self.mapUnitsPerMeasureUnit 
+            #measure = record.milestoneFrom - record.partFrom / self.mapUnitsPerMeasureUnit 
+            length = self.segmentLengthInMeasureUnits( 0, record.partFrom )
+            measure = record.milestoneFrom - length
+
             #debug ('routeId = %s measure = %s' % (self.routeId,measure) )
             self.records.insert( 0, LrsRecord ( measure, record.milestoneFrom, 0, record.partFrom ) )
 
         record = self.records[-1]
         #debug ('routeId = %s partTo = %s length = %s' % (self.routeId,record.partTo,self.length) )
         if record.partTo < self.length and not doubleNear(record.partTo,self.length):
-            measure = record.milestoneTo + (self.length - record.partTo) / self.mapUnitsPerMeasureUnit 
+            #measure = record.milestoneTo + (self.length - record.partTo) / self.mapUnitsPerMeasureUnit 
+            length = self.segmentLengthInMeasureUnits( record.partTo, self.length )
+            measure = record.milestoneTo + length
             #debug ('routeId = %s measure = %s' % (self.routeId,measure) )
             self.records.append( LrsRecord ( record.milestoneTo, measure, record.partTo, self.length ) )
         

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>434</width>
-    <height>387</height>
+    <height>388</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,13 +33,26 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QGridLayout" name="genGridLayout">
-          <item row="10" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="genSnapLabel">
             <property name="toolTip">
              <string>Maximum gap between lies to be snapped.</string>
             </property>
             <property name="text">
              <string>Max lines snap</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QDoubleSpinBox" name="genSnapSpin">
+            <property name="toolTip">
+             <string>Maximum gap between lies to be snapped.</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -81,7 +94,7 @@
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="14" column="0">
            <widget class="QLabel" name="genThresholdLabel">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -114,7 +127,7 @@
           <item row="3" column="1">
            <widget class="QComboBox" name="genPointLayerCombo"/>
           </item>
-          <item row="11" column="1">
+          <item row="14" column="1">
            <widget class="QDoubleSpinBox" name="genThresholdSpin">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -133,37 +146,24 @@
           <item row="5" column="1">
            <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
           </item>
-          <item row="6" column="1">
-           <widget class="QDoubleSpinBox" name="genMapUnitsPerMeasureUnitSpin">
-            <property name="decimals">
-             <number>2</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
           <item row="6" column="0">
-           <widget class="QLabel" name="genMapUnitsPerMeasureUnitLabel">
+           <widget class="QLabel" name="genMeasureUnitLabel">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map units per measure unit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Map units / measure unit</string>
+             <string>Measure unit</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="0" colspan="2">
+          <item row="9" column="0" colspan="2">
            <widget class="Line" name="line_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="genExtrapolateLabel">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
@@ -173,7 +173,7 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
+          <item row="15" column="1">
            <widget class="QCheckBox" name="genExtrapolateCheckBox">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
@@ -183,18 +183,8 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="1">
-           <widget class="QDoubleSpinBox" name="genSnapSpin">
-            <property name="toolTip">
-             <string>Maximum gap between lies to be snapped.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-           </widget>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="genMeasureUnitCombo"/>
           </item>
          </layout>
         </item>

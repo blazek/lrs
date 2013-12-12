@@ -28,6 +28,26 @@ from qgis.core import *
 # name of plugin in project file
 PROJECT_PLUGIN_NAME = "lrs"
 
+class LrsUnits():
+    METER = 0
+    KILOMETER = 1
+    FEET = 2
+    MILE = 3
+    UNKNOWN = 4
+
+    names = { METER: 'meter', KILOMETER: 'kilometer', FEET: 'feet', MILE: 'mile' }
+
+    @staticmethod
+    def unitName(unit):
+        return LrsUnits.names.get(unit, 'unknown')
+
+    @staticmethod
+    def unitFromName(name):
+        for u,n in LrsUnits.names.iteritems():
+            if n == name:
+                return u
+        return LrsUnits.UNKNOWN
+
 # print debug message
 def debug(msg):
     print "LRSDEBUG: %s" % msg
@@ -44,7 +64,11 @@ def normalizeRouteId( route ):
     if type(route) != str:
         route = str(route)
     return route.lower()
-        
+    
+# print measure with decent number of decimal places (meters), 
+# this is used in events error messages
+#def printMeasure(measure,crs,mapUnitsPerMeasureUnit):
+#   return measure 
 
 # test if two QgsPolyline are identical including reverse order
 # return False - not identical
@@ -62,6 +86,29 @@ def polylinesIdentical( polyline1, polyline2 ):
 def pointHash( point ):
     return "%s-%s" % ( point.x().__hash__(), point.y().__hash__() )
 
+
+def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
+    if qgisUnit == QGis.Meters:
+        if lrsUnit == LrsUnits.METER:
+            return distance
+        elif lrsUnit == LrsUnits.KILOMETER:
+            return distance / 1000.
+        elif lrsUnit == LrsUnits.FEET:
+            return distance * 3.2808399
+        elif lrsUnit == LrsUnits.MILE:
+            return distance / 1609.344
+    elif qgisUnit == QGis.Feet:
+        if lrsUnit == LrsUnits.METER:
+            return distance / 3.2808399
+        elif lrsUnit == LrsUnits.KILOMETER:
+            return distance / 3280.8399
+        elif lrsUnit == LrsUnits.FEET:
+            return distance
+        elif lrsUnit == LrsUnits.MILE:
+            return distance / 5280
+
+    raise Exception( "Conversion from QGIS unit %s to Lrs unit %s not supported" % ( qgisUnit, lrsUnit ) )
+
 def pointsDistance( p1, p2 ):
     dx = p2.x() - p1.x()
     dy = p2.y() - p1.y()
@@ -73,13 +120,14 @@ def segmentLength( polyline, segment ):
     return pointsDistance( p1, p2 )
 
 # calculate distance along line to pnt
-def measureAlongPolyline( polyline, segment, pnt ):
+def measureAlongPolyline( polyline, segment, pnt):
     measure = 0.0
     for i in range(segment):
         measure += segmentLength( polyline, i )
     
     measure += pointsDistance( polyline[segment], pnt )
     return measure
+
 
 # delete all features from layer
 #def clearLayer( layer ):
