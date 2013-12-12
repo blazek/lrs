@@ -16,7 +16,12 @@ Introduction
 What is LRS?
 ............
 
+.. image:: images/milestone.jpeg
+   :align: right
+
 "Linear referencing (also called linear reference system or linear referencing system or LRS), is a method of spatial referencing, in which the locations of features are described in terms of measurements along a linear element, from a defined starting point, for example a milestone along a road." (`Linear referencing <http://en.wikipedia.org/wiki/Linear_Reference_System>`_, Wikipedia, 2013).
+
+
 
 Motivation
 ..........
