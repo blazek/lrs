@@ -1,6 +1,6 @@
 <?xml version = "1.0"?>
 <plugins>
-   <pyqgis_plugin name = "LRS Plugin" version = "0.1.1">
+   <pyqgis_plugin name = "LRS Plugin" version = "0.1.4">
      <description>LRS plugin</description>
      <homepage>https://github.com/blazek/lrs</homepage>
      <qgis_minimum_version>2.0</qgis_minimum_version>
