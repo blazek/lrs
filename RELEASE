@@ -5,7 +5,6 @@ Release steps:
 * generate documentation in lrs/: make doc
 * create package in lrs/: make package VERSION=x.x.x
 * set link to latest help in index.html
-* set link to latest help in README.md
 * git commit
 * tag new version in git
 * git push; git push --tags; git push origin gh-pages:gh-pages

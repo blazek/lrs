@@ -12,7 +12,7 @@
 name=LRS
 qgisMinimumVersion=2.0
 description=Linear reference system builder and editor
-version=0.1.3
+version=0.1.4
 author=Radim Blazek
 email=radim.blazek@gmail.com
 
@@ -26,7 +26,7 @@ email=radim.blazek@gmail.com
 # tags are comma separated with spaces allowed
 tags=vector,network,linear referencing,dynamic segmentation
 
-homepage=https://github.com/blazek/lrs/
+homepage=http://blazek.github.io/lrs/
 tracker=https://github.com/blazek/lrs/issues/
 repository=https://github.com/blazek/lrs/
 icon=icon.svg
