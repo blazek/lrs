@@ -40,6 +40,8 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
+	convert -geometry 32 ../icon.svg build/icon.ico
+	convert -geometry 64 ../icon.svg build/icon.png
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

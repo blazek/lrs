@@ -1,30 +1,27 @@
-.. lrsplugin documentation master file, created by
-   sphinx-quickstart on Sun Feb 12 17:11:03 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. lrsplugin documentation master file
+   
 
-===============
-LRS Plugin
-===============
+LRS Plugin for QGIS
+*******************
 
 .. toctree::
    :maxdepth: 2
 
+.. image:: ../build/icon.png
+   :align: left
+   
+"Linear referencing (also called linear reference system or linear referencing system or LRS), is a method of spatial referencing, in which the locations of features are described in terms of measurements along a linear element, from a defined starting point, for example a milestone along a road." (`Linear referencing <http://en.wikipedia.org/wiki/Linear_Reference_System>`_, Wikipedia, 2013).   
+
 Introduction
 ============
 
-What is LRS?
-............
-
-.. image:: images/milestone.jpeg
-   :align: right
-
-"Linear referencing (also called linear reference system or linear referencing system or LRS), is a method of spatial referencing, in which the locations of features are described in terms of measurements along a linear element, from a defined starting point, for example a milestone along a road." (`Linear referencing <http://en.wikipedia.org/wiki/Linear_Reference_System>`_, Wikipedia, 2013).
-
-
+The plugin was developped for *Il Servizio Gestione Strade* della `Provincia Autonoma di Trento. <http://www.provincia.tn.it/>`_
 
 Motivation
 ..........
+
+.. image:: images/milestone.jpeg
+   :align: right
 
 The biggest problem of LRS is consistency and quality of data. This is caused by the fact that line and point data are maintained separately, sometimes even by different entities. Identification and correction of errors in LRS is tedious and inefficient without specialized tools. The true value of this plugin is in its support for errors identification, navigation and correction.
 
@@ -166,10 +163,10 @@ The output is created as memory layer which can be later stored in a persistent 
 General notes
 =============
 
-Routes id matching (e.g. finding points for line or route for event) is case insensitive in case of strings and it also accepts integers in fields of type string (e.g. lines may have route id field type integer and points type string).
+* **CRS.** Calibrated of LRS is done in one CRS to which lines and points are reprojected (if layers have different CRS). The CRS is either map canvas CRS if OTF is enabled otherwise line layer CRS. Note that max point distance and lines snap are in units used to build LRS (units are appended to fields labels).
 
-All options in all tabs are stored in project. The options of each tab are written to project when *OK* button is pressed (i.e. options are confirmed).
+* **Route id** matching (e.g. finding points for line or route for event) is case insensitive in case of strings and it also accepts integers in fields of type string (e.g. lines may have route id field type integer and points type string).
 
-Reset buttons in tabs will reset all options to **default** values.
+* **Options** in all tabs are stored in project. The options of each tab are written to project when *OK* button is pressed (i.e. options are confirmed). Reset buttons in tabs will reset all options to **default** values.
 
-The plugin window is dockable, it means that it can be eithers used as dialog window or it can be docked in QGIS main window.
+* **Dockable window.** The plugin window is dockable, it means that it can be eithers used as dialog window or it can be docked in QGIS main window.

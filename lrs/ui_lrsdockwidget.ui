@@ -24,11 +24,11 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="genTab">
        <attribute name="title">
-        <string>Calibrate</string>
+        <string>Calibration</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -476,7 +476,7 @@
       </widget>
       <widget class="QWidget" name="measureTab">
        <attribute name="title">
-        <string>Measure</string>
+        <string>Measures</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
