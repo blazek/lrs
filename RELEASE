@@ -1,5 +1,7 @@
 Release steps:
 
+* verify that designer was saved with Calibration stab selected
+* make resources in lrs/: make
 * set new version in lrs/metadata.txt
 * set new version and release in lrs/help/source/conf.py
 * generate documentation in lrs/: make doc
