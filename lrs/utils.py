@@ -67,8 +67,18 @@ def normalizeRouteId( route ):
     
 # print measure with decent number of decimal places (meters), 
 # this is used in events error messages
-#def printMeasure(measure,crs,mapUnitsPerMeasureUnit):
-#   return measure 
+def formatMeasure(measure,measureUnit):
+    if measureUnit == LrsUnits.METER:
+        return "%d" % measure
+    elif measureUnit == LrsUnits.KILOMETER:
+        return "%.3f" % measure
+    elif measureUnit == LrsUnits.FEET:
+        return "%d" % measure
+    elif measureUnit == LrsUnits.MILE:
+        return "%.3f" % measure
+    
+    return "%s" % measure
+    
 
 # test if two QgsPolyline are identical including reverse order
 # return False - not identical

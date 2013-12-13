@@ -68,7 +68,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
         self.genMeasureUnitCM = LrsUnitComboManager( self.genMeasureUnitCombo, settingsName = 'measureUnit', defaultValue = LrsUnits.KILOMETER )
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
-        self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 5.0 )
+        self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 0.0 )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)

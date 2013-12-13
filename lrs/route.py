@@ -418,7 +418,9 @@ class LrsRoute:
         for record in overlaps:
             part = recordParts[record]
             geo = part.getRecordGeometry(record)
-            self.errors.append( LrsError( LrsError.DUPLICATE_REFERENCING, geo, routeId = self.routeId, measure = [ record.milestoneFrom, record.milestoneTo ] ) )
+            measureFrom = formatMeasure(record.milestoneFrom, self.measureUnit)
+            measureTo = formatMeasure(record.milestoneTo, self.measureUnit)
+            self.errors.append( LrsError( LrsError.DUPLICATE_REFERENCING, geo, routeId = self.routeId, measure = [ measureFrom, measureTo ] ) )
             part.removeRecord(record)
 
     def getErrors(self):
@@ -499,7 +501,9 @@ class LrsRoute:
 
             gaps = []
             for i in range(len(measures)-1):
-                gaps.append( '%s-%s' % ( measures[i][1], measures[i+1][0] ) )
+                measureFrom = formatMeasure( measures[i][1], self.measureUnit)
+                measureTo = formatMeasure( measures[i+1][0], self.measureUnit)
+                gaps.append( '%s-%s' % ( measureFrom, measureTo ) )
 
             if gaps:
                 error = 'segments %s not available' % ', '.join(gaps)            
