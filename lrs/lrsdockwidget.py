@@ -35,6 +35,7 @@ from widget import *
 
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
+        #debug( "LrsDockWidget.__init__")
         self.iface = iface
         self.lrs = None # Lrs object
         self.errorPointLayer = None
@@ -81,7 +82,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
         self.genButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
-        self.updateGenerateUnits()
 
         ##### errorTab
         self.errorVisualizer = LrsErrorVisualizer ( self.iface.mapCanvas() )
@@ -160,6 +160,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # read project if plugin was reloaded
         self.projectRead()
 
+        # keep last, it was giving error on Win7/64 when it was called above:
+        # RuntimeError: wrapped C/C++ object of type QgsMapRenderer has been deleted
+        self.updateGenerateUnits()
+
     def errorFilterChanged(self, text):
         if not self.sortErrorModel: return
         self.sortErrorModel.setFilterWildcard( text )
@@ -211,9 +215,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs = None
 
     def close(self):
+        #debug( "LrsDockWidget.close")
         self.deleteLrs()
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect( self.projectRead )
+        self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect(self.mapRendererCrsChanged)
+        self.iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect(self.mapRendererCrsChanged)
 
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
@@ -322,6 +329,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def getGenerateCrs(self):
         crs = None
+        #debug ( "genLineLayerCM = %s" % self.genLineLayerCM )
         lineLayer = self.genLineLayerCM.getLayer()
         if lineLayer:
             crs = lineLayer.crs()
