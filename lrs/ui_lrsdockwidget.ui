@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>434</width>
-    <height>388</height>
+    <height>417</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,7 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QGridLayout" name="genGridLayout">
-          <item row="13" column="0">
+          <item row="14" column="0">
            <widget class="QLabel" name="genSnapLabel">
             <property name="toolTip">
              <string>Maximum gap between lies to be snapped.</string>
@@ -43,7 +43,7 @@
             </property>
            </widget>
           </item>
-          <item row="13" column="1">
+          <item row="14" column="1">
            <widget class="QDoubleSpinBox" name="genSnapSpin">
             <property name="toolTip">
              <string>Maximum gap between lies to be snapped.</string>
@@ -94,7 +94,7 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="genThresholdLabel">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -127,7 +127,7 @@
           <item row="3" column="1">
            <widget class="QComboBox" name="genPointLayerCombo"/>
           </item>
-          <item row="14" column="1">
+          <item row="15" column="1">
            <widget class="QDoubleSpinBox" name="genThresholdSpin">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -140,6 +140,20 @@
             </property>
             <property name="value">
              <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="QComboBox" name="genSelectionModeCombo">
+            <property name="toolTip">
+             <string>Routes selection mode.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0" colspan="2">
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -156,14 +170,7 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="0" colspan="2">
-           <widget class="Line" name="line_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="0">
+          <item row="16" column="0">
            <widget class="QLabel" name="genExtrapolateLabel">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
@@ -173,7 +180,7 @@
             </property>
            </widget>
           </item>
-          <item row="15" column="1">
+          <item row="16" column="1">
            <widget class="QCheckBox" name="genExtrapolateCheckBox">
             <property name="toolTip">
              <string>Extrapolate before and after calibration points.</string>
@@ -185,6 +192,24 @@
           </item>
           <item row="6" column="1">
            <widget class="QComboBox" name="genMeasureUnitCombo"/>
+          </item>
+          <item row="13" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QLineEdit" name="genSelectionLineEdit">
+              <property name="toolTip">
+               <string>Comma separated list of routes to include/exclude.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="genSelectionButton">
+              <property name="text">
+               <string>Select</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>

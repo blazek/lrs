@@ -36,9 +36,9 @@ PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 #EXTRAS = icon.png metadata.txt
 EXTRAS = icon.svg metadata.txt
 
-PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py utils.py widget.py icon.svg 
+PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py ui_selectiondialog.py selectiondialog.py utils.py widget.py icon.svg 
 
-UI_FILES = ui_lrsdockwidget.py
+UI_FILES = ui_lrsdockwidget.py ui_selectiondialog.py
 
 RESOURCE_FILES = resources_rc.py
 

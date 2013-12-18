@@ -36,11 +36,33 @@ class LrsComboManager(QObject):
         self.combo = combo # QComboBox
         self.settingsName = kwargs.get('settingsName')
         self.allowNone = kwargs.get('allowNone', False) # allow select none
-    
-        self.proxy = QSortFilterProxyModel(self)
+        self.sort = kwargs.get('sort', True) # sort values
+        #debug ( "sort = %s" % self.sort ) 
+        self.defaultValue = kwargs.get('defaultValue', None)
+
         self.model = QStandardItemModel(0, 1, self)
-        self.proxy.setSourceModel(self.model)
-        self.combo.setModel(self.proxy);
+
+        if self.sort:
+            self.proxy = QSortFilterProxyModel(self)
+            self.proxy.setSourceModel(self.model)
+            self.combo.setModel(self.proxy);
+        else:
+            self.proxy = None
+            self.combo.setModel(self.model)
+
+        # options is dict with of [value,label] pairs
+        options = kwargs.get('options', [])
+        if options:
+            for opt in options:
+                item = QStandardItem( opt[1] )
+                item.setData( opt[0], Qt.UserRole )
+                self.model.appendRow( item )
+
+    def value(self):
+        idx = self.combo.currentIndex()
+        if idx != -1:
+            return self.combo.itemData(idx, Qt.UserRole )
+        return None
 
     def writeToProject(self):
         idx = self.combo.currentIndex()
@@ -53,11 +75,19 @@ class LrsComboManager(QObject):
 
         idx = self.combo.findData(val, Qt.UserRole)
         #debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
+        if idx == -1:
+            idx = self.combo.findData( self.defaultValue, Qt.UserRole)
+        
         self.combo.setCurrentIndex(idx)
 
     # reset to index -1
     def reset(self):
-        self.combo.setCurrentIndex(-1)
+        if self.defaultValue is not None:
+            idx = self.combo.findData( self.defaultValue, Qt.UserRole )
+            #debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
+            self.combo.setCurrentIndex( idx )
+        else:
+            self.combo.setCurrentIndex(-1)
 
     def findItemByData(self, data, flags = Qt.MatchFixedString ):
         start = self.model.index(0,0, QModelIndex())
@@ -200,16 +230,11 @@ class LrsFieldComboManager(LrsComboManager):
         
         self.proxy.sort(0)
 
-class LrsUnitComboManager(QObject):
+class LrsUnitComboManager(LrsComboManager):
 
     def __init__(self, combo, **kwargs ):
-        super(LrsUnitComboManager, self).__init__()
-        self.combo = combo # QComboBox
-        self.settingsName = kwargs.get('settingsName')
-        self.defaultValue = kwargs.get('defaultValue', LrsUnits.KILOMETER)
-    
-        self.model = QStandardItemModel(0, 1, self)
-        self.combo.setModel(self.model);
+        kwargs['sort'] = False
+        super(LrsUnitComboManager, self).__init__(combo,**kwargs)
 
         for unit in [ LrsUnits.METER, LrsUnits.KILOMETER, LrsUnits.FEET, LrsUnits.MILE]:
             item = QStandardItem( LrsUnits.unitName( unit ) )
@@ -217,14 +242,6 @@ class LrsUnitComboManager(QObject):
             self.model.appendRow( item )
 
         self.reset()
-
-    def __del__(self):
-        pass
-
-    def reset(self):
-        idx = self.combo.findData( self.defaultValue, Qt.UserRole )
-        #debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
-        self.combo.setCurrentIndex( idx )
 
     def unit(self):
         idx = self.combo.currentIndex()

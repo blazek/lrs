@@ -66,6 +66,12 @@ class Lrs(QObject):
         self.pointLayer = pointLayer
         self.pointRouteField = pointRouteField
         self.pointMeasureField = pointMeasureField
+        # selectionMode: all,include,exclude selection
+        self.selectionMode = kwargs.get('selectionMode', 'all')
+        # selection is list of route ids to be included/excluded
+        self.selection = []
+        for routeId in kwargs.get('selection', [] ):
+            self.selection.append( normalizeRouteId( routeId ) )
         # max lines gaps snap
         self.snap = kwargs.get('snap', 0.0)
         # threshold - max distance between point and line in canvas CRS units
@@ -154,6 +160,18 @@ class Lrs(QObject):
                 self.lineLayerDisconnect()
                 self.lineLayer = None
 
+##################### COMMON ###############################################
+    
+    # test if process route according to selectionMode and selection
+    def routeIdSelected(self, routeId):
+        routeId = normalizeRouteId( routeId )
+        if self.selectionMode == 'all':
+            return True
+        elif self.selectionMode == 'include':
+            return routeId in self.selection
+        elif self.selectionMode == 'exclude':
+            return routeId not in self.selection
+
 ##################### GENERATE (CALIBRATE) #################################
 
     def updateProgressTotal(self):
@@ -219,6 +237,8 @@ class Lrs(QObject):
         if routeId == '' or routeId == NULL: routeId = None
         #debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
 
+        if not self.routeIdSelected(routeId): return
+
         geo = feature.geometry()
         if geo:
             if self.lineTransform:
@@ -249,6 +269,9 @@ class Lrs(QObject):
     def registerPointFeature (self, feature):
         routeId = feature[self.pointRouteField]
         if routeId == '' or routeId == NULL: routeId = None
+
+        if not self.routeIdSelected(routeId): return
+
         measure = feature[self.pointMeasureField]
         if measure == NULL: measure = None
         #debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )

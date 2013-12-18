@@ -32,12 +32,14 @@ from layer import *
 from lrs import *
 from combo import *
 from widget import *
+from selectiondialog import *
 
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         #debug( "LrsDockWidget.__init__")
         self.iface = iface
         self.lrs = None # Lrs object
+        self.genSelectionDialog = None
         self.errorPointLayer = None
         self.errorPointLayerManager = None
         self.errorLineLayer = None
@@ -66,8 +68,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM = LrsFieldComboManager( self.genPointRouteFieldCombo, self.genPointLayerCM, settingsName = 'pointRouteField' )
         self.genPointMeasureFieldCM = LrsFieldComboManager( self.genPointMeasureFieldCombo, self.genPointLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'pointMeasureField' )
 
-        #self.genMapUnitsPerMeasureUnitWM = LrsWidgetManager( self.genMapUnitsPerMeasureUnitSpin, settingsName = 'mapUnitsPerMeasureUnit', defaultValue = 1000.0 )
         self.genMeasureUnitCM = LrsUnitComboManager( self.genMeasureUnitCombo, settingsName = 'measureUnit', defaultValue = LrsUnits.KILOMETER )
+
+        self.genSelectionModeCM = LrsComboManager( self.genSelectionModeCombo, options = (('all', 'All routes'),('include', 'Include routes'),('exclude','Exclude routes')), defaultValue = 'all', settingsName = 'selectionMode' )
+        self.genSelectionWM = LrsWidgetManager( self.genSelectionLineEdit, settingsName = 'selection' )
+
+
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
         self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 0.0 )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
@@ -79,9 +85,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genPointMeasureFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
 
+        self.genSelectionModeCombo.currentIndexChanged.connect(self.enableGenerateSelection )
+        self.genSelectionButton.clicked.connect(self.openGenerateSelectionDialog)
+
         self.genButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.generateLrs)
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
         self.genButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
+
+        self.enableGenerateSelection()
 
         ##### errorTab
         self.errorVisualizer = LrsErrorVisualizer ( self.iface.mapCanvas() )
@@ -292,6 +303,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM.reset() 
         self.genPointMeasureFieldCM.reset() 
         self.genMeasureUnitCM.reset()
+        self.genSelectionModeCM.reset()
+        self.genSelectionWM.reset()
         self.genThresholdWM.reset()
         self.genSnapWM.reset()
         self.genExtrapolateWM.reset()
@@ -302,6 +315,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateOptions()
         self.writeGenerateOptions()
 
+    def enableGenerateSelection(self):
+        enable = self.genSelectionModeCM.value() != 'all'
+        self.genSelectionLineEdit.setEnabled(enable)
+        self.genSelectionButton.setEnabled(enable)
+
     # save settings in project
     def writeGenerateOptions(self):
         self.genLineLayerCM.writeToProject()
@@ -310,6 +328,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM.writeToProject()
         self.genPointMeasureFieldCM.writeToProject()
         self.genMeasureUnitCM.writeToProject()
+        self.genSelectionModeCM.writeToProject()
+        self.genSelectionWM.writeToProject()
         self.genThresholdWM.writeToProject() 
         self.genSnapWM.writeToProject() 
         self.genExtrapolateWM.writeToProject()
@@ -321,9 +341,31 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genPointRouteFieldCM.readFromProject()
         self.genPointMeasureFieldCM.readFromProject()
         self.genMeasureUnitCM.readFromProject()
+        self.genSelectionModeCM.readFromProject()
+        self.genSelectionWM.readFromProject()
         self.genThresholdWM.readFromProject()
         self.genSnapWM.readFromProject()
         self.genExtrapolateWM.readFromProject()
+
+    def getGenerateSelection(self):
+        return map( unicode.strip, self.genSelectionLineEdit.text().split(',') )
+
+    def openGenerateSelectionDialog(self):
+        if not self.genSelectionDialog:
+            self.genSelectionDialog = LrsSelectionDialog()
+            self.genSelectionDialog.accepted.connect( self.generateSelectionDialogAccepted )
+
+        layer = self.genLineLayerCM.getLayer()
+        fieldName = self.genLineRouteFieldCM.getFieldName()
+        select = self.getGenerateSelection()
+        self.genSelectionDialog.load( layer, fieldName, select )
+
+        self.genSelectionDialog.show()
+
+    def generateSelectionDialogAccepted(self):
+        selection = self.genSelectionDialog.selected()
+        selection = ",".join( map(str,selection) )
+        self.genSelectionLineEdit.setText( selection )
 
     def getGenerateCrs(self):
         crs = None
@@ -354,6 +396,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         crs = self.getGenerateCrs()
 
+        selection = self.getGenerateSelection()
         snap = self.genSnapSpin.value()
         threshold = self.genThresholdSpin.value()
         extrapolate = self.genExtrapolateCheckBox.isChecked()
@@ -361,7 +404,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
         measureUnit = self.genMeasureUnitCM.unit()
 
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, measureUnit = measureUnit )
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), selectionMode = self.genSelectionModeCM.value(), selection = selection, crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, measureUnit = measureUnit )
 
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
