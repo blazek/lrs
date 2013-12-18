@@ -73,7 +73,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
-        self.genLineLayerCombo.currentIndexChanged.connect(self.updateGenerateUnits)
+        self.genLineLayerCombo.currentIndexChanged.connect(self.updateLabelsUnits)
         self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genPointLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genPointRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -153,16 +153,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect(self.mapRendererCrsChanged)
         self.iface.mapCanvas().mapRenderer().destinationSrsChanged.connect(self.mapRendererCrsChanged)
+        self.updateLabelsUnits()
+
 
         # newProject is currently missing in sip
         #QgsProject.instance().newProject.connect( self.projectNew )
 
         # read project if plugin was reloaded
         self.projectRead()
-
-        # keep last, it was giving error on Win7/64 when it was called above:
-        # RuntimeError: wrapped C/C++ object of type QgsMapRenderer has been deleted
-        self.updateGenerateUnits()
 
     def errorFilterChanged(self, text):
         if not self.sortErrorModel: return
@@ -260,7 +258,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.measureTab.setEnabled( enable )
 
     def mapRendererCrsChanged(self):
-        self.updateGenerateUnits()
+        self.updateLabelsUnits()
 
     def getUnitsLabel(self, crs):
         label = ""
@@ -341,7 +339,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         return crs
 
     # set threshold units according to current crs
-    def updateGenerateUnits(self):
+    def updateLabelsUnits(self):
         crs = self.getGenerateCrs()
         label = self.getThresholdLabel(crs)
         self.genThresholdLabel.setText(label)

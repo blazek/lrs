@@ -37,6 +37,12 @@ class LrsPlugin:
         #debug( "LrsPlugin.__init__" )
         # Save reference to the QGIS interface
         self.iface = iface
+
+        # There is bug in SIP (Transfer of QgsMapRenderer) 
+        # http://lists.osgeo.org/pipermail/qgis-developer/2013-December/029816.html
+        # so we have to keep reference to QgsMapRenderer
+        self.mapRenderer = iface.mapCanvas().mapRenderer()
+
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
