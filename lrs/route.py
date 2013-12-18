@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- LrsPlugin
+ LrsRoute
                                  A QGIS plugin
  Linear reference system builder and editor
                               -------------------
@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys
+import sys, operator
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -35,7 +35,7 @@ from milestone import *
 
 class LrsRoute:
 
-    def __init__(self, layer, routeId, snap, threshold, crs, measureUnit, distanceArea):
+    def __init__(self, layer, routeId, snap, threshold, crs, measureUnit, distanceArea, **kwargs ):
         #debug ('init route %s' % routeId )
         self.layer = layer
         self.routeId = routeId # if None, keeps all lines and points without routeId
@@ -44,6 +44,9 @@ class LrsRoute:
         self.crs = crs
         self.measureUnit = measureUnit
         self.distanceArea = distanceArea
+        # parallelMode, http://en.wikipedia.org/wiki/Multiple_edges:
+        # 'error', 'exclude' (do not include in parts), span (replace by straight line)
+        self.parallelMode = kwargs.get('parallelMode', 'error')
         self.lines = [] # LrsLine list, may be empty 
         self.points = [] # LrsPoint list, may be empty
 
@@ -143,6 +146,7 @@ class LrsRoute:
  
     # create LrsRoutePart objects from geometryParts
     def buildParts(self):
+        #debug ( 'routeId %s buildParts' % (self.routeId))
         self.parts = []
         polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
         for line in self.lines:
@@ -220,12 +224,13 @@ class LrsRoute:
                 else:
                     nodes[ ph ]['nlines'] += 1 
 
-        for node in nodes.values():
-            #debug( "nlines = %s" % node['nlines'] )
-            if node['nlines'] > 2:
-                geo = QgsGeometry.fromPoint( node['pnt'] )
-                # origins sould not be necessary
-                self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
+        # moved to parallels block
+        #for node in nodes.values():
+        #    #debug( "nlines = %s" % node['nlines'] )
+        #    if node['nlines'] > 2:
+        #        geo = QgsGeometry.fromPoint( node['pnt'] )
+        #        # origins sould not be necessary
+        #        self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
         ###### join polylines to parts
         while len( polylines ) > 0:
@@ -242,31 +247,27 @@ class LrsRoute:
                     polyline2 = poly2['polyline']
 
                     # dont connect in forks (we don't know which is better)
-                    fork = False
+                    forks = [False, False]
                     for j in [0, -1]:
-                        ph = pointHash( polyline2[j] )
+                        ph = pointHash( polyline[j] )
                         if nodes[ph]['nlines'] > 2:
-                            fork = True
-                            break
-                    if fork: 
-                        #debug ('skip fork' )
-                        continue
+                            forks[j] = True
 
-                    if polyline[-1] == polyline2[0]: # --1-->  --2-->
+                    if polyline[-1] == polyline2[0] and not forks[-1]: # --1-->  --2-->
                         del polyline2[0]
                         polyline.extend(polyline2)
                         connected = True
-                    elif polyline[-1] == polyline2[-1]: # --1--> <--2--
+                    elif polyline[-1] == polyline2[-1] and not forks[-1]: # --1--> <--2--
                         polyline2.reverse()
                         del polyline2[0]
                         polyline.extend(polyline2)
                         connected = True
-                    elif polyline[0] == polyline2[-1]: # --2--> --1-->
+                    elif polyline[0] == polyline2[-1] and not forks[0]: # --2--> --1-->
                         del polyline[0]
                         polyline2.extend(polyline)
                         polyline = polyline2
                         connected = True
-                    elif polyline[0] == polyline2[0]: # <--2-- --1-->
+                    elif polyline[0] == polyline2[0] and not forks[0]: # <--2-- --1-->
                         polyline2.reverse()
                         del polyline[0]
                         polyline2.extend(polyline)
@@ -284,6 +285,99 @@ class LrsRoute:
                     break
 
             self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea) )
+
+        #debug ( 'num parts = %s' % len(self.parts) )
+        # Find loops
+        parallelParts = []
+        for i in range(len(self.parts)):
+            part1 = self.parts[i]
+            if parallelParts and part1 in reduce(operator.add, parallelParts): # already in parallels
+                continue
+
+            poly1 = part1.polyline
+            parallels = []
+            for j in range(len(self.parts)):
+                if j == i: continue
+                part2 = self.parts[j]
+                poly2 = part2.polyline
+                if (poly1[0] == poly2[0] and poly1[-1] == poly2[-1]) or (poly1[0] == poly2[-1] and poly1[-1] == poly2[0]):
+                    parallels.append( part2 )
+
+            if parallels:
+                parallels.insert(0, part1 )
+                parallelParts.append( parallels )
+
+        #if parallelParts:
+        #    debug ( 'routeId %s parallelParts: %s' % (self.routeId, parallelParts ))
+
+        for parallels in parallelParts:
+            origins = []
+            for part in parallels:
+                origins.extend ( part.origins )
+                if self.parallelMode == 'error':
+                    geo = QgsGeometry.fromPolyline( part.polyline )
+                    self.errors.append( LrsError( LrsError.PARALLEL, geo, routeId = self.routeId, origins = part.origins ) )
+
+                self.parts.remove( part )
+
+            # forks
+            if self.parallelMode == 'error':
+                part = parallels[0]
+                for i in [0, -1]:
+                    geo = QgsGeometry.fromPoint( part.polyline[i] )
+                    # origins sould not be necessary
+                    self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
+
+            if self.parallelMode == 'span': # span by straight line
+                part = parallels[0]
+                polyline = [ part.polyline[0], part.polyline[-1] ]
+                
+                self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea) )
+
+        # reconnect parts after parallels span
+        # TODO: similar code as joining polyline, move to function
+        if parallelParts and self.parallelMode == 'span':
+            parts = self.parts
+            self.parts = []
+            while len(parts) > 0:
+                part1 = parts.pop(0)
+                self.parts.append ( part1 )
+                polyline = part1.polyline
+                while True:
+                    connected = False
+                    for part2 in parts:
+                        polyline2 = part2.polyline
+
+                        if polyline[-1] == polyline2[0]: # --1-->  --2-->
+                            del polyline2[0]
+                            polyline.extend(polyline2)
+                            connected = True
+                        elif polyline[-1] == polyline2[-1]: # --1--> <--2--
+                            polyline2.reverse()
+                            del polyline2[0]
+                            polyline.extend(polyline2)
+                            connected = True
+                        elif polyline[0] == polyline2[-1]: # --2--> --1-->
+                            del polyline[0]
+                            polyline2.extend(polyline)
+                            polyline = polyline2
+                            connected = True
+                        elif polyline[0] == polyline2[0]: # <--2-- --1-->
+                            polyline2.reverse()
+                            del polyline[0]
+                            polyline2.extend(polyline)
+                            polyline = polyline2
+                            connected = True
+
+                        if connected: 
+                            print 'part connected'
+                            part1.polyline = polyline
+                            part1.origins.extend( part2.origins )
+                            parts.remove( part2 )
+                            break
+
+                    if not connected: # no more parts can be connected
+                        break
 
     def addPoint( self, point ):
        self.points.append ( point )

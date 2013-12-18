@@ -48,13 +48,11 @@ class Lrs(QObject):
     # calibration steps
     REGISTERING_LINES = 1
     REGISTERING_POINTS = 2
-    BUILDING_PARTS = 3
-    CALIBRATING_ROUTES = 4
+    CALIBRATING_ROUTES = 3
 
     stateLabels = {
         REGISTERING_LINES: 'Registering lines',
         REGISTERING_POINTS: 'Registering points',
-        BUILDING_PARTS: 'Building routes',
         CALIBRATING_ROUTES: 'Calibrating routes',
     }
 
@@ -76,6 +74,7 @@ class Lrs(QObject):
         self.snap = kwargs.get('snap', 0.0)
         # threshold - max distance between point and line in canvas CRS units
         self.threshold = kwargs.get('threshold', 10.0)
+        self.parallelMode = kwargs.get('parallelMode', 'error')
         self.crs = kwargs.get('crs')
         #self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
         self.measureUnit = kwargs.get('measureUnit', LrsUnits.UNKNOWN)
@@ -178,7 +177,6 @@ class Lrs(QObject):
         cnts = self.progressCounts
         cnts[self.TOTAL] = cnts[self.NLINES]
         cnts[self.TOTAL] += cnts[self.NPOINTS]
-        cnts[self.TOTAL] += cnts[self.NROUTES] # build parts
         cnts[self.TOTAL] += cnts[self.NROUTES] # calibrate routes
         #debug ("%s" % cnts )
 
@@ -190,6 +188,7 @@ class Lrs(QObject):
         self.progressChanged.emit( self.stateLabels[state], percent )
 
     def calibrate(self):
+        #debug ( 'Lrs.calibrate' )
         self.progressChanged.emit( self.stateLabels[self.REGISTERING_LINES], 0 )
 
         self.points = {}
@@ -206,21 +205,16 @@ class Lrs(QObject):
 
         self.registerLines()
         self.registerPoints()
-        self.buildParts()
         for route in self.routes.values():
             route.calibrate(self.extrapolate)
-
-    def buildParts(self):
-        for route in self.routes.values():
-            route.buildParts()
-            self.progressStep(self.BUILDING_PARTS) 
+            self.progressStep(self.CALIBRATING_ROUTES) 
 
     # get route by id, create it if does not exist
     # routeId does not have to be normalized
     def getRoute(self, routeId):
         normalId = normalizeRouteId( routeId )
         if not self.routes.has_key( normalId ):
-            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs, self.measureUnit, self.distanceArea )
+            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs, self.measureUnit, self.distanceArea, parallelMode = self.parallelMode )
         return self.routes[normalId]
 
     # get route by id if exists otherwise returns None

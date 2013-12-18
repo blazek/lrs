@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- LrsPlugin
+ LrsError
                                  A QGIS plugin
  Linear reference system builder and editor
                               -------------------
@@ -61,6 +61,7 @@ class LrsError(object):
     DIRECTION_GUESS = 9 # cannot guess part direction
     WRONG_MEASURE = 10 # milestones in wrong position
     DUPLICATE_REFERENCING = 11 # multiple route segments measures overlap
+    PARALLEL = 12 # parallel line
 
     typeLabels = {
         DUPLICATE_LINE: 'Duplicate line',
@@ -74,6 +75,7 @@ class LrsError(object):
         DIRECTION_GUESS: 'Cannot guess direction',
         WRONG_MEASURE: 'Wrong measure',
         DUPLICATE_REFERENCING: 'Duplicate referencing',
+        PARALLEL: 'Parallel line',
     }
 
     def __init__(self, type, geo, **kwargs ):
@@ -165,6 +167,8 @@ class LrsError(object):
                 m.update( '%s' % self.routeId )
                 m.update( self.geo.asWkb() )
                 m.update( self.getMeasureString() )
+            elif self.type == self.PARALLEL:
+                m.update( self.getOriginChecksum() )
                  
             self.checksum_ = m.digest()
         return self.checksum_

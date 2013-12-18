@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- LrsPlugin
+ LRS Plugin utilities
                                  A QGIS plugin
  Linear reference system builder and editor
                               -------------------

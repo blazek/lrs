@@ -76,6 +76,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
         self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 0.0 )
+        self.genParallelModeCM = LrsComboManager( self.genParallelModeCombo, options = (('error', 'Mark as errors'), ('span', 'Span by straight line'),('exclude','Exclude')), defaultValue = 'error', settingsName = 'parallelMode' )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -307,6 +308,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genSelectionWM.reset()
         self.genThresholdWM.reset()
         self.genSnapWM.reset()
+        self.genParallelModeCM.reset()
         self.genExtrapolateWM.reset()
 
         self.resetGenerateButtons()
@@ -332,6 +334,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genSelectionWM.writeToProject()
         self.genThresholdWM.writeToProject() 
         self.genSnapWM.writeToProject() 
+        self.genParallelModeCM.writeToProject()
         self.genExtrapolateWM.writeToProject()
 
     def readGenerateOptions(self):
@@ -345,6 +348,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genSelectionWM.readFromProject()
         self.genThresholdWM.readFromProject()
         self.genSnapWM.readFromProject()
+        self.genParallelModeCM.readFromProject()
         self.genExtrapolateWM.readFromProject()
 
     def getGenerateSelection(self):
@@ -399,12 +403,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         selection = self.getGenerateSelection()
         snap = self.genSnapSpin.value()
         threshold = self.genThresholdSpin.value()
+        parallelMode = self.genParallelModeCM.value()
         extrapolate = self.genExtrapolateCheckBox.isChecked()
 
         #self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
         measureUnit = self.genMeasureUnitCM.unit()
 
-        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), selectionMode = self.genSelectionModeCM.value(), selection = selection, crs = crs, snap = snap, threshold = threshold, extrapolate = extrapolate, measureUnit = measureUnit )
+        self.lrs = Lrs ( self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(), self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(), self.genPointMeasureFieldCM.getFieldName(), selectionMode = self.genSelectionModeCM.value(), selection = selection, crs = crs, snap = snap, threshold = threshold, parallelMode = parallelMode, extrapolate = extrapolate, measureUnit = measureUnit )
 
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
