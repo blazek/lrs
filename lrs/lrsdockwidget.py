@@ -641,7 +641,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         errorFieldName = self.eventsErrorFieldLineEdit.text()
  
         # create new layer
-        uri = "MultiLineString" if endFieldName else "Point"
+        geometryType = "MultiLineString" if endFieldName else "Point"
+        uri = geometryType
         uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapRenderer().destinationCrs() )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
         provider.addAttributes( layer.pendingFields().toList() )
@@ -664,7 +665,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             for field in layer.pendingFields():
                 outputFeature[field.name()] = feature[field.name()]
             
-            geo = QgsGeometry()
+            geo = None
             if endFieldName:
                 line, error = self.lrs.eventMultiPolyLine ( routeId, start, end )
                 if line:
@@ -674,9 +675,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 if point:
                     geo = QgsGeometry.fromPoint( point )
             
-            if not geo: geo = QgsGeometry()
+            if not geo: 
+                # TODO: find how to create correct empty geometry
+                # QgsGeometry() does not construct correct WKBNoGeometry
+                geo = QgsGeometry()
+                # QgsGeometry.fromWkt('MULTILINESTRING/POINT EMPTY') is cousing later crash
+                #geo = QgsGeometry.fromWkt('%s EMPTY' % geometryType.upper())
+
             if geo:
                 outputFeature.setGeometry( geo )
+
             if errorFieldName and error:
                 outputFeature[errorFieldName] = error
 
