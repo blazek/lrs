@@ -156,6 +156,20 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetMeasureButtons()
         self.measureProgressBar.hide()
 
+        #### export tab
+        self.exportPostgisConnectionCM = LrsComboManager( self.exportPostgisConnectionCombo, settingsName = 'exportPostgisConnection' )
+        self.exportPostgisTableWM = LrsWidgetManager( self.exportPostgisTableLineEdit, settingsName = 'exportPostgisTable', defaultValue = 'lrs' )
+
+        
+        self.exportPostgisConnectionCombo.currentIndexChanged.connect(self.resetExportButtons)
+        self.exportPostgisTableLineEdit.textEdited.connect(self.resetExportOptions)
+        self.exportButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.export)
+        self.exportButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetExportOptionsAndWrite)
+        self.exportButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
+
+        self.resetExportOptions()
+        self.resetExportButtons()
+
         #####
         self.enableTabs()
 
@@ -188,6 +202,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.readGenerateOptions()
         self.readEventsOptions()
         self.readMeasureOptions()
+        self.readExportOptions()
 
         registry = QgsMapLayerRegistry.instance()
 
@@ -218,6 +233,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetGenerateOptions()
         self.resetEventsOptions()
         self.resetMeasureOptions()
+        self.resetExportOptions()
         self.enableTabs()
 
     def deleteLrs(self):
@@ -268,6 +284,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.errorTab.setEnabled( enable )
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
+        self.exportTab.setEnabled( enable )
 
     def mapRendererCrsChanged(self):
         self.updateLabelsUnits()
@@ -777,3 +794,49 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )
 
         self.measureProgressBar.hide()
+
+############################ EXPORT ##################################
+
+    def getPostgisConnections(self):
+        connections = []
+        key = '/PostgreSQL/connections'
+        settings = QSettings()
+        settings.beginGroup( "/PostgreSQL/connections" );
+        for connectionName in settings.childGroups():
+            settings.beginGroup( u'/%s/%s' % (key, connectionName) )
+            connection = { 'name': connectionName }
+            for n in ['service', 'host', 'port', 'database', 'username', 'password']:
+                connection[n] = settings.value(n, "", type=str)
+            connections.append( connection )
+        return connections
+        
+
+    def resetExportOptions(self):
+        options = []
+        for connection in self.getPostgisConnections():
+            options.append( [ connection['name'], connection['name']  ] )
+        self.exportPostgisConnectionCM.setOptions ( options )
+        self.exportPostgisConnectionCM.reset()
+        self.exportPostgisTableWM.reset()
+
+        self.resetExportButtons()
+
+    def resetExportOptionsAndWrite(self):
+        self.resetExportOptions()
+        self.writeExportOptions()
+
+    def resetExportButtons(self):
+        enabled = bool(self.lrs) and self.exportPostgisConnectionCombo.currentIndex() != -1 and bool(self.exportPostgisTableLineEdit.text())
+        self.exportButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+
+    def writeExportOptions(self):
+        self.exportPostgisConnectionCM.writeToProject()
+        self.exportPostgisTableWM.writeToProject()
+
+    def readExportOptions(self):
+        self.exportPostgisConnectionCM.readFromProject()
+        self.exportPostgisTableWM.readFromProject()
+
+    def export(self):
+        debug('export')
+        self.writeExportOptions()

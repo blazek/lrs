@@ -51,7 +51,11 @@ class LrsComboManager(QObject):
             self.combo.setModel(self.model)
 
         # options is dict with of [value,label] pairs
-        options = kwargs.get('options', [])
+        self.setOptions( kwargs.get('options', []) )
+
+    def setOptions(self, options):
+        self.options = options
+        self.model.clear()
         if options:
             for opt in options:
                 item = QStandardItem( opt[1] )

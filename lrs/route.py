@@ -156,7 +156,7 @@ class LrsRoute:
         return nodes
  
     def joinParts(self, parts):
-        debug ( 'join %s parts' % ( len(parts)) )
+        #debug ( 'join %s parts' % ( len(parts)) )
         nodes = self.getPartsNodes( parts )
         joined = []
         while len(parts) > 0:
@@ -204,12 +204,12 @@ class LrsRoute:
 
                 if not connected: # no more parts can be connected
                     break
-        debug ( 'joined to %s parts' % ( len(joined)))
+        #debug ( 'joined to %s parts' % ( len(joined)))
         return joined
 
     # create LrsRoutePart objects from geometryParts
     def buildParts(self):
-        debug ( 'routeId %s buildParts' % (self.routeId))
+        #debug ( 'routeId %s buildParts' % (self.routeId))
         self.parts = []
         polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
         for line in self.lines:
@@ -417,7 +417,7 @@ class LrsRoute:
             parts.sort(key=lambda part: part.length)
 
             for i in range(len(parts)-2):
-                debug( 'remove fork part %s' % i )
+                #debug( 'remove fork part %s' % i )
                 part = parts[i]
                 geo = QgsGeometry.fromPolyline( part.polyline )
                 self.errors.append( LrsError( LrsError.FORK_LINE, geo, routeId = self.routeId, origins = part.origins ) )
