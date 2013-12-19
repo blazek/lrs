@@ -34,6 +34,16 @@ from combo import *
 from widget import *
 from selectiondialog import *
 
+try:
+    import psycopg2
+    import psycopg2.extensions
+    # use unicode!
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
+    havePostgis = True
+except:
+    havePostgis = False
+
 class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
     def __init__( self,parent, iface ):
         #debug( "LrsDockWidget.__init__")
@@ -461,6 +471,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.resetEventsButtons()
         self.resetMeasureButtons()
+        self.resetExportButtons()
         self.updateMeasureUnits()
         self.enableTabs()
 
@@ -797,19 +808,41 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
 ############################ EXPORT ##################################
 
+    def getPostgisConnection(self, connectionName):
+        settings = QSettings()
+        key = '/PostgreSQL/connections'
+
+        settings.beginGroup( u'/%s/%s' % (key, connectionName) )
+
+        if not settings.contains( 'database' ): return None
+
+        connection = { 'name': connectionName }
+        
+        settingsList = ['service', 'host', 'port', 'database', 'username', 'password']
+        service, host, port, database, username, password = map(lambda x: settings.value(x, '', type=str), settingsList)
+        
+        sslmode = settings.value("sslmode", QgsDataSourceURI.SSLprefer, type=int)
+
+        uri = QgsDataSourceURI()
+        if service:
+            uri.setConnection(service, database, username, password, sslmode)
+        else:
+            uri.setConnection(host, port, database, username, password, sslmode)
+
+        connection['uri'] = uri
+
+        return connection
+
     def getPostgisConnections(self):
+        settings = QSettings()
         connections = []
         key = '/PostgreSQL/connections'
-        settings = QSettings()
-        settings.beginGroup( "/PostgreSQL/connections" );
+        settings.beginGroup( key );
         for connectionName in settings.childGroups():
-            settings.beginGroup( u'/%s/%s' % (key, connectionName) )
-            connection = { 'name': connectionName }
-            for n in ['service', 'host', 'port', 'database', 'username', 'password']:
-                connection[n] = settings.value(n, "", type=str)
-            connections.append( connection )
+            connection = self.getPostgisConnection( connectionName )
+            if connection:
+                connections.append( connection )
         return connections
-        
 
     def resetExportOptions(self):
         options = []
@@ -837,6 +870,85 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.exportPostgisConnectionCM.readFromProject()
         self.exportPostgisTableWM.readFromProject()
 
+    def postgisExecute(self, conn, sql):
+        #debug('sql: %s' % sql )
+        cur = conn.cursor() 
+        cur.execute( sql )  
+
+    def postgisSelect(self, conn, sql):
+        #debug('sql: %s' % sql )
+        cur = conn.cursor() 
+        cur.execute( sql )  
+        return cur.fetchall()
+
     def export(self):
-        debug('export')
+        #debug('export')
         self.writeExportOptions()
+
+        if not havePostgis:
+            QMessageBox.critical( self, 'Error', 'psycopg2 not installed')
+            return
+
+        connectionName = self.exportPostgisConnectionCM.value()
+        connection = self.getPostgisConnection( connectionName )
+        if not connection:
+            QMessageBox.critical( self, 'Error', 'Connection not defined')
+            return
+
+        uri = connection['uri']
+
+        username = uri.username()
+        password = uri.password()
+        while True:
+            uri.setUsername( username )
+            uri.setPassword( password )
+            
+            #debug('connection: %s' % uri.connectionInfo() ) 
+            try:
+                conn = psycopg2.connect( uri.connectionInfo().encode('utf-8') )
+                #debug('connected ok' ) 
+                break
+            except Exception,e:
+                #QMessageBox.critical( self, 'Error', 'Cannot connect: %s' % e )
+                err = '%s' % e
+                (ok, username, password) = QgsCredentials.instance().get(uri.connectionInfo(), username, password, err)
+                if not ok: return
+
+        try:
+            schema = self.postgisSelect ( conn, "select current_schema()")[0][0]
+            #debug('schema: %s' % schema)
+            tables = [ r[0] for r in self.postgisSelect ( conn, "SELECT table_name FROM information_schema.tables where table_schema = '%s'" % schema ) ]
+            #debug('tables: %s' % tables)        
+
+            outputTable = self.exportPostgisTableLineEdit.text()
+            if outputTable in tables:
+                QMessageBox.critical( self, 'Error', "Table '%s' already exists" % outputTable )
+                # TODO: ask if overwrite
+                return 
+
+            sql = "create table %s ( route varchar(20), m_from double precision, m_to double precision)" % outputTable
+            self.postgisExecute ( conn, sql )
+
+            srid = -1
+            authid = self.lrs.crs.authid()
+            if authid.lower().startswith('epsg:'):
+                srid = authid.split(':')[1]
+            sql = "select AddGeometryColumn('%s', '%s', 'geom', %s, 'LINESTRINGM', 3)" % ( schema, outputTable, srid )
+            self.postgisExecute ( conn, sql )
+
+            for part in self.lrs.getParts():
+                if not part.records: continue
+                wkt = part.getWktWithMeasures()
+                if not wkt: continue
+                sql = "insert into %s.%s (route, m_from, m_to, geom) values ('%s', %s, %s, GeometryFromText('%s', %s))" % ( schema, outputTable, part.routeId, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
+                self.postgisExecute ( conn, sql )
+
+            conn.commit()
+            conn.close()
+
+        except Exception, e:
+            QMessageBox.critical( self, 'Error', '%s' % e )
+            return
+
+        QMessageBox.information( self, 'Information', 'Exported successfully' )
+

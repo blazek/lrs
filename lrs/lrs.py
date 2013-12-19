@@ -302,6 +302,12 @@ class Lrs(QObject):
             errors.extend( route.getErrors() )
         return errors
 
+    def getParts(self):
+        parts = []
+        for route in self.routes.values():
+            parts.extend( route.parts )
+        return parts
+
     def getSegments(self):
         segments = []
         for route in self.routes.values():

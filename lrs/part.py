@@ -327,9 +327,78 @@ class LrsRoutePart:
         segment = afterVertex-1
         partMeasure = measureAlongPolyline( self.polyline, segment, nearestPoint )
 
+        return self.getMilestoneMeasure( partMeasure )
+
+
+    def getMilestoneMeasure(self, partMeasure):
         for record in self.records:
             if record.containsPartMeasure( partMeasure ):
                 measure = record.measure( partMeasure )
                 return measure 
 
         return None
+
+    # beginning of first record
+    def milestoneMeasureFrom(self):
+        if not self.records: return None
+        return self.records[0].milestoneFrom
+
+    # end of last record
+    def milestoneMeasureTo(self):
+        if not self.records: return None
+        return self.records[-1].milestoneTo
+
+    # return list of coordinates with measures [[x,y,m],...]
+    # for valid LRS
+    def getCoordinatesWithMeasures(self):
+        #debug('getCoordinatesWithMeasures routeId = %s' % self.routeId )
+        coors = []
+        if not self.records: return coors
+
+        # get measures for polyline
+        partMeasure = 0
+        for i in range(len(self.polyline)):
+            if i > 0:
+                partMeasure += segmentLength( self.polyline, i-1 )
+            #debug('partMeasure = %s' % partMeasure )
+            measure = self.getMilestoneMeasure( partMeasure )
+            #debug('measure = %s' % measure )
+            if measure is not None:
+                point = self.polyline[i]
+                coor = [ point.x(), point.y(), measure ]
+                coors.append ( coor )
+
+        #debug('coors: %s' % coors )
+        # add coordinates for milestones
+        for record in self.records:
+            point = polylinePoint ( self.polyline, record.partFrom )
+            if point:
+                coor = [ point.x(), point.y(), record.milestoneFrom ]
+                coors.append ( coor )
+
+        point = polylinePoint ( self.polyline, self.records[-1].partTo )
+        if point:
+            coor = [ point.x(), point.y(), self.records[-1].milestoneTo ]
+            coors.append ( coor )
+
+        #debug('coors: %s' % coors )
+
+        # sort by measure
+        coors.sort(key = lambda x: x[0])
+
+        # remove coordinates too close each other
+        for i in range(len(coors)-1,0,-1):
+            if doubleNear( coors[i][2], coors[i-1][2] ):
+                del coors[i]
+
+        return coors
+
+    def getWktWithMeasures(self):
+        #debug('getWktWithMeasures')
+        coors = self.getCoordinatesWithMeasures()
+        if not coors or len(coors) < 2: return None
+        coors = [ '%f %f %f' % (c[0], c[1], c[2]) for c in coors ]
+        return 'LINESTRINGM ( %s )' % ", ".join( coors )
+        
+        
+
