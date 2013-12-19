@@ -62,6 +62,7 @@ class LrsError(object):
     WRONG_MEASURE = 10 # milestones in wrong position
     DUPLICATE_REFERENCING = 11 # multiple route segments measures overlap
     PARALLEL = 12 # parallel line
+    FORK_LINE = 13 # parts connected in fork
 
     typeLabels = {
         DUPLICATE_LINE: 'Duplicate line',
@@ -76,6 +77,7 @@ class LrsError(object):
         WRONG_MEASURE: 'Wrong measure',
         DUPLICATE_REFERENCING: 'Duplicate referencing',
         PARALLEL: 'Parallel line',
+        FORK_LINE: 'Fork line',
     }
 
     def __init__(self, type, geo, **kwargs ):
@@ -168,6 +170,8 @@ class LrsError(object):
                 m.update( self.geo.asWkb() )
                 m.update( self.getMeasureString() )
             elif self.type == self.PARALLEL:
+                m.update( self.getOriginChecksum() )
+            elif self.type == self.FORK_LINE:
                 m.update( self.getOriginChecksum() )
                  
             self.checksum_ = m.digest()

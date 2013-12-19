@@ -91,24 +91,26 @@ class LrsRoutePart:
 
     def __init__(self, polyline, routeId, origins, crs, measureUnit, distanceArea):
         #debug ('init route part' )
-        self.polyline = polyline
+        self.setPolyline(polyline)
         self.routeId = routeId
         self.origins = origins # list of LrsOrigin
         self.crs = crs
         self.measureUnit = measureUnit
         self.distanceArea = distanceArea
-        self.length = None # polyline length
         self.milestones = [] # LrsMilestone list, all input milestones
         self.records = [] # LrsRecord list
         self.errors = [] # LrsError list
 
+    def setPolyline(self,polyline):
+        self.polyline = polyline
+        self.polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
+        self.length = self.polylineGeo.length()
+
     def calibrate(self):
         #debug ( 'calibrate part routeId = %s' % self.routeId )
-        polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
-        self.length = polylineGeo.length()
 
         if len ( self.milestones ) < 2:
-            self.errors.append( LrsError( LrsError.NOT_ENOUGH_MILESTONES, polylineGeo, routeId = self.routeId, origins = self.origins ))
+            self.errors.append( LrsError( LrsError.NOT_ENOUGH_MILESTONES, self.polylineGeo, routeId = self.routeId, origins = self.origins ))
             return
 
         # create list of milestones sorted by partMeasure
@@ -131,15 +133,15 @@ class LrsRoutePart:
                 down += 1
 
         if up == down:
-            self.errors.append( LrsError( LrsError.DIRECTION_GUESS, polylineGeo, routeId = self.routeId, origins = self.origins  ))
+            self.errors.append( LrsError( LrsError.DIRECTION_GUESS, self.polylineGeo, routeId = self.routeId, origins = self.origins  ))
             return
         elif down > up: # revert
             self.polyline.reverse()
+            self.setPolyline( self.polyline ) # create polylineGeo
             milestones.reverse()
             # recalc partMeasures
-            length = polylineGeo.length()
             for milestone in milestones:
-                milestone.partMeasure = length - milestone.partMeasure
+                milestone.partMeasure = self.length - milestone.partMeasure
 
         # remove milestones in wrong direction, to do it well is not trivial because
         # sequence of milestones in correct order may appear in wrong place, e.g.7,8,3,4

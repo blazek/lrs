@@ -143,10 +143,73 @@ class LrsRoute:
                  'addedErrors': addedErrors,
                  'removedQualityChecksums': removedQualityChecksums,
                  'addedQualityFeatures': addedQualityFeatures }
+
+    def getPartsNodes(self, parts):
+        nodes = {} 
+        for part in parts:
+            for i in [0,-1]:    
+                ph = pointHash( part.polyline[i] )
+                if not nodes.has_key( ph ):
+                    nodes[ ph ] = { 'pnt': part.polyline[i], 'parts': [ part ] }
+                else:
+                    nodes[ ph ]['parts'].append( part ) 
+        return nodes
  
+    def joinParts(self, parts):
+        debug ( 'join %s parts' % ( len(parts)) )
+        nodes = self.getPartsNodes( parts )
+        joined = []
+        while len(parts) > 0:
+            part1 = parts.pop(0)
+            joined.append ( part1 )
+            polyline = part1.polyline
+            while True:
+                connected = False
+                for part2 in parts:
+                    polyline2 = part2.polyline
+
+                    forks2 = [False, False]
+                    for j in [0, -1]:
+                        ph = pointHash( polyline2[j] )
+                        node = nodes[ph]
+                        if len(node['parts']) > 2:
+                            forks2[j] = True
+
+                    if polyline[-1] == polyline2[0] and not forks2[0]: # --1-->  --2-->
+                        del polyline2[0]
+                        polyline.extend(polyline2)
+                        connected = True
+                    elif polyline[-1] == polyline2[-1] and not forks2[-1]: # --1--> <--2--
+                        polyline2.reverse()
+                        del polyline2[0]
+                        polyline.extend(polyline2)
+                        connected = True
+                    elif polyline[0] == polyline2[-1] and not forks2[-1]: # --2--> --1-->
+                        del polyline[0]
+                        polyline2.extend(polyline)
+                        polyline = polyline2
+                        connected = True
+                    elif polyline[0] == polyline2[0] and not forks2[0]: # <--2-- --1-->
+                        polyline2.reverse()
+                        del polyline[0]
+                        polyline2.extend(polyline)
+                        polyline = polyline2
+                        connected = True
+
+                    if connected: 
+                        part1.setPolyline ( polyline )
+                        part1.origins.extend( part2.origins )
+                        parts.remove( part2 )
+                        break
+
+                if not connected: # no more parts can be connected
+                    break
+        debug ( 'joined to %s parts' % ( len(joined)))
+        return joined
+
     # create LrsRoutePart objects from geometryParts
     def buildParts(self):
-        #debug ( 'routeId %s buildParts' % (self.routeId))
+        debug ( 'routeId %s buildParts' % (self.routeId))
         self.parts = []
         polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
         for line in self.lines:
@@ -233,6 +296,7 @@ class LrsRoute:
         #        self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
         ###### join polylines to parts
+        # TODO: similar code as joinParts, use common function
         while len( polylines ) > 0:
             #polyline = polylines.pop(0)
             poly = polylines.pop(0)
@@ -247,27 +311,27 @@ class LrsRoute:
                     polyline2 = poly2['polyline']
 
                     # dont connect in forks (we don't know which is better)
-                    forks = [False, False]
+                    forks2 = [False, False]
                     for j in [0, -1]:
-                        ph = pointHash( polyline[j] )
+                        ph = pointHash( polyline2[j] )
                         if nodes[ph]['nlines'] > 2:
-                            forks[j] = True
+                            forks2[j] = True
 
-                    if polyline[-1] == polyline2[0] and not forks[-1]: # --1-->  --2-->
+                    if polyline[-1] == polyline2[0] and not forks2[0]: # --1-->  --2-->
                         del polyline2[0]
                         polyline.extend(polyline2)
                         connected = True
-                    elif polyline[-1] == polyline2[-1] and not forks[-1]: # --1--> <--2--
+                    elif polyline[-1] == polyline2[-1] and not forks2[-1]: # --1--> <--2--
                         polyline2.reverse()
                         del polyline2[0]
                         polyline.extend(polyline2)
                         connected = True
-                    elif polyline[0] == polyline2[-1] and not forks[0]: # --2--> --1-->
+                    elif polyline[0] == polyline2[-1] and not forks2[-1]: # --2--> --1-->
                         del polyline[0]
                         polyline2.extend(polyline)
                         polyline = polyline2
                         connected = True
-                    elif polyline[0] == polyline2[0] and not forks[0]: # <--2-- --1-->
+                    elif polyline[0] == polyline2[0] and not forks2[0]: # <--2-- --1-->
                         polyline2.reverse()
                         del polyline[0]
                         polyline2.extend(polyline)
@@ -335,49 +399,32 @@ class LrsRoute:
                 self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea) )
 
         # reconnect parts after parallels span
-        # TODO: similar code as joining polyline, move to function
         if parallelParts and self.parallelMode == 'span':
-            parts = self.parts
-            self.parts = []
-            while len(parts) > 0:
-                part1 = parts.pop(0)
-                self.parts.append ( part1 )
-                polyline = part1.polyline
-                while True:
-                    connected = False
-                    for part2 in parts:
-                        polyline2 = part2.polyline
+            self.parts = self.joinParts( self.parts )
 
-                        if polyline[-1] == polyline2[0]: # --1-->  --2-->
-                            del polyline2[0]
-                            polyline.extend(polyline2)
-                            connected = True
-                        elif polyline[-1] == polyline2[-1]: # --1--> <--2--
-                            polyline2.reverse()
-                            del polyline2[0]
-                            polyline.extend(polyline2)
-                            connected = True
-                        elif polyline[0] == polyline2[-1]: # --2--> --1-->
-                            del polyline[0]
-                            polyline2.extend(polyline)
-                            polyline = polyline2
-                            connected = True
-                        elif polyline[0] == polyline2[0]: # <--2-- --1-->
-                            polyline2.reverse()
-                            del polyline[0]
-                            polyline2.extend(polyline)
-                            polyline = polyline2
-                            connected = True
+        # identify true forks (not parallels)
+        nodes = self.getPartsNodes( self.parts )
 
-                        if connected: 
-                            print 'part connected'
-                            part1.polyline = polyline
-                            part1.origins.extend( part2.origins )
-                            parts.remove( part2 )
-                            break
+        for node in nodes.values():
+            if len(node['parts']) > 2:
+                geo = QgsGeometry.fromPoint( node['pnt'] )
+                self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
+        # mark shortest forked parts as errors
+        for ph, node in nodes.iteritems():
+            parts = node['parts']
+            if len(parts) <= 2: continue
+            
+            parts.sort(key=lambda part: part.length)
 
-                    if not connected: # no more parts can be connected
-                        break
+            for i in range(len(parts)-2):
+                debug( 'remove fork part %s' % i )
+                part = parts[i]
+                geo = QgsGeometry.fromPolyline( part.polyline )
+                self.errors.append( LrsError( LrsError.FORK_LINE, geo, routeId = self.routeId, origins = part.origins ) )
+                self.parts.remove(part)
+
+        # join again after forks removed
+        self.parts = self.joinParts( self.parts )
 
     def addPoint( self, point ):
        self.points.append ( point )

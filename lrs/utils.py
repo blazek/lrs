@@ -97,7 +97,6 @@ def polylinesIdentical( polyline1, polyline2 ):
 def pointHash( point ):
     return "%s-%s" % ( point.x().__hash__(), point.y().__hash__() )
 
-
 def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
     if qgisUnit == QGis.Meters:
         if lrsUnit == LrsUnits.METER:
