@@ -182,7 +182,15 @@ The calibrated LRS may be exported to PostGIS database using *LINESTRINGM* (not 
 Export tab options:
 
 * **PostGIS connection:** Standard QGIS PostGIS database connection which may be created in *Add PostGIS layers* dialog.
-* **Output table:** Name of output table. The name may be table name only or fully qualified, i.e. <schema>.<table>. If a table of the same name already exists user will be asked if the table should be overwritten or export canceled.
+* **Output schema:** Output schema selection filled with schemas for selected connection.
+* **Output table:** Name of output table. If a table of the same name already exists, user will be asked if the table should be overwritten or export aborted.
+
+Exported table may be used by other applications supporting geometry with measure, by custom applications or even from SQL console, for example, to create event (point) on 'road1' at km 6.3:
+
+::
+
+  select locate_along_measure(geom,6.3) from lrs where route = 'road1' and m_from <= 6.3 and 6.3 <= m_to;
+
 
 General notes
 =============

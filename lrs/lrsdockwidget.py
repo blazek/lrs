@@ -58,6 +58,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.qualityLayerManager = None
 
         self.pluginDir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "python/plugins/lrs"
+        # remember if export schema options has to be reset to avoid asking credential until necessary
+        self.resetExportSchemaOptionsOnVisible = False
  
         super(LrsDockWidget, self).__init__(parent )
         
@@ -68,7 +70,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genProgressFrame.setMinimumHeight( self.genProgressFrame.height() )
         self.hideGenProgress()
 
-        ##### getTab 
+        self.tabWidget.currentChanged.connect(self.tabChanged)
+
+        ##### genTab 
         # initLayer, initField, fieldType did not work, fixed and created pull request
         # https://github.com/3nids/qgiscombomanager/pull/1
 
@@ -168,11 +172,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         #### export tab
         self.exportPostgisConnectionCM = LrsComboManager( self.exportPostgisConnectionCombo, settingsName = 'exportPostgisConnection' )
+        self.exportPostgisSchemaCM = LrsComboManager( self.exportPostgisSchemaCombo, settingsName = 'exportPostgisSchema' )
         self.exportPostgisTableWM = LrsWidgetManager( self.exportPostgisTableLineEdit, settingsName = 'exportPostgisTable', defaultValue = 'lrs' )
+        validator = QRegExpValidator( QRegExp( '[A-Za-z_][A-Za-z0-9_]+' ), None )
+        self.exportPostgisTableLineEdit.setValidator( validator )
 
         
+        self.exportPostgisConnectionCombo.currentIndexChanged.connect(self.resetExportSchemaOptions)
         self.exportPostgisConnectionCombo.currentIndexChanged.connect(self.resetExportButtons)
-        self.exportPostgisTableLineEdit.textEdited.connect(self.resetExportOptions)
+        self.exportPostgisSchemaCombo.currentIndexChanged.connect(self.resetExportButtons)
+        self.exportPostgisTableLineEdit.textEdited.connect(self.resetExportButtons)
         self.exportButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.export)
         self.exportButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetExportOptionsAndWrite)
         self.exportButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
@@ -295,6 +304,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
         self.exportTab.setEnabled( enable )
+
+    def tabChanged(self, index):
+        #debug("tabChanged index = %s" % index )
+        if self.tabWidget.widget(index) == self.exportTab:
+           self.exportTabBecameVisible() 
 
     def mapRendererCrsChanged(self):
         self.updateLabelsUnits()
@@ -858,48 +872,82 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             options.append( [ connection['name'], connection['name']  ] )
         self.exportPostgisConnectionCM.setOptions ( options )
         self.exportPostgisConnectionCM.reset()
+        self.exportPostgisSchemaCM.reset()
         self.exportPostgisTableWM.reset()
 
         self.resetExportButtons()
+
+    def exportTabVisible(self):
+        return self.tabWidget.currentWidget() == self.exportTab
+
+    def exportTabBecameVisible(self):
+        #debug("exportTabBecameVisible" )
+        if self.resetExportSchemaOptionsOnVisible:
+            self.resetExportSchemaOptions()
+
+    def resetExportSchemaOptions(self):
+        if self.exportPostgisConnectionCombo.currentIndex() == -1: 
+            self.exportPostgisSchemaCM.clear()
+            return
+
+        # do not reset options until the tab is visible to avoid asking credentials
+        # this will only happen if project is loaded when export tab is not active
+        if not self.exportTabVisible():
+            self.exportPostgisSchemaCM.clear()
+            self.resetExportSchemaOptionsOnVisible = True
+            return
+
+        conn = self.openPostgisConnection()
+        if not conn: 
+            self.exportPostgisSchemaCM.clear()
+            return
+
+        try:
+            # set current schema as default
+            schema = self.postgisSelect ( conn, "select current_schema()")[0][0]
+            self.exportPostgisSchemaCM.defaultValue = schema
+
+            options = [ (r[0], r[0]) for r in self.postgisSelect ( conn, "select nspname from pg_catalog.pg_namespace where nspname <> 'information_schema' and nspname !~ '^pg_'") ]
+            #debug('options: %s' % options)
+
+
+            self.exportPostgisSchemaCM.setOptions ( options )
+                        
+            if self.resetExportSchemaOptionsOnVisible: 
+                self.exportPostgisSchemaCM.readFromProject()
+            
+            self.resetExportSchemaOptionsOnVisible = False
+
+            conn.close()
+            
+        except Exception, e:
+            conn.close()
+            QMessageBox.critical( self, 'Error', '%s' % e )
+            return
 
     def resetExportOptionsAndWrite(self):
         self.resetExportOptions()
         self.writeExportOptions()
 
     def resetExportButtons(self):
-        enabled = bool(self.lrs) and self.exportPostgisConnectionCombo.currentIndex() != -1 and bool(self.exportPostgisTableLineEdit.text())
+        enabled = bool(self.lrs) and self.exportPostgisConnectionCombo.currentIndex() != -1 and self.exportPostgisSchemaCombo.currentIndex() != -1 and bool(self.exportPostgisTableLineEdit.text())
         self.exportButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     def writeExportOptions(self):
         self.exportPostgisConnectionCM.writeToProject()
+        self.exportPostgisSchemaCM.writeToProject()
         self.exportPostgisTableWM.writeToProject()
 
     def readExportOptions(self):
         self.exportPostgisConnectionCM.readFromProject()
+        self.exportPostgisSchemaCM.readFromProject()
         self.exportPostgisTableWM.readFromProject()
 
-    def postgisExecute(self, conn, sql):
-        #debug('sql: %s' % sql )
-        cur = conn.cursor() 
-        cur.execute( sql )  
-
-    def postgisSelect(self, conn, sql):
-        #debug('sql: %s' % sql )
-        cur = conn.cursor() 
-        cur.execute( sql )  
-        return cur.fetchall()
-
-    def export(self):
-        #debug('export')
-        self.writeExportOptions()
-
-        if not havePostgis:
-            QMessageBox.critical( self, 'Error', 'psycopg2 not installed')
-            return
-
+    # open connection asking credentials in cycle
+    def openPostgisConnection(self):
         connectionName = self.exportPostgisConnectionCM.value()
         connection = self.getPostgisConnection( connectionName )
-        if not connection:
+        if not connection: # should not happen
             QMessageBox.critical( self, 'Error', 'Connection not defined')
             return
 
@@ -915,46 +963,77 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             try:
                 conn = psycopg2.connect( uri.connectionInfo().encode('utf-8') )
                 #debug('connected ok' ) 
-                break
+                return conn
             except Exception,e:
                 #QMessageBox.critical( self, 'Error', 'Cannot connect: %s' % e )
                 err = '%s' % e
                 (ok, username, password) = QgsCredentials.instance().get(uri.connectionInfo(), username, password, err)
-                if not ok: return
+                # Put the credentials back (for yourself and the provider), as QGIS removes it when you "get" it
+                if ok: 
+                    QgsCredentials.instance().put( uri.connectionInfo(), username, password )
+                else:
+                    return None
+
+    def postgisExecute(self, conn, sql):
+        debug('sql: %s' % sql )
+        cur = conn.cursor() 
+        cur.execute( sql )  
+
+    def postgisSelect(self, conn, sql):
+        #debug('sql: %s' % sql )
+        cur = conn.cursor() 
+        cur.execute( sql )  
+        return cur.fetchall()
+
+    def export(self):
+        #debug('export')
+        self.writeExportOptions()
+
+        # TODO: disable tab instead
+        if not havePostgis:
+            QMessageBox.critical( self, 'Error', 'psycopg2 not installed')
+            return
+
+        conn = self.openPostgisConnection()
+        #debug('conn: %s' % conn ) 
+        if not conn: return
 
         try:
-            schema = self.postgisSelect ( conn, "select current_schema()")[0][0]
-            #debug('schema: %s' % schema)
-            tables = [ r[0] for r in self.postgisSelect ( conn, "SELECT table_name FROM information_schema.tables where table_schema = '%s'" % schema ) ]
-            #debug('tables: %s' % tables)        
+            outputSchema = self.exportPostgisSchemaCM.value()
+            tables = [ r[0] for r in self.postgisSelect ( conn, "SELECT table_name FROM information_schema.tables where table_schema = '%s'" % outputSchema ) ]
+            debug('tables: %s' % tables)        
 
             outputTable = self.exportPostgisTableLineEdit.text()
             if outputTable in tables:
-                QMessageBox.critical( self, 'Error', "Table '%s' already exists" % outputTable )
-                # TODO: ask if overwrite
-                return 
+                answer = QMessageBox.question( self, 'Table exists', "Table '%s' already exists in schema '%s'. Overwrite?" % (outputTable, outputSchema), QMessageBox.Yes | QMessageBox.Abort )
+                if answer == QMessageBox.Abort:
+                    return 
+                else:
+                    sql = "drop table %s.%s" % (outputSchema, outputTable)
+                    self.postgisExecute ( conn, sql )
 
-            sql = "create table %s ( route varchar(20), m_from double precision, m_to double precision)" % outputTable
+            sql = "create table %s.%s ( route varchar(20), m_from double precision, m_to double precision)" % (outputSchema, outputTable)
             self.postgisExecute ( conn, sql )
 
             srid = -1
             authid = self.lrs.crs.authid()
             if authid.lower().startswith('epsg:'):
                 srid = authid.split(':')[1]
-            sql = "select AddGeometryColumn('%s', '%s', 'geom', %s, 'LINESTRINGM', 3)" % ( schema, outputTable, srid )
+            sql = "select AddGeometryColumn('%s', '%s', 'geom', %s, 'LINESTRINGM', 3)" % ( outputSchema, outputTable, srid )
             self.postgisExecute ( conn, sql )
 
             for part in self.lrs.getParts():
                 if not part.records: continue
                 wkt = part.getWktWithMeasures()
                 if not wkt: continue
-                sql = "insert into %s.%s (route, m_from, m_to, geom) values ('%s', %s, %s, GeometryFromText('%s', %s))" % ( schema, outputTable, part.routeId, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
+                sql = "insert into %s.%s (route, m_from, m_to, geom) values ('%s', %s, %s, GeometryFromText('%s', %s))" % ( outputSchema, outputTable, part.routeId, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
                 self.postgisExecute ( conn, sql )
 
             conn.commit()
             conn.close()
 
         except Exception, e:
+            conn.close()
             QMessageBox.critical( self, 'Error', '%s' % e )
             return
 

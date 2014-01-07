@@ -53,6 +53,10 @@ class LrsComboManager(QObject):
         # options is dict with of [value,label] pairs
         self.setOptions( kwargs.get('options', []) )
 
+    def clear(self):
+        self.options = []
+        self.model.clear()
+
     def setOptions(self, options):
         self.options = options
         self.model.clear()
