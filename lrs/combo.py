@@ -176,11 +176,14 @@ class LrsFieldComboManager(LrsComboManager):
         super(LrsFieldComboManager, self).__init__(combo, **kwargs)
         self.types = kwargs.get('types', None) # QVariant.type
         self.layerComboManager = layerComboManager
-
+        self.layerId = None # current layer id
 
         self.layerChanged()
 
         self.layerComboManager.layerChanged.connect(self.layerChanged)
+
+    def __del__(self):
+        self.disconnectFromLayer()
 
     def getFieldName(self):
         idx = self.combo.currentIndex()
@@ -188,15 +191,30 @@ class LrsFieldComboManager(LrsComboManager):
             return self.combo.itemData(idx, Qt.UserRole )
         return None
 
+    def disconnectFromLayer(self):
+        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
+        if layer:
+            layer.attributeAdded.disconnect( self.resetFields )    
+            layer.attributeDeleted.disconnect( self.resetFields )    
 
     def layerChanged(self):
         #debug ("layerChanged settingsName = %s" % self.settingsName )
         if not QgsMapLayerRegistry: return
 
-        layerId = self.layerComboManager.layerId()
+        self.disconnectFromLayer()
+
+        self.layerId = self.layerComboManager.layerId()
         #debug ("layerId = %s" % layerId)
 
-        layer = QgsMapLayerRegistry.instance().mapLayer( layerId )
+        self.resetFields()
+
+        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
+        if layer:
+            layer.attributeAdded.connect( self.resetFields )    
+            layer.attributeDeleted.connect( self.resetFields )    
+
+    def resetFields(self):
+        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
         if not layer:
             self.combo.clear()
             return            
