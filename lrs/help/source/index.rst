@@ -69,9 +69,16 @@ Options:
 * **Points layer:** Layer with points. It may contain points and multi-points (multi-points make no sense in LRS however).
 * **Points route field:** Route id field in points layer. The field type may be string or integer.
 * **Measure field:** Measure field in points layer. The field type may be integer or float.
-* **Measure units:** Measure field values units.
+* **Measure unit:** Measure field values units.
+* **All/include/exclude routes:** Calibration may be done on all routes, selected routes or some routes may be excluded. Included/excluded routes can be either entered in following field as comma separated list or selected from list in dialog opened by *Select* button. The list in the dialog is filled by route id values from lines layer.
 * **Max lines snap:** Maximum gap between route lines to be snapped.
 * **Max point distance:** Maximum distance of point from route to be used.
+* **Parallels:** Because `paralles <http://en.wikipedia.org/wiki/Multiple_edges>`_ (multiple edges, parallel edges), typicaly `roundabouts <http://en.wikipedia.org/wiki/Roundabout>`_ would become ambiguous in LRS they must be treated in special way. There are three options:
+  
+  * **Mark as errors:** Parallels will be added to the list of errors and excluded from calibration.
+  * **Span by straight line:** Parallel lines will be replaced by straight line going from parallels start coordinate to end coordinate.
+  * **Exclude:** Paralles will be excluded from callibration without being marked as errors.
+  
 * **Extrapolate:** If checked, measures are extrapolated before first and after last point on route part. Otherwise segments before/after first/last point are not calibrated.
 
 When all oprions are set correctly, calibration may be launched by *OK* button. The process may take a while, progress bar with status label is indicating current state. When calibration is finished all tabs are enabled and LRS may be used or edited.
@@ -163,6 +170,19 @@ Measures tab options:
 The output layer contains all attributes from input layer plus route id and measure field. To acqure measure, the points  are projected to neares point on nearest route within the threshold. If nearest route within threshold was found but there is no LRS for that part of the route, the measure field is left blank. If no route was found within the threshold both route id and measure fields are left blank.
 
 The output is created as memory layer which can be later stored in a persistent data source using standard QGIS options like *"Save as"* or DB Manager *"Import layer"*.
+
+Export
+======
+
+The calibrated LRS may be exported to PostGIS database using *LINESTRINGM* (not the *M* at the end) geometry type from *Export* tab.
+
+.. image:: images/export.png
+   :align: center
+
+Export tab options:
+
+* **PostGIS connection:** Standard QGIS PostGIS database connection which may be created in *Add PostGIS layers* dialog.
+* **Output table:** Name of output table. The name may be table name only or fully qualified, i.e. <schema>.<table>. If a table of the same name already exists user will be asked if the table should be overwritten or export canceled.
 
 General notes
 =============

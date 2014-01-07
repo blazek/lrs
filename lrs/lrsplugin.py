@@ -69,7 +69,7 @@ class LrsPlugin:
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(u"&LRS", self.action)
+        self.iface.addPluginToVectorMenu(u"&LRS", self.action)
 
         # Create the docked panel 
         print "self.iface.mainWindow = %s" % self.iface.mainWindow()
