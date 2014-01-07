@@ -58,11 +58,14 @@ def doubleNear( d1, d2 ):
     return abs(d1-d2) < 1e-10
 
 # covert route id to lower case string
-# expected types are str, int, None
+# expected types are str, int, double, None
 # TODO: float
 def normalizeRouteId( route ):
     if route is None: return None
     if type(route) != str:
+        if type(route) == float: # could be integer, try round
+            if int(route) == route:
+                route = int(route)
         route = str(route)
     return route.lower()
     

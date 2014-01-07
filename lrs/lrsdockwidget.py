@@ -975,7 +975,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                     return None
 
     def postgisExecute(self, conn, sql):
-        debug('sql: %s' % sql )
+        #debug('sql: %s' % sql )
         cur = conn.cursor() 
         cur.execute( sql )  
 
@@ -1001,7 +1001,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         try:
             outputSchema = self.exportPostgisSchemaCM.value()
             tables = [ r[0] for r in self.postgisSelect ( conn, "SELECT table_name FROM information_schema.tables where table_schema = '%s'" % outputSchema ) ]
-            debug('tables: %s' % tables)        
+            #debug('tables: %s' % tables)        
 
             outputTable = self.exportPostgisTableLineEdit.text()
             if outputTable in tables:
@@ -1011,8 +1011,20 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 else:
                     sql = "drop table %s.%s" % (outputSchema, outputTable)
                     self.postgisExecute ( conn, sql )
+            
+            routeField = self.lrs.routeField
+            routeFieldName = routeField.name().replace( " ", "_" )
+            routeFieldStr = "%s " % routeFieldName
+            if routeField.type() == QVariant.String:
+                routeFieldStr += "varchar(%s)" % routeField.length()
+            elif routeField.type() == QVariant.Int:
+                routeFieldStr += "int"
+            elif routeField.type() == QVariant.Double:
+                routeFieldStr += "double precision"
+            else:
+                routeFieldStr += "varchar(20)"
 
-            sql = "create table %s.%s ( route varchar(20), m_from double precision, m_to double precision)" % (outputSchema, outputTable)
+            sql = "create table %s.%s ( %s, m_from double precision, m_to double precision)" % (outputSchema, outputTable, routeFieldStr)
             self.postgisExecute ( conn, sql )
 
             srid = -1
@@ -1026,7 +1038,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 if not part.records: continue
                 wkt = part.getWktWithMeasures()
                 if not wkt: continue
-                sql = "insert into %s.%s (route, m_from, m_to, geom) values ('%s', %s, %s, GeometryFromText('%s', %s))" % ( outputSchema, outputTable, part.routeId, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
+
+                if routeField.type() == QVariant.Int or routeField.type() == QVariant.Double:
+                    routeVal = part.routeId
+                else:
+                    routeVal = "'%s'" % part.routeId
+
+                sql = "insert into %s.%s ( %s, m_from, m_to, geom) values ( %s, %s, %s, GeometryFromText('%s', %s))" % ( outputSchema, outputTable, routeFieldName, routeVal, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
                 self.postgisExecute ( conn, sql )
 
             conn.commit()

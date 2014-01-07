@@ -82,8 +82,7 @@ class Lrs(QObject):
             raise Exception( "measureUnit not set" )
 
         self.distanceArea = QgsDistanceArea()
-        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP
-        #self.distanceArea.setSourceCrs( self.crs )
+        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP 
         self.distanceArea.setSourceCrs( self.crs.srsid() )
         if self.crs.mapUnits() == QGis.Degrees:
             self.distanceArea.setEllipsoidalMode( True )
@@ -93,6 +92,9 @@ class Lrs(QObject):
         
         # extrapolate LRS before/after calibration points
         self.extrapolate = kwargs.get('extrapolate', False)
+
+        # stored line route id QgsField to know type
+        self.routeField = None 
 
         self.pointLayer.editingStarted.connect( self.pointLayerEditingStarted )
         self.pointLayer.editingStopped.connect( self.pointLayerEditingStopped )
@@ -195,6 +197,9 @@ class Lrs(QObject):
         self.lines = {} 
         self.errors = [] # reset
 
+        field = self.lineLayer.pendingFields().field( self.lineRouteField )
+        self.routeField = QgsField( field.name(), field.type(), field.typeName(), field.length(), field.precision() )
+
         self.progressCounts = {}
         # we dont know progressTotal at the beginning, but we can estimate it
         self.progressCounts[self.NLINES] =  self.lineLayer.featureCount()
@@ -213,6 +218,7 @@ class Lrs(QObject):
     # routeId does not have to be normalized
     def getRoute(self, routeId):
         normalId = normalizeRouteId( routeId )
+        debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
         if not self.routes.has_key( normalId ):
             self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs, self.measureUnit, self.distanceArea, parallelMode = self.parallelMode )
         return self.routes[normalId]

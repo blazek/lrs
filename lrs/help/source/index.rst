@@ -185,6 +185,13 @@ Export tab options:
 * **Output schema:** Output schema selection filled with schemas for selected connection.
 * **Output table:** Name of output table. If a table of the same name already exists, user will be asked if the table should be overwritten or export aborted.
 
+Exported table has four fields:
+
+* **<route id>:** Route id. Name and type are taken from line layer.
+* **m_from:** Measure of the first coordinate in linestring.
+* **m_to:** Measure of the last coordinate in linestring.
+* **geom:** Geometry of type LINESTRINGM.
+
 Exported table may be used by other applications supporting geometry with measure, by custom applications or even from SQL console, for example, to create event (point) on 'road1' at km 6.3:
 
 ::
