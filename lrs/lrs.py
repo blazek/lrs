@@ -218,7 +218,7 @@ class Lrs(QObject):
     # routeId does not have to be normalized
     def getRoute(self, routeId):
         normalId = normalizeRouteId( routeId )
-        debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
+        #debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
         if not self.routes.has_key( normalId ):
             self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs, self.measureUnit, self.distanceArea, parallelMode = self.parallelMode )
         return self.routes[normalId]
@@ -237,7 +237,7 @@ class Lrs(QObject):
         if routeId == '' or routeId == NULL: routeId = None
         #debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
 
-        if not self.routeIdSelected(routeId): return
+        if not self.routeIdSelected(routeId): return None
 
         geo = feature.geometry()
         if geo:
@@ -270,7 +270,7 @@ class Lrs(QObject):
         routeId = feature[self.pointRouteField]
         if routeId == '' or routeId == NULL: routeId = None
 
-        if not self.routeIdSelected(routeId): return
+        if not self.routeIdSelected(routeId): return None
 
         measure = feature[self.pointMeasureField]
         if measure == NULL: measure = None
@@ -379,6 +379,8 @@ class Lrs(QObject):
         #debug ( "feature added fid %s" % fid )
         feature = getLayerFeature( self.pointLayer, fid )
         point = self.registerPointFeature ( feature ) # returns LrsPoint
+        if not point: return # route id not in selection
+
         route = self.getRoute( point.routeId )
         errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
@@ -386,7 +388,9 @@ class Lrs(QObject):
     def pointFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
-        point = self.points[fid]
+        point = self.points.get(fid)
+        if not point: return # route id not in selection
+
         route = self.getRoute( point.routeId )
         self.unregisterPointByFid(fid)
         errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
@@ -396,7 +400,9 @@ class Lrs(QObject):
         #debug ( "geometry changed fid %s" % fid )
 
         #remove old
-        point = self.points[fid]
+        point = self.points.get(fid)
+        if not point: return # route id not in selection
+
         route = self.getRoute( point.routeId )
         self.unregisterPointByFid(fid)
         
@@ -414,22 +420,24 @@ class Lrs(QObject):
         routeIdx = fields.indexFromName ( self.pointRouteField )
         measureIdx = fields.indexFromName ( self.pointMeasureField )
         #debug ( "routeIdx = %s measureIdx = %s" % ( routeIdx, measureIdx) )
-        
-        if attIdx == routeIdx or attIdx == measureIdx:
-            point = self.points[fid]
-            route = self.getRoute( point.routeId )
-            feature = getLayerFeature( self.pointLayer, fid )
-            self.unregisterPointByFid(fid)
 
-            if attIdx == routeIdx:
-                # recalibrate old
+        if attIdx == routeIdx or attIdx == measureIdx:
+            point = self.points.get(fid)
+            if point: # was in selection
+                route = self.getRoute( point.routeId )
+                self.unregisterPointByFid(fid)
+
+                if attIdx == routeIdx:
+                    # recalibrate old
+                    errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
+                    self.emitUpdateErrors( errorUpdates )
+
+            feature = getLayerFeature( self.pointLayer, fid )
+            point = self.registerPointFeature ( feature ) # returns LrsPoint
+            if point: # route id in selection
+                route = self.getRoute( point.routeId )
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors( errorUpdates )
-
-            point = self.registerPointFeature ( feature ) # returns LrsPoint
-            route = self.getRoute( point.routeId )
-            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
-            self.emitUpdateErrors( errorUpdates )
     
     #### line edit ####
     def lineFeatureAdded( self, fid ):
@@ -437,6 +445,8 @@ class Lrs(QObject):
         #debug ( "feature added fid %s" % fid )
         feature = getLayerFeature( self.lineLayer, fid )
         line = self.registerLineFeature ( feature ) # returns LrsLine
+        if not line: return # route id not in selection
+
         route = self.getRoute( line.routeId )
         errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
         self.emitUpdateErrors( errorUpdates )
@@ -444,7 +454,9 @@ class Lrs(QObject):
     def lineFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
-        line = self.lines[fid]
+        line = self.lines.get(fid)
+        if not line: return # route id not in selection
+
         route = self.getRoute( line.routeId )
         self.unregisterLineByFid(fid)
         errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
@@ -454,7 +466,9 @@ class Lrs(QObject):
         #debug ( "geometry changed fid %s" % fid )
 
         #remove old
-        line = self.lines[fid]
+        line = self.lines.get(fid)
+        if not line: return # route id not in selection
+
         route = self.getRoute( line.routeId )
         self.unregisterLineByFid(fid)
         
@@ -473,19 +487,20 @@ class Lrs(QObject):
         #debug ( "routeIdx = %s" % ( routeIdx, measureIdx) )
         
         if attIdx == routeIdx:
-            line = self.lines[fid]
-            route = self.getRoute( line.routeId )
+            line = self.lines.get(fid)
+            if line: # was in selection
+                route = self.getRoute( line.routeId )
+                self.unregisterLineByFid(fid)
+                errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
+                self.emitUpdateErrors( errorUpdates )
+
             feature = getLayerFeature( self.lineLayer, fid )
 
-            self.unregisterLineByFid(fid)
-            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
-            self.emitUpdateErrors( errorUpdates )
-
             line = self.registerLineFeature ( feature ) # returns LrsLine
-            route = self.getRoute( line.routeId )
-            errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
-            self.emitUpdateErrors( errorUpdates )
-
+            if line: # route id in selection
+                route = self.getRoute( line.routeId )
+                errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
+                self.emitUpdateErrors( errorUpdates )
 
 ##################### EVENTS ######################################
 

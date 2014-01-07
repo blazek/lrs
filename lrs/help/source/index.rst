@@ -65,10 +65,10 @@ The calibration is launched from the first tab *Calibrate*:
 Options:
 
 * **Lines layer:** Layer with lines representing routes. It may contain lines and multi-lines. A single route may be represented by multiple features. Lines do not have to be oriented.
-* **Lines route field:** Route id field in lines layer. The field type may be string or integer.
+* **Lines route field:** Route id field in lines layer. All field types are supported (including floats) but reasonable types, i.e. string or integer are recommended.
 * **Points layer:** Layer with points. It may contain points and multi-points (multi-points make no sense in LRS however).
 * **Points route field:** Route id field in points layer. The field type may be string or integer.
-* **Measure field:** Measure field in points layer. The field type may be integer or float.
+* **Measure field:** Measure field in points layer. All field types are supported (including floats) but reasonable types, i.e. string or integer are recommended. The type of field does not need to match route id field type in line layer, see general notes.
 * **Measure unit:** Measure field values units.
 * **All/include/exclude routes:** Calibration may be done on all routes, selected routes or some routes may be excluded. Included/excluded routes can be either entered in following field as comma separated list or selected from list in dialog opened by *Select* button. The list in the dialog is filled by route id values from lines layer.
 * **Max lines snap:** Maximum gap between route lines to be snapped.
@@ -204,7 +204,7 @@ General notes
 
 * **CRS.** Calibration of LRS is done in single CRS to which lines and points are reprojected (if layers have different CRS). The CRS is either map canvas CRS if OTF is enabled otherwise line layer CRS. Note that max point distance and lines snap are in units used to build LRS (units are appended to fields labels).
 
-* **Route id** matching (e.g. finding points for line or route for event) is case insensitive in case of strings and it also accepts integers in fields of type string (e.g. lines may have route id field type integer and points type string).
+* **Route id** All field types are accepted. Line and point layer route id field types do not need to be the same. For example, values 1 (integer), 1.0 (float) and "1" (string) are treated as equal. Route id matching (e.g. finding points for line or route for event) is case insensitive in case of strings.
 
 * **Options** in all tabs are stored in project. The options of each tab are written to project when *OK* button is pressed (i.e. options are confirmed). Reset buttons in tabs will reset all options to **default** values.
 
