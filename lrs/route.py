@@ -577,6 +577,13 @@ class LrsRoute:
             segments.extend( part.getSegments() )
         return segments
 
+    def getMeasureRanges(self):
+        ranges = []
+        for part in self.parts:
+            ranges.extend( part.getMeasureRanges() )
+        ranges.sort()
+        return ranges
+
     def getQualityFeatures(self):
         features = [] 
         fields = LrsQualityFields()

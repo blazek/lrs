@@ -340,6 +340,15 @@ class Lrs(QObject):
 
     #############################################33
 
+    def getRouteIds(self):
+        ids = []
+        for route in self.routes.values():
+            if route.routeId is not None:
+                ids.append ( route.routeId )
+
+        ids.sort()
+        return ids
+
     def getErrors(self):
         errors = list ( self.errors )
         for route in self.routes.values():
@@ -357,6 +366,12 @@ class Lrs(QObject):
         for route in self.routes.values():
             segments.extend( route.getSegments() )
         return segments
+
+    # get list of available measures ( (from, to),.. )
+    def getRouteMeasureRanges(self, routeId):
+        routeId = normalizeRouteId( routeId )
+        if not self.routes.has_key( routeId ): return []
+        return self.routes[routeId].getMeasureRanges()
 
     def getQualityFeatures(self):
         features = []
@@ -540,24 +555,6 @@ class Lrs(QObject):
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors( errorUpdates )
 
-######################### STATS ####################################
-
-    def getStatsHtmlRow(self, name, label):
-        #return "%s : %s<br>" % ( label, self.stats[name] )
-        return "<tr><td>%s</td> <td>%s</td></tr>" % ( label, self.stats[name] )
-
-    def getStatsHtml(self):
-        html = '<html><head></head><body>'
-        html += '<table>'
-
-        for s in self.statsNames: 
-            html += self.getStatsHtmlRow( s[0], s[1] )
-
-        html += '</table>'
-        html += '</body></html>'
-        return html
-
-
 ##################### EVENTS ######################################
 
     def eventValuesError(self, routeId, start, end = None, linear = False):
@@ -660,4 +657,21 @@ class Lrs(QObject):
                 return routeId, measure
             
         return routeId, None
+
+######################### STATS ####################################
+
+    def getStatsHtmlRow(self, name, label):
+        #return "%s : %s<br>" % ( label, self.stats[name] )
+        return "<tr><td>%s</td> <td>%s</td></tr>" % ( label, self.stats[name] )
+
+    def getStatsHtml(self):
+        html = '<html><head></head><body>'
+        html += '<table>'
+
+        for s in self.statsNames: 
+            html += self.getStatsHtmlRow( s[0], s[1] )
+
+        html += '</table>'
+        html += '</body></html>'
+        return html
 

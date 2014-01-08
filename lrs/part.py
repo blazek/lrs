@@ -263,6 +263,22 @@ class LrsRoutePart:
             segments.append ( LrsSegment( self.routeId, record, geo ) )
         return segments
 
+    def getMeasureRanges(self):
+        ranges = []
+        rang = None
+        for record in self.records:
+            if rang:
+                if rang[1] == record.milestoneFrom:
+                    rang[1] = record.milestoneTo
+                    continue
+                else:
+                    rang = None
+                    
+            if not rang:
+                rang = [ record.milestoneFrom, record.milestoneTo ]
+                ranges.append( rang )
+        return ranges
+
     def getErrors(self):
         return self.errors
 

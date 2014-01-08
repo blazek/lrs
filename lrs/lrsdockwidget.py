@@ -50,6 +50,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.iface = iface
         self.lrs = None # Lrs object
         self.genSelectionDialog = None
+        self.locatePoint = None # QgsPoint
         self.errorPointLayer = None
         self.errorPointLayerManager = None
         self.errorLineLayer = None
@@ -122,6 +123,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.addErrorLayersButton.clicked.connect( self.addErrorLayers )
         self.addQualityLayerButton.clicked.connect( self.addQualityLayer )
         self.errorButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
+
+        #### locateTab
+        self.locateRouteCM = LrsComboManager( self.locateRouteCombo )
+        self.locateBufferWM = LrsWidgetManager( self.locateBufferSpin, settingsName = 'locateBuffer', defaultValue = 200.0 )
+    
+        self.locateRouteCombo.currentIndexChanged.connect(self.locateRouteChanged)
+        self.locateMeasureSpin.valueChanged.connect( self.resetLocateEvent) 
+        self.locateBufferSpin.valueChanged.connect( self.locateBufferChanged )
+        self.locateCenterButton.clicked.connect( self.locateCenter )
+        self.locateZoomButton.clicked.connect( self.locateZoom )
 
         #### eventsTab
         self.eventsLayerCM = LrsLayerComboManager( self.eventsLayerCombo, settingsName = 'eventsLayerId' )
@@ -223,6 +234,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if not project: return
 
         self.readGenerateOptions()
+        self.readLocateOptions()
         self.readEventsOptions()
         self.readMeasureOptions()
         self.readExportOptions()
@@ -304,11 +316,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def enableTabs(self):
         enable = bool(self.lrs)
-        self.statsTab.setEnabled( enable )
         self.errorTab.setEnabled( enable )
+        self.locateTab.setEnabled( enable )
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
         self.exportTab.setEnabled( enable )
+        #self.statsTab.setEnabled( enable )
 
     def tabChanged(self, index):
         #debug("tabChanged index = %s" % index )
@@ -491,6 +504,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
             self.iface.mapCanvas().refresh()
 
+        self.resetLocateRoutes()
+
         self.resetEventsButtons()
         self.resetMeasureButtons()
         self.resetExportButtons()
@@ -611,6 +626,80 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.qualityLayerManager.clear()
         features = self.lrs.getQualityFeatures()
         self.qualityLayerManager.addFeatures( features, self.lrs.crs )
+
+############################# LOCATE ###############################################
+
+    def readLocateOptions(self):
+        self.locateBufferWM.readFromProject()
+
+    def resetLocateRoutes(self):
+        if not self.lrs: return
+        options = [ ( id, "%s" % id ) for id in self.lrs.getRouteIds() ]
+        options.insert(0, ( None, 'Route'))
+        #debug ( "%s" % options )
+        self.locateRouteCM.setOptions( options )
+
+    def locateRouteChanged(self):
+        #debug ('locateRouteChanged')
+        rangesText = ''
+        routeId = self.locateRouteCM.value()
+        if self.lrs and routeId is not None:
+            ranges = []
+            for r in self.lrs.getRouteMeasureRanges(routeId):
+                rang = "%s-%s" % ( formatMeasure(r[0], self.lrs.measureUnit), formatMeasure(r[1], self.lrs.measureUnit))
+                ranges.append ( rang )
+            rangesText = ", ".join( ranges)
+        #debug ('ranges: %s' % rangesText ) 
+        self.locateRanges.setText(rangesText)
+
+        self.resetLocateEvent()
+
+    def locateBufferChanged(self):
+        self.locateBufferWM.writeToProject()
+
+    def resetLocateEvent(self):
+        routeId = self.locateRouteCM.value()
+        measure = self.locateMeasureSpin.value()
+        coordinates = ''
+        point = None
+        if routeId is not None:
+            point, error = self.lrs.eventPoint(routeId, measure)
+            if point:
+                mapRenderer = self.iface.mapCanvas().mapRenderer()
+                if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != self.lrs.crs:
+                    transform = QgsCoordinateTransform( self.lrs.crs, mapRenderer.destinationCrs() )
+                    point = transform.transform( point )
+
+                coordinates = "%s,%s" % ( point.x(), point.y() )
+            else:
+                coordinates = error
+
+        self.locatePoint = point # QgsPoint
+
+        self.locateCoordinates.setText( coordinates )
+
+        self.locateCenterButton.setEnabled( bool(point) )
+        self.locateZoomButton.setEnabled( bool(point) )
+
+    def locateCenter(self):
+        if not self.locatePoint: return
+        mapCanvas = self.iface.mapCanvas()
+        extent = mapCanvas.extent()
+        extent.scale( 1.0, self.locatePoint );
+
+        self.iface.mapCanvas().setExtent( extent )
+        self.iface.mapCanvas().refresh();
+
+
+    def locateZoom(self):
+        if not self.locatePoint: return
+        p = self.locatePoint
+        b = self.locateBufferSpin.value()
+        extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
+
+        self.iface.mapCanvas().setExtent( extent )
+        self.iface.mapCanvas().refresh();
+        
             
 ############################# EVENTS ###############################################
 
