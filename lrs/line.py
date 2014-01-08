@@ -33,3 +33,10 @@ class LrsLine(object):
         self.routeId = routeId
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry, may be None
 
+    def getNumParts(self):
+        if not self.geo: return 0
+
+        if self.geo.isMultipart():
+            return len( self.geo.asMultiPolyline() )
+
+        return 1

@@ -189,6 +189,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.resetExportOptions()
         self.resetExportButtons()
 
+        #### statistics tab
+        # currently not used (did not correspond well to errors)
+        self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
+
         #####
         self.enableTabs()
 
@@ -300,6 +304,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def enableTabs(self):
         enable = bool(self.lrs)
+        self.statsTab.setEnabled( enable )
         self.errorTab.setEnabled( enable )
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
@@ -455,7 +460,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
         self.hideGenProgress()
-    
+
+        #self.resetStats()   
+
+        #### errors ##### 
         self.errorZoomButton.setEnabled( False)
         self.errorModel = LrsErrorModel()
         self.errorModel.addErrors( self.lrs.getErrors() )
@@ -689,13 +697,16 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 if point:
                     geo = QgsGeometry.fromPoint( point )
             
-            if not geo: 
-                # TODO: find how to create correct empty geometry
-                # QgsGeometry() does not construct correct WKBNoGeometry
-                geo = QgsGeometry()
-                # QgsGeometry.fromWkt('MULTILINESTRING/POINT EMPTY') is cousing later crash
-                #geo = QgsGeometry.fromWkt('%s EMPTY' % geometryType.upper())
-
+            # Because of bug #9309 in memory provider in 2.0 it was crashing if geometry
+            # was not set on feature. OTOH, if empty geometry (created by QgsGeometry()
+            # which does not construct correct WKBNoGeometry) was set on a feature, 
+            # QgsVectorFileWriter was giving errors when saving memory layer.
+            if QGis.QGIS_VERSION_INT < 20100:
+                if not geo: 
+                    # QgsGeometry() does not construct correct WKBNoGeometry
+                    # QgsGeometry.fromWkt('MULTILINESTRING/POINT EMPTY') is cousing later crash
+                    geo = QgsGeometry()
+                
             if geo:
                 outputFeature.setGeometry( geo )
 
@@ -1056,4 +1067,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             return
 
         QMessageBox.information( self, 'Information', 'Exported successfully' )
+
+################################## STATS ##########################################
+
+    def resetStats(self):
+        #debug ( 'setStats' )
+        html = self.lrs.getStatsHtml() if self.lrs else ''
+        self.statsTextEdit.setHtml( html )
+        
 

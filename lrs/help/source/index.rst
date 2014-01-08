@@ -209,3 +209,8 @@ General notes
 * **Options** in all tabs are stored in project. The options of each tab are written to project when *OK* button is pressed (i.e. options are confirmed). Reset buttons in tabs will reset all options to **default** values.
 
 * **Dockable window.** The plugin window is dockable, it means that it can be eithers used as dialog window or it can be docked in QGIS main window.
+
+Known issues
+============
+
+* Because of `issue 9309  <http://hub.qgis.org/issues/9309>`_ saving of event layer with features without geometry (if an event could not be referenced) was giving warning and those features were not saved (features with geometry were saved correctly however) in QGIS 2.0 and early development version 2.1. The issue was fixed in 2.1 which will become official 2.2 release. 

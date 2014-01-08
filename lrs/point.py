@@ -36,3 +36,11 @@ class LrsPoint(object):
         # original feature geo, may be multipart
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
 
+    def getNumParts(self):
+        if not self.geo: return 0
+        
+        if self.geo.isMultipart():
+            return len( self.geo.asMultiPoint() )
+
+        return 1
+

@@ -82,7 +82,7 @@ class Lrs(QObject):
             raise Exception( "measureUnit not set" )
 
         self.distanceArea = QgsDistanceArea()
-        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP 
+        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
         self.distanceArea.setSourceCrs( self.crs.srsid() )
         if self.crs.mapUnits() == QGis.Degrees:
             self.distanceArea.setEllipsoidalMode( True )
@@ -114,6 +114,25 @@ class Lrs(QObject):
         self.errors = [] # LrsError list
 
         self.progressCounts = {}
+
+        # Statistics currently not used (did not correspond well to errors)
+        self.stats = {} # statistics
+        self.statsNames = (
+            ( 'lineFeatures', 'Total number of line features' ), # may be multilinestrings
+            ( 'lineFeaturesIncluded', 'Number of included line features' ), # selected
+            #( 'lines', 'Total number of line strings' ), # may be parts of multi
+            ( 'linesIncluded', 'Number of included line strings' ),
+            ( 'pointFeatures', 'Total number of point features' ), #may be multipoint
+            ( 'pointFeaturesIncluded', 'Number of included point features' ), # selected
+            #( 'points', 'Total number of points' ), # may be parts of multi
+            ( 'pointsIncluded', 'Number of included points' ), # selected 
+            ( 'pointsOk', 'Number of included points successfully used in LRS' ),
+            ( 'pointsError', 'Number of included points with error' ),
+            ( 'length', 'Total length of all lines in map units' ),
+            ( 'lengthIncluded', 'Length of included lines in map units' ),
+            ( 'lengthOk', 'Length of included lines with successfully created LRS' ),
+            ( 'lengthError', 'Length of included lines without LRS' ),
+        )
 
         self.lineTransform = None
         if self.crs and self.crs != lineLayer.crs():
@@ -197,6 +216,10 @@ class Lrs(QObject):
         self.lines = {} 
         self.errors = [] # reset
 
+        self.stats = {}
+        for s in self.statsNames:
+            self.stats[ s[0] ] = 0
+
         field = self.lineLayer.pendingFields().field( self.lineRouteField )
         self.routeField = QgsField( field.name(), field.type(), field.typeName(), field.length(), field.precision() )
 
@@ -213,6 +236,13 @@ class Lrs(QObject):
         for route in self.routes.values():
             route.calibrate(self.extrapolate)
             self.progressStep(self.CALIBRATING_ROUTES) 
+
+        # count stats
+        #for route in self.routes.values():
+            #self.stats['pointsOk'] += len ( route.getGoodMilestones() )
+
+        #self.stats['pointsError'] = self.stats['pointsIncluded'] - self.stats['pointsOk']
+
 
     # get route by id, create it if does not exist
     # routeId does not have to be normalized
@@ -259,7 +289,11 @@ class Lrs(QObject):
     def registerLines (self):
         self.routes = {}
         for feature in self.lineLayer.getFeatures():
-            self.registerLineFeature(feature)
+            line = self.registerLineFeature(feature)
+            #self.stats['lineFeatures'] += 1
+            #if line:
+                #self.stats['lineFeaturesIncluded'] += 1
+                #self.stats['linesIncluded'] += line.getNumParts()
             self.progressStep(self.REGISTERING_LINES) 
         # precise number of routes
         self.progressCounts[self.NROUTES] = len( self.routes )
@@ -294,7 +328,11 @@ class Lrs(QObject):
 
     def registerPoints (self):
         for feature in self.pointLayer.getFeatures():
-            self.registerPointFeature ( feature )
+            point = self.registerPointFeature ( feature )
+            #self.stats['pointFeatures'] += 1
+            #if point:
+                #self.stats['pointFeaturesIncluded'] += 1
+                #self.stats['pointsIncluded'] += point.getNumParts()
             self.progressStep(self.REGISTERING_POINTS) 
         # route total may increase (e.g. orphans)
         self.progressCounts[self.NROUTES] = len( self.routes )
@@ -501,6 +539,24 @@ class Lrs(QObject):
                 route = self.getRoute( line.routeId )
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors( errorUpdates )
+
+######################### STATS ####################################
+
+    def getStatsHtmlRow(self, name, label):
+        #return "%s : %s<br>" % ( label, self.stats[name] )
+        return "<tr><td>%s</td> <td>%s</td></tr>" % ( label, self.stats[name] )
+
+    def getStatsHtml(self):
+        html = '<html><head></head><body>'
+        html += '<table>'
+
+        for s in self.statsNames: 
+            html += self.getStatsHtmlRow( s[0], s[1] )
+
+        html += '</table>'
+        html += '</body></html>'
+        return html
+
 
 ##################### EVENTS ######################################
 

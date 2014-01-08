@@ -98,6 +98,7 @@ class LrsRoutePart:
         self.measureUnit = measureUnit
         self.distanceArea = distanceArea
         self.milestones = [] # LrsMilestone list, all input milestones
+        self.goodMilestones = [] # milestons ok, used for LRS
         self.records = [] # LrsRecord list
         self.errors = [] # LrsError list
 
@@ -240,6 +241,9 @@ class LrsRoutePart:
             #debug ('routeId = %s measure = %s' % (self.routeId,measure) )
             self.records.append( LrsRecord ( record.milestoneTo, measure, record.partTo, self.length ) )
         
+
+    def getGoodMilestones(self):
+        return self.goodMilestones
 
     def getRecords(self):
         return self.records

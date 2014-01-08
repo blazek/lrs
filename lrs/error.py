@@ -190,7 +190,7 @@ class LrsErrorModel( QAbstractTableModel ):
     TYPE_COL = 0
     ROUTE_COL = 1
     MEASURE_COL = 2
-    MESSAGE_COL = 3
+    MESSAGE_COL = 3 # currently not used
 
     headerLabels = {
         TYPE_COL: 'Type',
@@ -217,7 +217,7 @@ class LrsErrorModel( QAbstractTableModel ):
         return len( self.errors )
 
     def columnCount(self, index):
-        return 4
+        return 3
 
     def data(self, index, role):
         if role != Qt.DisplayRole: return None

@@ -603,6 +603,12 @@ class LrsRoute:
 
         return features
 
+    def getGoodMilestones(self):
+        goodMilestones = []
+        for part in self.parts:
+            goodMilestones.extend( part.getGoodMilestones() )
+        return goodMilestones
+
     # returns ( QgsPoint, error )
     def eventPoint(self, start):
         for part in self.parts:
