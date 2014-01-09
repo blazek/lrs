@@ -416,12 +416,13 @@ class LrsRoute:
             
             parts.sort(key=lambda part: part.length)
 
-            for i in range(len(parts)-2):
-                #debug( 'remove fork part %s' % i )
-                part = parts[i]
-                geo = QgsGeometry.fromPolyline( part.polyline )
-                self.errors.append( LrsError( LrsError.FORK_LINE, geo, routeId = self.routeId, origins = part.origins ) )
-                self.parts.remove(part)
+            removeParts = parts[0:len(parts)-2]
+            for part in removeParts:
+                # one part may be fork at both ends -> check if it was already removed
+                if part in self.parts:
+                    geo = QgsGeometry.fromPolyline( part.polyline )
+                    self.errors.append( LrsError( LrsError.FORK_LINE, geo, routeId = self.routeId, origins = part.origins ) )
+                    self.parts.remove(part)
 
         # join again after forks removed
         self.parts = self.joinParts( self.parts )
