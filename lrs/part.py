@@ -279,6 +279,13 @@ class LrsRoutePart:
                 ranges.append( rang )
         return ranges
 
+    # Get sum of lengths with correct LRS in map units
+    def getGoodLength(self):
+        length = 0
+        for record in self.records:
+            length += record.partTo - record.partFrom
+        return length
+
     def getErrors(self):
         return self.errors
 

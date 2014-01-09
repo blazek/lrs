@@ -37,6 +37,7 @@ from error import *
 class Lrs(QObject):
     progressChanged = pyqtSignal( str, float, name = 'progressChanged' )
     updateErrors = pyqtSignal(dict, name = 'updateErrors')
+    edited = pyqtSignal(name = 'edited')
 
     # progress counts
     CURRENT = 1 # current progress count
@@ -115,23 +116,24 @@ class Lrs(QObject):
 
         self.progressCounts = {}
 
-        # Statistics currently not used (did not correspond well to errors)
+        # Numbers of features/lines/points currently not used because did not 
+        # correspond well to list/layer of errors
         self.stats = {} # statistics
         self.statsNames = (
-            ( 'lineFeatures', 'Total number of line features' ), # may be multilinestrings
-            ( 'lineFeaturesIncluded', 'Number of included line features' ), # selected
+            #( 'lineFeatures', 'Total number of line features' ), # may be multilinestrings
+            #( 'lineFeaturesIncluded', 'Number of included line features' ), # selected
             #( 'lines', 'Total number of line strings' ), # may be parts of multi
-            ( 'linesIncluded', 'Number of included line strings' ),
-            ( 'pointFeatures', 'Total number of point features' ), #may be multipoint
-            ( 'pointFeaturesIncluded', 'Number of included point features' ), # selected
+            #( 'linesIncluded', 'Number of included line strings' ),
+            #( 'pointFeatures', 'Total number of point features' ), #may be multipoint
+            #( 'pointFeaturesIncluded', 'Number of included point features' ), # selected
             #( 'points', 'Total number of points' ), # may be parts of multi
-            ( 'pointsIncluded', 'Number of included points' ), # selected 
-            ( 'pointsOk', 'Number of included points successfully used in LRS' ),
-            ( 'pointsError', 'Number of included points with error' ),
-            ( 'length', 'Total length of all lines in map units' ),
-            ( 'lengthIncluded', 'Length of included lines in map units' ),
-            ( 'lengthOk', 'Length of included lines with successfully created LRS' ),
-            ( 'lengthError', 'Length of included lines without LRS' ),
+            #( 'pointsIncluded', 'Number of included points' ), # selected 
+            #( 'pointsOk', 'Number of included points successfully used in LRS' ),
+            #( 'pointsError', 'Number of included points with error' ),
+            ( 'length', 'Total length of all lines' ),
+            ( 'lengthIncluded', 'Length of included lines' ),
+            ( 'lengthOk', 'Length of successfully created LRS' ),
+            #( 'lengthError', 'Length of included lines without LRS' ),
         )
 
         self.lineTransform = None
@@ -147,6 +149,8 @@ class Lrs(QObject):
 
         self.partSpatialIndex = None
         self.partSpatialIndexRoutePart = None
+
+        self.wasEdited = False # true if layers were edited since calibration
 
         QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)        
 
@@ -238,8 +242,9 @@ class Lrs(QObject):
             self.progressStep(self.CALIBRATING_ROUTES) 
 
         # count stats
-        #for route in self.routes.values():
+        for route in self.routes.values():
             #self.stats['pointsOk'] += len ( route.getGoodMilestones() )
+            self.stats['lengthOk'] += route.getGoodLength()
 
         #self.stats['pointsError'] = self.stats['pointsIncluded'] - self.stats['pointsOk']
 
@@ -291,9 +296,14 @@ class Lrs(QObject):
         for feature in self.lineLayer.getFeatures():
             line = self.registerLineFeature(feature)
             #self.stats['lineFeatures'] += 1
-            #if line:
+            length = 0
+            if feature.geometry():
+                length = self.distanceArea.measure( feature.geometry() )
+            self.stats['length'] += length
+            if line:
                 #self.stats['lineFeaturesIncluded'] += 1
                 #self.stats['linesIncluded'] += line.getNumParts()
+                self.stats['lengthIncluded'] += length
             self.progressStep(self.REGISTERING_LINES) 
         # precise number of routes
         self.progressCounts[self.NROUTES] = len( self.routes )
@@ -416,7 +426,14 @@ class Lrs(QObject):
             self.lineEditBuffer.featureDeleted.disconnect( self.lineFeatureDeleted )
             self.lineEditBuffer.geometryChanged.disconnect( self.lineGeometryChanged )
             self.lineEditBuffer.attributeValueChanged.disconnect( self.lineAttributeValueChanged )
-    
+
+    def setEdited(self):
+        self.wasEdited = True    
+        self.edited.emit()
+
+    def getEdited(self):
+        return self.wasEdited
+
     def emitUpdateErrors(self, errorUpdates):
         errorUpdates['crs'] = self.crs
         self.updateErrors.emit ( errorUpdates )
@@ -430,6 +447,7 @@ class Lrs(QObject):
     def pointFeatureAdded( self, fid ):
         # added features have temporary negative id
         #debug ( "feature added fid %s" % fid )
+        self.setEdited()
         feature = getLayerFeature( self.pointLayer, fid )
         point = self.registerPointFeature ( feature ) # returns LrsPoint
         if not point: return # route id not in selection
@@ -440,6 +458,7 @@ class Lrs(QObject):
 
     def pointFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
+        self.setEdited()
         # deleted feature cannot be read anymore from layer
         point = self.points.get(fid)
         if not point: return # route id not in selection
@@ -451,6 +470,7 @@ class Lrs(QObject):
             
     def pointGeometryChanged( self, fid, geo ):
         #debug ( "geometry changed fid %s" % fid )
+        self.setEdited()
 
         #remove old
         point = self.points.get(fid)
@@ -468,6 +488,7 @@ class Lrs(QObject):
 
     def pointAttributeValueChanged( self, fid, attIdx, value ):
         #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
+        self.setEdited()
 
         fields = self.pointLayer.pendingFields()
         routeIdx = fields.indexFromName ( self.pointRouteField )
@@ -496,6 +517,7 @@ class Lrs(QObject):
     def lineFeatureAdded( self, fid ):
         # added features have temporary negative id
         #debug ( "feature added fid %s" % fid )
+        self.setEdited()
         feature = getLayerFeature( self.lineLayer, fid )
         line = self.registerLineFeature ( feature ) # returns LrsLine
         if not line: return # route id not in selection
@@ -507,6 +529,7 @@ class Lrs(QObject):
     def lineFeatureDeleted( self, fid ):
         #debug ( "feature deleted fid %s" % fid )
         # deleted feature cannot be read anymore from layer
+        self.setEdited()
         line = self.lines.get(fid)
         if not line: return # route id not in selection
 
@@ -517,6 +540,7 @@ class Lrs(QObject):
             
     def lineGeometryChanged( self, fid, geo ):
         #debug ( "geometry changed fid %s" % fid )
+        self.setEdited()
 
         #remove old
         line = self.lines.get(fid)
@@ -534,6 +558,7 @@ class Lrs(QObject):
 
     def lineAttributeValueChanged( self, fid, attIdx, value ):
         #debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
+        self.setEdited()
 
         fields = self.lineLayer.pendingFields()
         routeIdx = fields.indexFromName ( self.lineRouteField )
@@ -662,16 +687,36 @@ class Lrs(QObject):
 
     def getStatsHtmlRow(self, name, label):
         #return "%s : %s<br>" % ( label, self.stats[name] )
-        return "<tr><td>%s</td> <td>%s</td></tr>" % ( label, self.stats[name] )
+        value = self.stats[name]
+        # lengths are in map units not in measure units
+        #if 'length' in name.lower():
+        #    value = formatMeasure( value, self.measureUnit )
+        return "<tr><td>%s</td> <td>%s</td></tr>" % ( label, value )
 
     def getStatsHtml(self):
-        html = '<html><head></head><body>'
+        html = '''<html><head>
+                    <style type="text/css">
+                      table {
+                        border: 1px solid gray;
+                        border-spacing: 0px;
+                      }
+                      td {
+                        padding: 5px;
+                        border: 1px solid gray;
+                        font-size: 10pt;
+                      }
+                      body {
+                        font-size: 10pt;
+                      }
+                    </style>
+                  </head><body>'''
         html += '<table>'
 
         for s in self.statsNames: 
             html += self.getStatsHtmlRow( s[0], s[1] )
 
         html += '</table>'
+        html += '<p>Lengths in map units.'
         html += '</body></html>'
         return html
 

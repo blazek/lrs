@@ -205,7 +205,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         #### statistics tab
         # currently not used (did not correspond well to errors)
-        self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
+        #self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
 
         #####
         self.enableTabs()
@@ -326,7 +326,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsTab.setEnabled( enable )
         self.measureTab.setEnabled( enable )
         self.exportTab.setEnabled( enable )
-        #self.statsTab.setEnabled( enable )
+        self.statsTab.setEnabled( enable )
 
     def tabChanged(self, index):
         #debug("tabChanged index = %s" % index )
@@ -353,6 +353,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         #debug ( helpFile )
         QDesktopServices.openUrl(QUrl(helpFile))
         
+    def lrsEdited(self):
+        self.resetStats()
 
 ############################ GENERATE (CALIBRATE) ###############################
 
@@ -479,7 +481,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs.calibrate()
         self.hideGenProgress()
 
-        #self.resetStats()   
+        self.resetStats()   
 
         #### errors ##### 
         self.errorZoomButton.setEnabled( False)
@@ -508,6 +510,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
             self.iface.mapCanvas().refresh()
+
+        self.lrs.edited.connect ( self.lrsEdited )
 
         self.resetLocateRoutes()
 
@@ -1203,7 +1207,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
     def resetStats(self):
         #debug ( 'setStats' )
-        html = self.lrs.getStatsHtml() if self.lrs else ''
-        self.statsTextEdit.setHtml( html )
+        html = ''
+        if self.lrs: 
+            if self.lrs.getEdited():
+                html = 'Statistics are not available if an input layer has been edited after calibration. Run calibration again to get fresh statistics.'
+            else:
+                html = self.lrs.getStatsHtml()
+        self.statsWebView.setHtml( html )
         
 

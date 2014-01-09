@@ -218,6 +218,15 @@ Exported table may be used by other applications supporting geometry with measur
 
   select locate_along_measure(geom,6.3) from lrs where route = 'road1' and m_from <= 6.3 and 6.3 <= m_to;
 
+Statistics
+==========
+
+*Statistics* tab shows brief statistics about lengths of lines. 
+
+.. image:: images/stats.png
+   :align: center
+
+Statistics are disabled if an input layer is edited. Calibration has to be run again to get fresh statistics after editing.
 
 General notes
 =============

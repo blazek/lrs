@@ -616,6 +616,13 @@ class LrsRoute:
             goodMilestones.extend( part.getGoodMilestones() )
         return goodMilestones
 
+    # Get sum of lengths with correct LRS in map units
+    def getGoodLength(self):
+        length = 0
+        for part in self.parts:
+            length += part.getGoodLength()
+        return length
+
     # returns ( QgsPoint, error )
     def eventPoint(self, start):
         for part in self.parts:
