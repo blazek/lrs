@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>536</width>
+    <width>501</width>
     <height>444</height>
    </rect>
   </property>
@@ -438,7 +438,7 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
+          <item row="6" column="0">
            <widget class="QLabel" name="locateBufferLabel">
             <property name="toolTip">
              <string>Buffer around event in map units used for zoom.</string>
@@ -448,7 +448,7 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QDoubleSpinBox" name="locateBufferSpin">
             <property name="toolTip">
              <string>Buffer around event in map units used for zoom.</string>
@@ -482,6 +482,9 @@
             <property name="wordWrap">
              <bool>true</bool>
             </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+            </property>
            </widget>
           </item>
           <item row="2" column="1">
@@ -494,6 +497,23 @@
             </property>
             <property name="singleStep">
              <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="locateHighlightLabel">
+            <property name="text">
+             <string>Highlight</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="locateHighlightCheckBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -525,7 +545,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>218</height>
+            <height>193</height>
            </size>
           </property>
          </spacer>

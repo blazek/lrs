@@ -130,6 +130,26 @@ The properties of the errors and quality layers are stored in project like for a
 
 The **power of the plugin** is in **dynamic update** of the LRS, errors list, error layers and quality layer when source lines or points layers are edited. User can start editing of points or lines, zoom to an error, fix the error in data and error/quality layers are immediately (and quickly because only single route is recalibrated) updated so that the user see promptly if the fix was successful.
 
+
+Locate
+======
+
+Single event may be interactively localized from *Localize* tab.
+
+.. image:: images/locate.png
+   :align: center
+
+Localize tab options:
+
+* **Route:** Route id.
+* **Available measures:** Comma separated list of measure ranges available for selected route.
+* **Measure:** Event measure.
+* **Coordinates:** Event coordinates in current map canvas CRS or error message if the event cannot be referenced.
+* **Highlight:** Highlight the event in map canvas.
+* **Zoom buffer:** Buffer (minimum radius) aroud the event in map units used for zoom.
+
+It is possible either to **Center** the map canvas to current event or to **Zoom** to the event using specified buffer.
+
 Create events
 =============
 

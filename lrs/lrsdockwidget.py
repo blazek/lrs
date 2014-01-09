@@ -51,6 +51,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.lrs = None # Lrs object
         self.genSelectionDialog = None
         self.locatePoint = None # QgsPoint
+        self.locateHighlight = None # QgsHighlight
         self.errorPointLayer = None
         self.errorPointLayerManager = None
         self.errorLineLayer = None
@@ -126,12 +127,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         #### locateTab
         self.locateRouteCM = LrsComboManager( self.locateRouteCombo )
+        self.locateHighlightWM = LrsWidgetManager( self.locateHighlightCheckBox, settingsName = 'locateHighlight', defaultValue = True )
         self.locateBufferWM = LrsWidgetManager( self.locateBufferSpin, settingsName = 'locateBuffer', defaultValue = 200.0 )
     
         self.locateRouteCombo.currentIndexChanged.connect(self.locateRouteChanged)
         self.locateMeasureSpin.valueChanged.connect( self.resetLocateEvent) 
         self.locateBufferSpin.valueChanged.connect( self.locateBufferChanged )
         self.locateCenterButton.clicked.connect( self.locateCenter )
+        self.locateHighlightCheckBox.stateChanged.connect( self.locateHighlightChanged )
         self.locateZoomButton.clicked.connect( self.locateZoom )
 
         #### eventsTab
@@ -295,6 +298,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         del self.eventsRouteFieldCM
         del self.eventsMeasureStartFieldCM
         del self.eventsMeasureEndFieldCM
+
+        self.clearLocateHighlight()
 
         super(LrsDockWidget, self).close()
             
@@ -629,13 +634,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
 ############################# LOCATE ###############################################
 
+    def resetLocateOptions(self):
+        self.locateHighlightWM.reset() 
+        self.locateBufferWM.reset() 
+
     def readLocateOptions(self):
+        self.locateHighlightWM.readFromProject()
         self.locateBufferWM.readFromProject()
 
     def resetLocateRoutes(self):
         if not self.lrs: return
         options = [ ( id, "%s" % id ) for id in self.lrs.getRouteIds() ]
-        options.insert(0, ( None, 'Route'))
+        options.insert(0, ( None, ''))
         #debug ( "%s" % options )
         self.locateRouteCM.setOptions( options )
 
@@ -658,12 +668,14 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.locateBufferWM.writeToProject()
 
     def resetLocateEvent(self):
+        self.clearLocateHighlight()
         routeId = self.locateRouteCM.value()
         measure = self.locateMeasureSpin.value()
         coordinates = ''
         point = None
         if routeId is not None:
             point, error = self.lrs.eventPoint(routeId, measure)
+
             if point:
                 mapRenderer = self.iface.mapCanvas().mapRenderer()
                 if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != self.lrs.crs:
@@ -675,11 +687,41 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 coordinates = error
 
         self.locatePoint = point # QgsPoint
+        self.highlightLocatePoint()
 
         self.locateCoordinates.setText( coordinates )
 
         self.locateCenterButton.setEnabled( bool(point) )
         self.locateZoomButton.setEnabled( bool(point) )
+
+    def locateHighlightChanged(self):
+        #debug ('locateHighlightChanged')
+        self.clearLocateHighlight()
+        self.locateHighlightWM.writeToProject()
+        self.highlightLocatePoint()
+
+    def highlightLocatePoint(self):
+        #debug ('highlightLocatePoint')
+        self.clearLocateHighlight()
+        if not self.locatePoint: return
+        if not self.locateHighlightCheckBox.isChecked(): return
+
+        mapCanvas = self.iface.mapCanvas()
+        mapRenderer = mapCanvas.mapRenderer()
+        # QgsHighlight does reprojection from layer CRS
+        crs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else self.lrs.crs
+        layer = QgsVectorLayer( 'Point?crs=' + crsString( crs ), 'LRS locate highlight', 'memory' ) 
+        self.locateHighlight = QgsHighlight( mapCanvas, QgsGeometry.fromPoint( self.locatePoint ), layer )
+        # highlight point size is hardcoded in QgsHighlight
+        self.locateHighlight.setWidth( 2 )
+        self.locateHighlight.setColor( Qt.yellow )
+        self.locateHighlight.show()
+
+    def clearLocateHighlight(self):
+        #debug ('clearLocateHighlight')
+        if self.locateHighlight:
+            del self.locateHighlight
+            self.locateHighlight = None
 
     def locateCenter(self):
         if not self.locatePoint: return

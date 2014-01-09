@@ -394,7 +394,7 @@ class LrsErrorVisualizer(object):
         if not error: return
 
         # QgsHighlight does reprojection from layer CRS
-        layer = QgsVectorLayer( 'Point?crs=' + crsString( crs ), 'LRS highlight', 'memory' )   
+        layer = QgsVectorLayer( 'Point?crs=' + crsString( crs ), 'LRS error highlight', 'memory' )   
         self.errorHighlight = QgsHighlight( self.mapCanvas, error.geo, layer )
         # highlight point size is hardcoded in QgsHighlight
         self.errorHighlight.setWidth( 2 )
