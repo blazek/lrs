@@ -15,7 +15,10 @@ LRS Plugin for QGIS
 Introduction
 ============
 
-The plugin was developped for *Il Servizio Gestione Strade* della `Provincia Autonoma di Trento. <http://www.provincia.tn.it/>`_
+.. image:: images/logo_pat_gsc.png
+   :align: right
+   
+The plugin was developped in collaboration with `Provincia Autonoma di Trento <http://www.provincia.tn.it/>`_ - Dipartimento Lavori Pubblici e mobilità - Servizio Gestione Strade - Ufficio Controllo e Tecnologie Stradali.
 
 Motivation
 ..........
