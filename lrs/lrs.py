@@ -318,6 +318,9 @@ class Lrs(QObject):
 
         measure = feature[self.pointMeasureField]
         if measure == NULL: measure = None
+        if measure is not None:
+            # convert to float to don't care later about operations with integers
+            measure = float ( measure )
         #debug ( "fid = %s routeId = %s measure = %s" % ( feature.id(), routeId, measure ) )
         geo = feature.geometry()
         if geo:

@@ -33,9 +33,18 @@ class LrsRecord:
         # measures from mileston measure attribute
         self.milestoneFrom = milestoneFrom
         self.milestoneTo = milestoneTo
+        # convert to float to don't care later about operations with integers
+        # (it should come here already as float)
+        # (it can also be used as milestoneFrom or milestoneTo = None) 
+        if self.milestoneFrom is not None:
+            self.milestoneFrom = float(self.milestoneFrom) 
+        if self.milestoneTo is not None:
+            self.milestoneTo = float(self.milestoneTo)
+
         # measures measured along part polyline
         self.partFrom = partFrom
         self.partTo = partTo
+        #debug( "LrsRecord.init() milestoneFrom = %s milestoneTo = %s partFrom = %s partTo = %s" % ( milestoneFrom, milestoneTo, partFrom, partTo) )
 
     # returns true if measure is within open interval (milestoneFrom,milestoneTo)
     # i.e. milestoneFrom < measure < milestoneTo
@@ -294,6 +303,10 @@ class LrsRoutePart:
 
     # returns QgsPoint or None
     def eventPoint(self, start):
+        #debug( "part.eventPoint() start = %s" % start )
+        if start is None:
+            return None
+        start = float(start)
         for record in self.records:
             if record.containsMeasure( start ):
                 m = record.partMeasure( start )
@@ -304,6 +317,10 @@ class LrsRoutePart:
     # returns [ [ QgsPolyline, measure_from, measure_to ], ... ]
     def eventSegments(self, start, end):
         segments = []
+        if start is None or end is None: return segments
+        start = float(start)
+        end = float(end)
+
         # segment values
         seg = LrsRecord(None,None,None,None)
         nrecords = len(self.records)

@@ -32,6 +32,8 @@ class LrsPoint(object):
         self.fid = fid # point feature id
         self.routeId = routeId
         self.measure = measure
+        if self.measure is not None:
+            self.measure = float( self.measure )
         #debug ( "routeId = %s %s measure = %s %s" % (routeId, type(routeId), measure, type(measure) ) )
         # original feature geo, may be multipart
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
