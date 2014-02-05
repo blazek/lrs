@@ -31,7 +31,7 @@ tracker=https://github.com/blazek/lrs/issues/
 repository=https://github.com/blazek/lrs/
 icon=icon.svg
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
