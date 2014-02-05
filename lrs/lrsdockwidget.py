@@ -90,7 +90,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.genSelectionWM = LrsWidgetManager( self.genSelectionLineEdit, settingsName = 'selection' )
 
 
-        self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 200.0 )
+        self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 100.0 )
         self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 0.0 )
         self.genParallelModeCM = LrsComboManager( self.genParallelModeCombo, options = (('error', 'Mark as errors'), ('span', 'Span by straight line'),('exclude','Exclude')), defaultValue = 'error', settingsName = 'parallelMode' )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
@@ -162,7 +162,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         #### measureTab
         self.measureLayerCM = LrsLayerComboManager( self.measureLayerCombo, geometryType = QGis.Point, settingsName = 'measureLayerId' )
-        self.measureThresholdWM = LrsWidgetManager( self.measureThresholdSpin, settingsName = 'measureThreshold', defaultValue = 200.0 )
+        self.measureThresholdWM = LrsWidgetManager( self.measureThresholdSpin, settingsName = 'measureThreshold', defaultValue = 100.0 )
         self.measureOutputNameWM = LrsWidgetManager( self.measureOutputNameLineEdit, settingsName = 'measureOutputName', defaultValue = 'LRS measure' )
 
         self.measureRouteFieldWM = LrsWidgetManager( self.measureRouteFieldLineEdit, settingsName = 'measureRouteField', defaultValue = 'route' )
