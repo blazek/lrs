@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import md5
+from hashlib import md5
 
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
@@ -43,7 +43,7 @@ class LrsOrigin(object):
 
     def getChecksum(self):
         s  = "%s-%s-%s-%s" % ( self.geoType, self.fid, self.geoPart, self.nGeoParts )
-        m = md5.new( s )
+        m = md5( s )
         return m.digest()
 
 # Class representing error in LRS 
@@ -130,7 +130,7 @@ class LrsError(object):
 
             checksums.sort()
 
-            m = md5.new()
+            m = md5()
             for checksum in checksums:
                 m.update( checksum )
             self.originChecksum_ = m.digest()
@@ -141,7 +141,7 @@ class LrsError(object):
     # calculation depends on error type
     def getChecksum(self):
         if not self.checksum_: 
-            m = md5.new( "%s" % self.type )
+            m = md5( "%s" % self.type )
             
             if self.type == self.DUPLICATE_LINE:
                 m.update( self.geo.asWkb() )
@@ -181,7 +181,7 @@ class LrsError(object):
     #def getFullChecksum(self):
         #if not self.fullChecksum_: 
             #s  = "%s-%s-%s-%s-%s" % ( self.type, self.geo.asWkb(), self.routeId, self.getMeasureString(), self.getOriginChecksum() )
-            #m = md5.new( s )
+            #m = md5( s )
             #self.fullChecksum_ = m.digest()
         #return self.fullChecksum_
 
@@ -364,7 +364,7 @@ class LrsQualityFeature(LrsFeature):
     # geometry + all attributes
     def getChecksum(self):
         if not self.checksum_:
-            m = md5.new( "%s" % self.geometry().asWkb() )
+            m = md5( "%s" % self.geometry().asWkb() )
            
             for attribute in self.attributes():
                 m.update( '%s' % attribute )
