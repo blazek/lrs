@@ -164,7 +164,7 @@ def pointOnLine( point1, point2, distance ):
 
 # returns new QgsPoint on polyline in distance along original polyline
 def polylinePoint( polyline, distance ):
-    debug( "polylinePoint distance = %s" % distance )
+    #debug( "polylinePoint distance = %s" % distance )
     #geo = QgsGeometry.fromPolyline( polyline )
     #length = geo.length()
 
