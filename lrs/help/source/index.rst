@@ -102,17 +102,19 @@ When calibration phase is finished it is possible to browse data inconsistencies
    
 Tha tab contains list of all errors which can be filtered over all columns by entering a string in **Filter** entry. The plugin is able to identify following data errors:
 
-* **Duplicate line**
-* **Duplicate point**
-* **Fork**
-* **Orphan point**
-* **Out of threshold**
-* **Not enough points**
-* **Missing route id**
-* **Missing measure**
-* **Cannot guess direction**
-* **Wrong measure**
-* **Duplicate referencing**
+* **Duplicate line:** Two or more lines with the same route id and geometry.
+* **Duplicate point:** Two or more points with the same route id and geometry.
+* **Fork:** Three or more lines with the same route id connected in one node.
+* **Fork line:** Shortest route part(s) connected to fork.
+* **Orphan point:** No line with the same route id.
+* **Out of threshold:** The point is distant more than *Max point distance* from nearest line of the same route id.
+* **Not enough points:** A part of a route has not enough points (two points is minimum) to be calibrated.
+* **Missing route id:** Point or line has no route id attribute (NULL).
+* **Missing measure:** Point does not have measure attribute (NULL).
+* **Cannot guess direction:** Measures of points along a route part are not in ascendant order and number of segments in both directions is equal. 
+* **Wrong measure:** A point measure is not in order with respect to other correct points and guessed route direction.
+* **Duplicate referencing:** Multiple route parts with the same measures.
+* **Parallel line:** Parallel lines (multiple edges), see *Parallels* option.
 
 When an error is selected in the list, it is highlighted in map and it is possible to **Zoom** to the feature by the button under the list.
 
