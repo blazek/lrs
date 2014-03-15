@@ -63,7 +63,7 @@ class LrsSelectionDialog( QDialog, Ui_LrsSelectionDialog ):
             values.add( value )
 
         if field.type() == QVariant.String:
-            values = sorted( values, key=str.lower )
+            values = sorted( values, key=lambda s: s.lower() if type(s) is not QPyNullVariant else '' )
         else:
             values = sorted( values )
 
