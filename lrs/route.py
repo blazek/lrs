@@ -224,6 +224,10 @@ class LrsRoute:
                 polys = line.geo.asMultiPolyline()
 
             for i in range(len(polys)):
+                if polys[i] is None or len( polys[i] ) < 2:
+                    # TODO(?): report degenerated lines as errors
+                    continue
+
                 polylines.append( { 
                     'polyline': polys[i],
                     'fid': line.fid,
@@ -348,7 +352,12 @@ class LrsRoute:
                 if not connected: # no more parts can be connected
                     break
 
-            self.parts.append( LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea) )
+            part = LrsRoutePart( polyline, self.routeId, origins, self.crs, self.measureUnit, self.distanceArea)
+            if part.length > 0:
+                self.parts.append( part )
+            else:
+                # TODO(?): report degenerated lines as errors, should be catched already above however
+                pass
 
         #debug ( 'num parts = %s' % len(self.parts) )
         # Find loops

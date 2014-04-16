@@ -113,8 +113,12 @@ class LrsRoutePart:
 
     def setPolyline(self,polyline):
         self.polyline = polyline
+        # QgsGeometry.fromPolyline() returns None if plyline has only one point
         self.polylineGeo = QgsGeometry.fromPolyline( self.polyline ) 
-        self.length = self.polylineGeo.length()
+        if self.polylineGeo is not None:    
+            self.length = self.polylineGeo.length()
+        else:
+            self.length = 0
 
     def calibrate(self):
         #debug ( 'calibrate part routeId = %s' % self.routeId )
