@@ -214,8 +214,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         QgsProject.instance().readProject.connect( self.projectRead )
 
-        self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect(self.mapRendererCrsChanged)
-        self.iface.mapCanvas().mapRenderer().destinationSrsChanged.connect(self.mapRendererCrsChanged)
+        #self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect(self.mapRendererCrsChanged)
+        connectHasCrsTransformEnabledChanged( self.iface, self.mapRendererCrsChanged )
+        #self.iface.mapCanvas().mapRenderer().destinationSrsChanged.connect(self.mapRendererCrsChanged)
+        connectDestinationSrsChanged( self.iface, self.mapRendererCrsChanged )
         self.updateLabelsUnits()
 
 
@@ -283,8 +285,10 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.deleteLrs()
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect( self.projectRead )
-        self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect(self.mapRendererCrsChanged)
-        self.iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect(self.mapRendererCrsChanged)
+        #self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect(self.mapRendererCrsChanged)
+        disconnectHasCrsTransformEnabledChanged( self.iface, self.mapRendererCrsChanged)
+        #self.iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect(self.mapRendererCrsChanged)
+        disconnectDestinationSrsChanged( self.iface, self.mapRendererCrsChanged )
 
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
@@ -445,9 +449,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             crs = lineLayer.crs()
 
         #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
-        if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
+        #if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
+        if getHasCrsTransformEnabled( self.iface ):
             #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
-            crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            #crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            crs = getDestinationCrs ( self.iface )
         return crs
 
     # set threshold units according to current crs

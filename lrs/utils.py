@@ -229,3 +229,40 @@ def crsString ( crs ):
     if not string.lower().startswith('epsg'):
         string = 'internal:%s' % crs.srsid()
     return string
+
+# Version independent helpers to avoid DeprecationWarning
+def getHasCrsTransformEnabled( iface ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().mapSettings().hasCrsTransformEnabled()
+    else:
+        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled()
+
+def getDestinationCrs( iface ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().mapSettings().destinationCrs()
+    else:
+        iface.mapCanvas().mapRenderer().destinationCrs()
+
+def connectHasCrsTransformEnabledChanged( iface, slot ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().hasCrsTransformEnabledChanged.connect( slot )
+    else:
+        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect( slot )
+
+def disconnectHasCrsTransformEnabledChanged( iface, slot ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect( slot )
+    else:
+        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect( slot )
+
+def connectDestinationSrsChanged( iface, slot ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().destinationCrsChanged.connect( slot )
+    else:
+        iface.mapCanvas().mapRenderer().destinationSrsChanged.connect( slot )
+
+def disconnectDestinationSrsChanged( iface, slot ):
+    if QGis.QGIS_VERSION_INT >= 20300:
+        iface.mapCanvas().destinationCrsChanged.disconnect( slot )
+    else:
+        iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect( slot )
