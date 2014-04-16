@@ -316,6 +316,7 @@ class LrsRoutePart:
 
     # returns [ [ QgsPolyline, measure_from, measure_to ], ... ]
     def eventSegments(self, start, end):
+        #debug ( "eventSegments start = %s end = %s" % (start,end) )
         segments = []
         if start is None or end is None: return segments
         start = float(start)
@@ -330,28 +331,34 @@ class LrsRoutePart:
 
             if end < record.milestoneFrom: break
 
+            #debug ( "record.milestoneFrom = %s record.milestoneTo = %s" % ( record.milestoneFrom, record.milestoneTo ) )
             if seg.milestoneFrom is None:
                 if start <= record.milestoneFrom:
+                    #debug ( "start before or at record.milestoneFrom" )
                     seg.milestoneFrom = record.milestoneFrom
                     seg.partFrom = record.partFrom
                 elif record.measureWithin( start ):
                     seg.milestoneFrom = start
                     seg.partFrom = record.partMeasure( start )
 
-            if seg.milestoneFrom:
+            if seg.milestoneFrom is not None:
                 if end == record.milestoneTo:
+                    #debug ( "end at record.milestoneTo" )
                     seg.milestoneTo = record.milestoneTo
                     seg.partTo = record.partTo
                 elif record.measureWithin( end ):
+                    #debug ( "end within record" )
                     seg.milestoneTo = end
                     seg.partTo = record.partMeasure( end )
                 elif nextRecord and record.continues( nextRecord ):
+                    #debug ( "next record continues" )
                     pass
                 else:
+                    #debug ( "seg.milestoneTo set tot record.milestoneTo" )
                     seg.milestoneTo = record.milestoneTo
                     seg.partTo = record.partTo
                     
-            if seg.milestoneTo:
+            if seg.milestoneTo is not None:
                 polyline = polylineSegment( self.polyline, seg.partFrom, seg.partTo )
                 segments.append( [ polyline, seg.milestoneFrom, seg.milestoneTo ] )
                 
