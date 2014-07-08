@@ -64,8 +64,6 @@ class LrsError(QObject):
     PARALLEL = 12 # parallel line
     FORK_LINE = 13 # parts connected in fork
 
-    typeLabels = None
-
     def __init__(self, type, geo, **kwargs ):
         super(LrsError, self).__init__()
         self.type = type
@@ -84,24 +82,22 @@ class LrsError(QObject):
         self.checksum_ = None
         #self.fullChecksum_ = None
 
-        # initialized here to allow stranslation
-        if self.typeLabels is None:
-            debug( 'init error labels')
-            self.typeLabels = {
-                self.DUPLICATE_LINE: self.tr('Duplicate line'),
-                self.DUPLICATE_POINT: self.tr('Duplicate point'),
-                self.FORK: self.tr('Fork'),
-                self.ORPHAN: self.tr('Orphan point'),
-                self.OUTSIDE_THRESHOLD: self.tr('Out of threshold'),
-                self.NOT_ENOUGH_MILESTONES: self.tr('Not enough points'),
-                self.NO_ROUTE_ID: self.tr('Missing route id'),
-                self.NO_MEASURE: self.tr('Missing measure'),
-                self.DIRECTION_GUESS: self.tr('Cannot guess direction'),
-                self.WRONG_MEASURE: self.tr('Wrong measure'),
-                self.DUPLICATE_REFERENCING: self.tr('Duplicate referencing'),
-                self.PARALLEL: self.tr('Parallel line'),
-                self.FORK_LINE: self.tr('Fork line'),
-            }
+        # initialized here to allow stranslation, how to translate static variables?
+        self.typeLabels = {
+            self.DUPLICATE_LINE: self.tr('Duplicate line'),
+            self.DUPLICATE_POINT: self.tr('Duplicate point'),
+            self.FORK: self.tr('Fork'),
+            self.ORPHAN: self.tr('Orphan point'),
+            self.OUTSIDE_THRESHOLD: self.tr('Out of threshold'),
+            self.NOT_ENOUGH_MILESTONES: self.tr('Not enough points'),
+            self.NO_ROUTE_ID: self.tr('Missing route id'),
+            self.NO_MEASURE: self.tr('Missing measure'),
+            self.DIRECTION_GUESS: self.tr('Cannot guess direction'),
+            self.WRONG_MEASURE: self.tr('Wrong measure'),
+            self.DUPLICATE_REFERENCING: self.tr('Duplicate referencing'),
+            self.PARALLEL: self.tr('Parallel line'),
+            self.FORK_LINE: self.tr('Fork line'),
+        }
 
 
     def typeLabel(self):
