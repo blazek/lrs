@@ -86,13 +86,13 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
         self.genMeasureUnitCM = LrsUnitComboManager( self.genMeasureUnitCombo, settingsName = 'measureUnit', defaultValue = LrsUnits.KILOMETER )
 
-        self.genSelectionModeCM = LrsComboManager( self.genSelectionModeCombo, options = (('all', 'All routes'),('include', 'Include routes'),('exclude','Exclude routes')), defaultValue = 'all', settingsName = 'selectionMode' )
+        self.genSelectionModeCM = LrsComboManager( self.genSelectionModeCombo, options = (('all', self.tr('All routes')),('include', self.tr('Include routes')),('exclude',self.tr('Exclude routes'))), defaultValue = 'all', settingsName = 'selectionMode' )
         self.genSelectionWM = LrsWidgetManager( self.genSelectionLineEdit, settingsName = 'selection' )
 
 
         self.genThresholdWM = LrsWidgetManager( self.genThresholdSpin, settingsName = 'threshold', defaultValue = 100.0 )
         self.genSnapWM = LrsWidgetManager( self.genSnapSpin, settingsName = 'snap', defaultValue = 0.0 )
-        self.genParallelModeCM = LrsComboManager( self.genParallelModeCombo, options = (('error', 'Mark as errors'), ('span', 'Span by straight line'),('exclude','Exclude')), defaultValue = 'error', settingsName = 'parallelMode' )
+        self.genParallelModeCM = LrsComboManager( self.genParallelModeCombo, options = (('error', self.tr('Mark as errors')), ('span', self.tr('Span by straight line')),('exclude',self.tr('Exclude'))), defaultValue = 'error', settingsName = 'parallelMode' )
         self.genExtrapolateWM = LrsWidgetManager( self.genExtrapolateCheckBox, settingsName = 'extrapolate', defaultValue = False )
 
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)

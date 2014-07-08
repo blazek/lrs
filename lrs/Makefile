@@ -23,9 +23,10 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = __init__.py lrsplugin.py ui_lrsdockwidget.py lrsdockwidget.py 
+SOURCES = combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py plugin_upload.py point.py route.py selectiondialog.py ui_lrsdockwidget.py ui_selectiondialog.py utils.py widget.py
+
 #TRANSLATIONS = i18n/lrsplugin_en.ts
-TRANSLATIONS = 
+TRANSLATIONS = i18n/lrsplugin_pt.ts
 
 # global
 

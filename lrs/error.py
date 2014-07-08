@@ -47,7 +47,7 @@ class LrsOrigin(object):
         return m.digest()
 
 # Class representing error in LRS 
-class LrsError(object):
+class LrsError(QObject):
 
     # Error type enums
     DUPLICATE_LINE = 1
@@ -64,23 +64,10 @@ class LrsError(object):
     PARALLEL = 12 # parallel line
     FORK_LINE = 13 # parts connected in fork
 
-    typeLabels = {
-        DUPLICATE_LINE: 'Duplicate line',
-        DUPLICATE_POINT: 'Duplicate point',
-        FORK: 'Fork',
-        ORPHAN: 'Orphan point',
-        OUTSIDE_THRESHOLD: 'Out of threshold',
-        NOT_ENOUGH_MILESTONES: 'Not enough points',
-        NO_ROUTE_ID: 'Missing route id',
-        NO_MEASURE: 'Missing measure',
-        DIRECTION_GUESS: 'Cannot guess direction',
-        WRONG_MEASURE: 'Wrong measure',
-        DUPLICATE_REFERENCING: 'Duplicate referencing',
-        PARALLEL: 'Parallel line',
-        FORK_LINE: 'Fork line',
-    }
+    typeLabels = None
 
     def __init__(self, type, geo, **kwargs ):
+        super(LrsError, self).__init__()
         self.type = type
         self.geo = QgsGeometry(geo) # store copy of QgsGeometry
         self.message = kwargs.get('message', '')
@@ -96,6 +83,26 @@ class LrsError(object):
         self.originChecksum_ = None
         self.checksum_ = None
         #self.fullChecksum_ = None
+
+        # initialized here to allow stranslation
+        if self.typeLabels is None:
+            debug( 'init error labels')
+            self.typeLabels = {
+                self.DUPLICATE_LINE: self.tr('Duplicate line'),
+                self.DUPLICATE_POINT: self.tr('Duplicate point'),
+                self.FORK: self.tr('Fork'),
+                self.ORPHAN: self.tr('Orphan point'),
+                self.OUTSIDE_THRESHOLD: self.tr('Out of threshold'),
+                self.NOT_ENOUGH_MILESTONES: self.tr('Not enough points'),
+                self.NO_ROUTE_ID: self.tr('Missing route id'),
+                self.NO_MEASURE: self.tr('Missing measure'),
+                self.DIRECTION_GUESS: self.tr('Cannot guess direction'),
+                self.WRONG_MEASURE: self.tr('Wrong measure'),
+                self.DUPLICATE_REFERENCING: self.tr('Duplicate referencing'),
+                self.PARALLEL: self.tr('Parallel line'),
+                self.FORK_LINE: self.tr('Fork line'),
+            }
+
 
     def typeLabel(self):
         if not self.typeLabels.has_key( self.type ):
