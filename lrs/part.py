@@ -439,7 +439,7 @@ class LrsRoutePart:
         #debug('coors: %s' % coors )
 
         # sort by measure
-        coors.sort(key = lambda x: x[0])
+        coors.sort(key = lambda x: x[2])
 
         # remove coordinates too close each other
         for i in range(len(coors)-1,0,-1):
