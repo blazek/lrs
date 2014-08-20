@@ -4,6 +4,7 @@ Release steps:
 * make resources in lrs/: make
 * verify there are no debug() calls uncommented
 * set new version in lrs/metadata.txt
+* add changelog in lrs/metadata.txt
 * set new version and release in lrs/help/source/conf.py
 * generate documentation in lrs/: make doc
 * create package in lrs/: make package VERSION=x.x.x

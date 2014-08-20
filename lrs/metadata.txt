@@ -12,7 +12,7 @@
 name=LRS
 qgisMinimumVersion=2.0
 description=Linear reference system builder and editor 
-version=0.3.2
+version=0.3.3
 author=Radim Blazek
 email=radim.blazek@gmail.com
 
@@ -21,7 +21,14 @@ email=radim.blazek@gmail.com
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-# changelog=
+changelog=0.3.3
+    - Fixed export to PostGIS (wrong line coordinates order)
+    - Added event tolerance (0.01m)
+  0.3.2
+    - Fixed issues #2 (error on degenerated lines) 
+    - Fixed issue #3 (generate segments starting on 0)
+  0.3.1
+    - Fixed issue #1 (string type route id selection)
 
 # tags are comma separated with spaces allowed
 tags=vector,network,lrs,lineare reference system,linear referencing,dynamic segmentation

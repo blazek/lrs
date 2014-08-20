@@ -602,22 +602,24 @@ class Lrs(QObject):
 
         return error
 
+    # tolerance - maximum accepted measure from start to nearest existing lrs if exact start measure was not found
     # returns ( QgsPoint, error )
-    def eventPoint(self, routeId, start):
+    def eventPoint(self, routeId, start, tolerance=0):
         error = self.eventValuesError( routeId, start)
         if error: return None, error
 
         route = self.getRoute( routeId )
-        geo, error = route.eventPoint( start )
+        geo, error = route.eventPoint( start, tolerance  )
         return geo, error
         
+    # tolerance - minimum missing gap which will be reported as error
     # returns ( QgsMultiPolyline, error )
-    def eventMultiPolyLine(self, routeId, start, end):
+    def eventMultiPolyLine(self, routeId, start, end, tolerance=0):
         error = self.eventValuesError( routeId, start, end, True)
         if error: return None, error
 
         route = self.getRoute( routeId )
-        geo, error = route.eventMultiPolyLine( start, end)
+        geo, error = route.eventMultiPolyLine( start, end, tolerance)
         return geo, error
 
 ############################# MEASURE ####################################

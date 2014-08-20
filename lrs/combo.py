@@ -97,12 +97,14 @@ class LrsComboManager(QObject):
         else:
             self.combo.setCurrentIndex(-1)
 
-    def findItemByData(self, data, flags = Qt.MatchFixedString ):
-        start = self.model.index(0,0, QModelIndex())
-        indexes = self.model.match( start, Qt.UserRole, data, flags )
-        if len(indexes) == 0: return None
-        index = indexes[0]
-        return self.model.item( index.row(), index.column())
+    def findItemByData(self, data ):
+        # QStandardItemModel.match() is not suitable, with Qt.MatchExactly it seems to comare objects
+        # (must be treference to the same object?) and with Qt.MatchFixedString it works like with Qt.MatchContains
+        # so we do our loop
+        for i in range( self.model.rowCount()-1, -1, -1):
+            itemData = self.model.item(i).data( Qt.UserRole )
+            if itemData == data: return self.model.item(i)
+        return None
 
 class LrsLayerComboManager(LrsComboManager):
     layerChanged = pyqtSignal()
@@ -218,7 +220,7 @@ class LrsFieldComboManager(LrsComboManager):
         if not layer:
             self.combo.clear()
             return            
-
+            
         # Add none item
         if self.allowNone:
             item = self.findItemByData(None)
@@ -241,7 +243,7 @@ class LrsFieldComboManager(LrsComboManager):
         
         # add new fields
         for idx, field in enumerate(layer.pendingFields()):
-            #debug ("%s %s" % ( field.type(), self.types) )
+            #debug ("%s %s %s" % ( field.name(), field.type(), self.types) )
             if self.types and not field.type() in self.types: continue
             fieldName = field.name()
             fieldLabel = layer.attributeDisplayName(idx)

@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys, operator
+import sys, operator, math
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -634,14 +634,33 @@ class LrsRoute:
         return length
 
     # returns ( QgsPoint, error )
-    def eventPoint(self, start):
+    def eventPoint(self, start, tolerance=0):
         for part in self.parts:
             point = part.eventPoint( start )
             if point: return point, None
+
+        # second try with tolerance
+        if tolerance > 0:
+            nearestPoint = None
+            nearestMeasure = sys.float_info.max
+            for part in self.parts:
+                for record in part.records:
+                    m = abs(record.milestoneFrom-start)
+                    if m <= tolerance and m < nearestMeasure:
+                        nearestPoint = part.eventPoint( record.milestoneFrom )
+                        nearestMeasure = m
+
+                    m = abs(record.milestoneTo-start)
+                    if m <= tolerance and m < nearestMeasure:
+                        nearestPoint = part.eventPoint( record.milestoneTo )
+                        nearestMeasure = m
+ 
+            if nearestPoint: return nearestPoint, None
+
         return None, 'measure not available'
 
     # returns ( QgsMultiPolyline, error )
-    def eventMultiPolyLine(self, start, end):
+    def eventMultiPolyLine(self, start, end, tolerance=0):
         multipolyline = []
         measures = []
         for part in self.parts:
@@ -649,7 +668,6 @@ class LrsRoute:
             for polyline, measure_from, measure_to in segments:
                 multipolyline.append( polyline )
                 measures.append( [measure_from, measure_to ])
-
         
         error = None
         if len(multipolyline) == 0:
@@ -671,9 +689,13 @@ class LrsRoute:
                 measures.append([end,end]) 
 
             gaps = []
+
             for i in range(len(measures)-1):
-                measureFrom = formatMeasure( measures[i][1], self.measureUnit)
-                measureTo = formatMeasure( measures[i+1][0], self.measureUnit)
+                measureFrom = measures[i][1]
+                measureTo = measures[i+1][0]
+                if measureTo - measureFrom < tolerance: continue
+
+                # measures are not formated (rounded) to show to user real data and dont hidden the true error by rounding
                 gaps.append( '%s-%s' % ( measureFrom, measureTo ) )
 
             if gaps:

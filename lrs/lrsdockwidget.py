@@ -808,11 +808,35 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         uri = geometryType
         uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapRenderer().destinationCrs() )
         provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-        provider.addAttributes( layer.pendingFields().toList() )
+        # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
+        # and negative length and precision we overwrite type names according to types and reset length and precision
+        fieldsList = layer.pendingFields().toList()
+        for field in fieldsList:
+            if field.type() == QVariant.String:
+                field.setTypeName('string')
+            elif field.type() == QVariant.Int:
+                field.setTypeName('int')
+            elif field.type() == QVariant.Double:
+                field.setTypeName('double')
+
+            if field.length() < 0:
+                field.setLength(0)
+
+            if field.precision() < 0:
+                field.setPrecision(0)
+            
+        provider.addAttributes( fieldsList )
         if errorFieldName:
             provider.addAttributes( [ QgsField( errorFieldName, QVariant.String, "string"), ]) 
         uri = provider.dataSourceUri()
+        #debug ( 'uri: %s' % uri )
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
+
+        # It may happen that event goes slightely outside available lrs because of 
+        # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that 
+        # tolerance and skip smaller linear event errors (gaps)
+        # 0.1m is too much and less than 0.01 m does not make sense in standard GIS
+        eventTolerance = convertDistanceUnits( 0.01,  LrsUnits.METER, self.lrs.measureUnit ) 
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
@@ -830,11 +854,11 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             
             geo = None
             if endFieldName:
-                line, error = self.lrs.eventMultiPolyLine ( routeId, start, end )
+                line, error = self.lrs.eventMultiPolyLine ( routeId, start, end, eventTolerance )
                 if line:
                     geo = QgsGeometry.fromMultiPolyline( line )
             else:
-                point, error = self.lrs.eventPoint ( routeId, start )
+                point, error = self.lrs.eventPoint ( routeId, start, eventTolerance )
                 if point:
                     geo = QgsGeometry.fromPoint( point )
             
