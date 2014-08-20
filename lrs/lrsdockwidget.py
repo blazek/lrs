@@ -1220,7 +1220,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 else:
                     routeVal = "'%s'" % part.routeId
 
-                sql = "insert into %s.%s ( %s, m_from, m_to, geom) values ( %s, %s, %s, GeometryFromText('%s', %s))" % ( outputSchema, outputTable, routeFieldName, routeVal, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
+                sql = "insert into %s.%s ( %s, m_from, m_to, geom) values ( %s, %s, %s, ST_GeometryFromText('%s', %s))" % ( outputSchema, outputTable, routeFieldName, routeVal, part.milestoneMeasureFrom(), part.milestoneMeasureTo(), wkt, srid )
                 self.postgisExecute ( conn, sql )
 
             conn.commit()
