@@ -157,6 +157,8 @@ def measureAlongPolyline( polyline, segment, pnt):
 def pointOnLine( point1, point2, distance ):
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
+    # this gives exception if point1 and point2 have the same coordinate, but duplicate coordinates 
+    # clean up was added in LrsRoute.buildParts so that it should no more happen
     k = distance / math.sqrt(dx*dx+dy*dy)
     x = point1.x() + k * dx
     y = point1.y() + k * dy

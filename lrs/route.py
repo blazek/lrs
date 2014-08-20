@@ -224,12 +224,23 @@ class LrsRoute:
                 polys = line.geo.asMultiPolyline()
 
             for i in range(len(polys)):
-                if polys[i] is None or len( polys[i] ) < 2:
+                poly = polys[i]
+        
+                if poly is None:
+                    # TODO(?): report degenerated lines as errors
+                    continue
+
+                # clean duplicate coordinates
+                for j in range(len(poly)-1,0,-1):
+                    if poly[j].x() == poly[j-1].x() and poly[j].y() == poly[j-1].y():
+                        del poly[j]
+                    
+                if len( poly ) < 2:
                     # TODO(?): report degenerated lines as errors
                     continue
 
                 polylines.append( { 
-                    'polyline': polys[i],
+                    'polyline': poly,
                     'fid': line.fid,
                     'geoPart': i,
                     'nGeoParts': len(polys),
