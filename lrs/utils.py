@@ -268,3 +268,22 @@ def disconnectDestinationSrsChanged( iface, slot ):
         iface.mapCanvas().destinationCrsChanged.disconnect( slot )
     else:
         iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect( slot )
+
+# Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
+# and negative length and precision we overwrite type names according to types and reset length and precision
+def fixFields( fieldsList ):
+    for field in fieldsList:
+        if field.type() == QVariant.String:
+            field.setTypeName('string')
+        elif field.type() == QVariant.Int:
+            field.setTypeName('int')
+        elif field.type() == QVariant.Double:
+            field.setTypeName('double')
+
+        if field.length() < 0:
+            field.setLength(0)
+
+        if field.precision() < 0:
+            field.setPrecision(0)
+
+    
