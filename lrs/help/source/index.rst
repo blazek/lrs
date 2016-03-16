@@ -212,7 +212,6 @@ The calibrated LRS may be exported to PostGIS database using *LINESTRINGM* (not 
    :align: center
 
 Export tab options:
-~/devel/lrs/lrs/help/source/index.rst
 
 * **PostGIS connection:** Standard QGIS PostGIS database connection which may be created in *Add PostGIS layers* dialog.
 * **Output schema:** Output schema selection filled with schemas for selected connection.
