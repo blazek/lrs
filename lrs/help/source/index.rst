@@ -18,7 +18,7 @@ Introduction
 .. image:: images/logo_mpa_pat_gsc.png
    :align: right
    
-The plugin was developped by `MPA Solutions <http://www.mpasolutions.it/>`_ in collaboration with `Provincia Autonoma di Trento <http://www.provincia.tn.it/>`_ - Dipartimento infrastrutture e mobilità - Servizio Gestione Strade - Ufficio Controllo e Tecnologie Stradali.
+The plugin was developed by `MPA Solutions <http://www.mpasolutions.it/>`_ in collaboration with `Provincia Autonoma di Trento <http://www.provincia.tn.it/>`_ - Dipartimento infrastrutture e mobilità - Servizio Gestione Strade - Ufficio Controllo e Tecnologie Stradali.
 
 Motivation
 ..........
