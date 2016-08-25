@@ -715,7 +715,7 @@ class Lrs(QObject):
                       }
                     </style>
                   </head><body>'''
-        html += '<table>'
+        html += '<table border="1">'
 
         for s in self.statsNames: 
             html += self.getStatsHtmlRow( s[0], s[1] )

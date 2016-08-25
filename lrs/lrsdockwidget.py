@@ -1232,6 +1232,6 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 html = 'Statistics are not available if an input layer has been edited after calibration. Run calibration again to get fresh statistics.'
             else:
                 html = self.lrs.getStatsHtml()
-        self.statsWebView.setHtml( html )
+        self.statsTextEdit.setHtml( html )
         
 
