@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>LRS Plugin for QGIS &mdash; LRS Plugin 0.3.7 documentation</title>
+    
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="shortcut icon" href="static/icon.ico"/>
+    <link rel="top" title="LRS Plugin 0.3.7 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="#">LRS Plugin 0.3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="lrs-plugin-for-qgis">
+<h1>LRS Plugin for QGIS<a class="headerlink" href="#lrs-plugin-for-qgis" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<img alt="images/icon.png" class="align-left" src="images/icon.png" />
+<p>&#8220;Linear referencing (also called linear reference system or linear referencing system or LRS), is a method of spatial referencing, in which the locations of features are described in terms of measurements along a linear element, from a defined starting point, for example a milestone along a road.&#8221; (<a class="reference external" href="http://en.wikipedia.org/wiki/Linear_Reference_System">Linear referencing</a>, Wikipedia, 2013).</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<img alt="images/logo_mpa_pat_gsc.png" class="align-right" src="images/logo_mpa_pat_gsc.png" />
+<p>The plugin was developed by <a class="reference external" href="http://www.mpasolutions.it/">MPA Solutions</a> in collaboration with <a class="reference external" href="http://www.provincia.tn.it/">Provincia Autonoma di Trento</a> - Dipartimento infrastrutture e mobilità - Servizio Gestione Strade - Ufficio Controllo e Tecnologie Stradali.</p>
+<div class="section" id="motivation">
+<h3>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h3>
+<img alt="images/milestone.jpeg" class="align-right" src="images/milestone.jpeg" />
+<p>The biggest problem of LRS is consistency and quality of data. This is caused by the fact that line and point data are maintained separately, sometimes even by different entities. Identification and correction of errors in LRS is tedious and inefficient without specialized tools. The true value of this plugin is in its support for errors identification, navigation and correction.</p>
+</div>
+<div class="section" id="features">
+<h3>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Standard LRS tasks: calibration (creation of LRS), creation of punctual and linear events and calculation of measures for points.</li>
+<li>Support for all vector formats supported by QGIS.</li>
+<li>Supported are lines, multi-lines, points, multi-points. The lines don&#8217;t need to be oriented. Single route may be represented by multiple features.</li>
+<li><strong>Dynamic</strong> list and layer of errors and layer of quality which are <strong>updated immediately</strong> when source layer features is edited.</li>
+<li>The generated LRS is stored in memory only.</li>
+<li>Interpolation between points by default, optional extrapolation.</li>
+</ul>
+<iframe width="560" height="315" src="http://www.youtube.com/embed/3BmUIAQRc0g" frameborder="0" allowfullscreen></iframe></div>
+<div class="section" id="terminology">
+<h3>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><strong>route</strong> is linear feature represented by one or more line features with the same identifier, e.g. road with the same road number or river with the same name.</li>
+<li><strong>route id</strong> is unique route identifier</li>
+<li><strong>measure</strong> is real world measure along linear feature, e.g. kilometers measured along road from its beginning which may be represented in real world by milestones.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="calibration">
+<h2>Calibration<a class="headerlink" href="#calibration" title="Permalink to this headline">¶</a></h2>
+<p>The calibration is a process in which:</p>
+<ul class="simple">
+<li>route elements are joined into route parts</li>
+<li>points are attached to routes by route id</li>
+<li>routes orientation is guessed from point measures</li>
+<li>table of calibration records is created for each route parts</li>
+<li>it is generated the list of errors</li>
+</ul>
+<p>The calibration is launched from the first tab <em>Calibrate</em>:</p>
+<img alt="images/calibration.png" class="align-center" src="images/calibration.png" />
+<p>Options:</p>
+<ul class="simple">
+<li><strong>Lines layer:</strong> Layer with lines representing routes. It may contain lines and multi-lines. A single route may be represented by multiple features. Lines do not have to be oriented.</li>
+<li><strong>Lines route field:</strong> Route id field in lines layer. All field types are supported (including floats) but reasonable types, i.e. string or integer are recommended.</li>
+<li><strong>Points layer:</strong> Layer with points. It may contain points and multi-points (multi-points make no sense in LRS however).</li>
+<li><strong>Points route field:</strong> Route id field in points layer. The field type may be string or integer.</li>
+<li><strong>Measure field:</strong> Measure field in points layer. All field types are supported (including floats) but reasonable types, i.e. string or integer are recommended. The type of field does not need to match route id field type in line layer, see general notes.</li>
+<li><strong>Measure unit:</strong> Measure field values units.</li>
+<li><strong>All/include/exclude routes:</strong> Calibration may be done on all routes, selected routes or some routes may be excluded. Included/excluded routes can be either entered in following field as comma separated list or selected from list in dialog opened by <em>Select</em> button. The list in the dialog is filled by route id values from lines layer.</li>
+<li><strong>Max lines snap:</strong> Maximum gap between route lines to be snapped.</li>
+<li><strong>Max point distance:</strong> Maximum distance of point from route to be used.</li>
+<li><strong>Parallels:</strong> Because <a class="reference external" href="http://en.wikipedia.org/wiki/Multiple_edges">paralles</a> (multiple edges, parallel edges), typicaly <a class="reference external" href="http://en.wikipedia.org/wiki/Roundabout">roundabouts</a> would become ambiguous in LRS they must be treated in special way. There are three options:<ul>
+<li><strong>Mark as errors:</strong> Parallels will be added to the list of errors and excluded from calibration.</li>
+<li><strong>Span by straight line:</strong> Parallel lines will be replaced by straight line going from parallels start coordinate to end coordinate.</li>
+<li><strong>Exclude:</strong> Paralles will be excluded from callibration without being marked as errors.</li>
+</ul>
+</li>
+<li><strong>Extrapolate:</strong> If checked, measures are extrapolated before first and after last point on route part. Otherwise segments before/after first/last point are not calibrated.</li>
+</ul>
+<p>When all oprions are set correctly, calibration may be launched by <em>OK</em> button. The process may take a while, progress bar with status label is indicating current state. When calibration is finished all tabs are enabled and LRS may be used or edited.</p>
+<p>Measures are always interpolated between two poins. This may be made optional in future but currently we don&#8217;t see any usecase where non inperpolating could give better results. If you know any, please create a <a class="reference external" href="https://github.com/blazek/lrs/issues/new">new issue</a>.</p>
+<p>The generated LRS is not stored in a new output layer but it is kept in memory and it can be used immediately to generate events or acquire measures. This may change in future but currently QGIS vector core API does not support measure value in vector geometry. We hope that rebuilding the LRS when needed should not be disturbing because all options are stored in project for the case when a task has to be repeated and calibration is <em>relatively</em> fast.</p>
+<p>The LRS plugin in QGIS works similarly as ArcGIS CalibrateRoutes_lr() with parameters calibrate_method=DISTANCE, search_radius=&lt;<strong>Max distance</strong>&gt; and interpolate_between=BETWEEN. If <strong>Extrapolate</strong> is checked it means plus parameters extrapolate_before=BEFORE and extrapolate_after=AFTER.</p>
+</div>
+<div class="section" id="data-errors">
+<h2>Data errors<a class="headerlink" href="#data-errors" title="Permalink to this headline">¶</a></h2>
+<p>When calibration phase is finished it is possible to browse data inconsistencies in <em>Errors</em> tab.</p>
+<img alt="images/errors.png" class="align-center" src="images/errors.png" />
+<p>Tha tab contains list of all errors which can be filtered over all columns by entering a string in <strong>Filter</strong> entry. The plugin is able to identify following data errors:</p>
+<ul class="simple">
+<li><strong>Duplicate line:</strong> Two or more lines with the same route id and geometry.</li>
+<li><strong>Duplicate point:</strong> Two or more points with the same route id and geometry.</li>
+<li><strong>Fork:</strong> Three or more lines with the same route id connected in one node.</li>
+<li><strong>Fork line:</strong> Shortest route part(s) connected to fork.</li>
+<li><strong>Orphan point:</strong> No line with the same route id.</li>
+<li><strong>Out of threshold:</strong> The point is distant more than <em>Max point distance</em> from nearest line of the same route id.</li>
+<li><strong>Not enough points:</strong> A part of a route has not enough points (two points is minimum) to be calibrated.</li>
+<li><strong>Missing route id:</strong> Point or line has no route id attribute (NULL).</li>
+<li><strong>Missing measure:</strong> Point does not have measure attribute (NULL).</li>
+<li><strong>Cannot guess direction:</strong> Measures of points along a route part are not in ascendant order and number of segments in both directions is equal.</li>
+<li><strong>Wrong measure:</strong> A point measure is not in order with respect to other correct points and guessed route direction.</li>
+<li><strong>Duplicate referencing:</strong> Multiple route parts with the same measures.</li>
+<li><strong>Parallel line:</strong> Parallel lines (multiple edges), see <em>Parallels</em> option.</li>
+</ul>
+<p>When an error is selected in the list, it is highlighted in map and it is possible to <strong>Zoom</strong> to the feature by the button under the list.</p>
+<p>It is also possible to add a new memory error (points and lines) layers by <strong>Error layers</strong> button.</p>
+<p>It is also possible to add a new layer quality layer by <strong>Quality layer</strong> button. The quality layer by default symbolizes features based on relative error, which is calculated as difference between a distance calculated from measures defined as point attributes and a length of the line between those points measured along the line (calculated from line geometry). The quality layer attributes are:</p>
+<ul class="simple">
+<li><strong>route:</strong> Route id.</li>
+<li><strong>m_from:</strong> Measure of point at the beginning of a segment.</li>
+<li><strong>m_to:</strong> Measure of point at the end of a segment.</li>
+<li><strong>m_len:</strong> Length calculated from point measures as <strong>(m_to-m_from) *map_units_per_measure_unit</strong>.</li>
+<li><strong>len:</strong> Distance along line between two points in measure units.</li>
+<li><strong>err_abs:</strong> Absolute difference between m_len and len: <strong>m_len-len</strong>.</li>
+<li><strong>err_rel:</strong> Relative error calculated as: <strong>err_abs/len</strong>.</li>
+<li><strong>err_perc:</strong> Absolute value of relative error in percents: <strong>abs(err_rel)*100</strong>.</li>
+</ul>
+<p>The properties of the errors and quality layers are stored in project like for any other layer and the plugin remember those layers so it is possible to change symbology and store it in project for the next time.</p>
+<p>The <strong>power of the plugin</strong> is in <strong>dynamic update</strong> of the LRS, errors list, error layers and quality layer when source lines or points layers are edited. User can start editing of points or lines, zoom to an error, fix the error in data and error/quality layers are immediately (and quickly because only single route is recalibrated) updated so that the user see promptly if the fix was successful.</p>
+</div>
+<div class="section" id="locate">
+<h2>Locate<a class="headerlink" href="#locate" title="Permalink to this headline">¶</a></h2>
+<p>Single event may be interactively localized from <em>Localize</em> tab.</p>
+<img alt="images/locate.png" class="align-center" src="images/locate.png" />
+<p>Localize tab options:</p>
+<ul class="simple">
+<li><strong>Route:</strong> Route id.</li>
+<li><strong>Available measures:</strong> Comma separated list of measure ranges available for selected route.</li>
+<li><strong>Measure:</strong> Event measure.</li>
+<li><strong>Coordinates:</strong> Event coordinates in current map canvas CRS or error message if the event cannot be referenced.</li>
+<li><strong>Highlight:</strong> Highlight the event in map canvas.</li>
+<li><strong>Zoom buffer:</strong> Buffer (minimum radius) aroud the event in map units used for zoom.</li>
+</ul>
+<p>It is possible either to <strong>Center</strong> the map canvas to current event or to <strong>Zoom</strong> to the event using specified buffer.</p>
+</div>
+<div class="section" id="create-events">
+<h2>Create events<a class="headerlink" href="#create-events" title="Permalink to this headline">¶</a></h2>
+<p>Punctual or linear events can be generated from <em>Events</em> tab.</p>
+<img alt="images/events.png" class="align-center" src="images/events.png" />
+<p>Events tab options:</p>
+<ul class="simple">
+<li><strong>Events layer:</strong> Layer with informations about events. i.e. route id and measure(s). The layer is usually a table without geometry.</li>
+<li><strong>Route field:</strong> Field with route id.</li>
+<li><strong>Start measure field:</strong> Measure of a point event or start measure of a linear event.</li>
+<li><strong>End measure field:</strong> End measure of a linear event. To be left empty for point events.</li>
+<li><strong>Output layer name:</strong> Name of output layer used in legend.</li>
+<li><strong>Output error field:</strong> Optional name of error field. This field contains description reasonsons why an event could not be (fully) created. If this option is left blank, the field is not created.</li>
+</ul>
+<p>The output layer type is point if <em>End measure field</em> is left blank or line if <em>End measure field</em> is selected. The output layer contains all attributes from input layer plus, if specified, error field.</p>
+<p>The output is created as memory layer which can be later stored in a persistent data source using standard QGIS options like <em>&#8220;Save as&#8221;</em> or DB Manager <em>&#8220;Import layer&#8221;</em>.</p>
+<p>It may happen that event measures are slightely outside available LRS (at the beginning or end of a route) because of decimal number inaccuracy of input data. To avoid unwanted errors, a measure tolerance is applied:</p>
+<ul class="simple">
+<li><strong>punctual events :</strong> If an exact event measure was not found the plugin will search for nearest available event within the measure tolerance.</li>
+<li><strong>linear events :</strong> Missing event parts (gaps) are reported as errors only if they are longer than the event tolerance.</li>
+</ul>
+<p>The event tolerance is currently set to 0.01m.</p>
+</div>
+<div class="section" id="calculate-measures">
+<h2>Calculate measures<a class="headerlink" href="#calculate-measures" title="Permalink to this headline">¶</a></h2>
+<p>Route id and measures may be acquired for existing points from <em>Measures</em> tab.</p>
+<img alt="images/measure.png" class="align-center" src="images/measure.png" />
+<p>Measures tab options:</p>
+<ul class="simple">
+<li><strong>Layer:</strong> Existing layer of points for which measures have to be found.</li>
+<li><strong>Max point distance:</strong> Maximum distance of point from nearest line.</li>
+<li><strong>Output layer name:</strong> Name of output layer used in legend.</li>
+<li><strong>Output route field:</strong> Name of output field in which route id will be stored.</li>
+<li><strong>Output measure field:</strong> Name of output field in which measure will be store.</li>
+</ul>
+<p>The output layer contains all attributes from input layer plus route id and measure field. To acqure measure, the points  are projected to neares point on nearest route within the threshold. If nearest route within threshold was found but there is no LRS for that part of the route, the measure field is left blank. If no route was found within the threshold both route id and measure fields are left blank.</p>
+<p>The output is created as memory layer which can be later stored in a persistent data source using standard QGIS options like <em>&#8220;Save as&#8221;</em> or DB Manager <em>&#8220;Import layer&#8221;</em>.</p>
+</div>
+<div class="section" id="export">
+<h2>Export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h2>
+<p>The calibrated LRS may be exported to PostGIS database using <em>LINESTRINGM</em> (not the <em>M</em> at the end) geometry type from <em>Export</em> tab.</p>
+<img alt="images/export.png" class="align-center" src="images/export.png" />
+<p>Export tab options:</p>
+<ul class="simple">
+<li><strong>PostGIS connection:</strong> Standard QGIS PostGIS database connection which may be created in <em>Add PostGIS layers</em> dialog.</li>
+<li><strong>Output schema:</strong> Output schema selection filled with schemas for selected connection.</li>
+<li><strong>Output table:</strong> Name of output table. If a table of the same name already exists, user will be asked if the table should be overwritten or export aborted.</li>
+</ul>
+<p>Exported table has four fields:</p>
+<ul class="simple">
+<li><strong>&lt;route id&gt;:</strong> Route id. Name and type are taken from line layer.</li>
+<li><strong>m_from:</strong> Measure of the first coordinate in linestring.</li>
+<li><strong>m_to:</strong> Measure of the last coordinate in linestring.</li>
+<li><strong>geom:</strong> Geometry of type LINESTRINGM.</li>
+</ul>
+<p>Exported table may be used by other applications supporting geometry with measure, by custom applications or even from SQL console, for example, to create event (point) on &#8216;road1&#8217; at km 6.3:</p>
+<div class="highlight-python"><div class="highlight"><pre>select locate_along_measure(geom,6.3) from lrs where route = &#39;road1&#39; and m_from &lt;= 6.3 and 6.3 &lt;= m_to;
+</pre></div>
+</div>
+</div>
+<div class="section" id="statistics">
+<h2>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline">¶</a></h2>
+<p><em>Statistics</em> tab shows brief statistics about lengths of lines.</p>
+<img alt="images/stats.png" class="align-center" src="images/stats.png" />
+<p>Statistics are disabled if an input layer is edited. Calibration has to be run again to get fresh statistics after editing.</p>
+</div>
+<div class="section" id="general-notes">
+<h2>General notes<a class="headerlink" href="#general-notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>CRS.</strong> Calibration of LRS is done in single CRS to which lines and points are reprojected (if layers have different CRS). The CRS is either map canvas CRS if OTF is enabled otherwise line layer CRS. Note that max point distance and lines snap are in units used to build LRS (units are appended to fields labels).</li>
+<li><strong>Route id</strong> All field types are accepted. Line and point layer route id field types do not need to be the same. For example, values 1 (integer), 1.0 (float) and &#8220;1&#8221; (string) are treated as equal. Route id matching (e.g. finding points for line or route for event) is case insensitive in case of strings.</li>
+<li><strong>Options</strong> in all tabs are stored in project. The options of each tab are written to project when <em>OK</em> button is pressed (i.e. options are confirmed). Reset buttons in tabs will reset all options to <strong>default</strong> values.</li>
+<li><strong>Dockable window.</strong> The plugin window is dockable, it means that it can be eithers used as dialog window or it can be docked in QGIS main window.</li>
+</ul>
+</div>
+<div class="section" id="known-issues">
+<h2>Known issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Because of <a class="reference external" href="http://hub.qgis.org/issues/9309">issue 9309</a> saving of event layer with features without geometry (if an event could not be referenced) was giving warning and those features were not saved (features with geometry were saved correctly however) in QGIS 2.0 and early development version 2.1. The issue was fixed in 2.1 which will become official 2.2 release.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">LRS Plugin for QGIS</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#motivation">Motivation</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#calibration">Calibration</a></li>
+<li><a class="reference internal" href="#data-errors">Data errors</a></li>
+<li><a class="reference internal" href="#locate">Locate</a></li>
+<li><a class="reference internal" href="#create-events">Create events</a></li>
+<li><a class="reference internal" href="#calculate-measures">Calculate measures</a></li>
+<li><a class="reference internal" href="#export">Export</a></li>
+<li><a class="reference internal" href="#statistics">Statistics</a></li>
+<li><a class="reference internal" href="#general-notes">General notes</a></li>
+<li><a class="reference internal" href="#known-issues">Known issues</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="#">LRS Plugin 0.3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Radim Blazek.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
