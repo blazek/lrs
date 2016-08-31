@@ -25,6 +25,23 @@ from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
+# QGis was renamed to Qgis: https://github.com/qgis/QGIS/commit/1a2231f10c
+try:
+    from qgis.core import Qgis
+except Exception, e:
+    from qgis.core import QGis as Qgis
+    
+# QGis::GeometryType was replaced by QgsWkbTypes::GeometryType https://github.com/qgis/QGIS/commit/bb79d1
+try:
+    from qgis.core import QgsWkbTypes
+except Exception, e:
+    class QgsWkbTypes():
+      PointGeometry = Qgis.Point
+      LineGeometry = Qgis.Line
+      PolygonGeometry = Qgis.Polygon
+      UnknownGeometry = Qgis.UnknownGeometry
+      NullGeometry = Qgis.NoGeometry
+
 # name of plugin in project file
 PROJECT_PLUGIN_NAME = "lrs"
 
@@ -101,7 +118,7 @@ def pointHash( point ):
     return "%s-%s" % ( point.x().__hash__(), point.y().__hash__() )
 
 def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
-    if qgisUnit == QGis.Meters:
+    if qgisUnit == Qgis.Meters:
         if lrsUnit == LrsUnits.METER:
             return distance
         elif lrsUnit == LrsUnits.KILOMETER:
@@ -110,7 +127,7 @@ def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
             return distance * 3.2808399
         elif lrsUnit == LrsUnits.MILE:
             return distance / 1609.344
-    elif qgisUnit == QGis.Feet:
+    elif qgisUnit == Qgis.Feet:
         if lrsUnit == LrsUnits.METER:
             return distance / 3.2808399
         elif lrsUnit == LrsUnits.KILOMETER:
@@ -234,40 +251,22 @@ def crsString ( crs ):
 
 # Version independent helpers to avoid DeprecationWarning
 def getHasCrsTransformEnabled( iface ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().mapSettings().hasCrsTransformEnabled()
-    else:
-        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled()
+    iface.mapCanvas().mapSettings().hasCrsTransformEnabled()
 
 def getDestinationCrs( iface ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().mapSettings().destinationCrs()
-    else:
-        iface.mapCanvas().mapRenderer().destinationCrs()
+    iface.mapCanvas().mapSettings().destinationCrs()
 
 def connectHasCrsTransformEnabledChanged( iface, slot ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().hasCrsTransformEnabledChanged.connect( slot )
-    else:
-        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect( slot )
+    iface.mapCanvas().hasCrsTransformEnabledChanged.connect( slot )
 
 def disconnectHasCrsTransformEnabledChanged( iface, slot ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect( slot )
-    else:
-        iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect( slot )
+    iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect( slot )
 
 def connectDestinationSrsChanged( iface, slot ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().destinationCrsChanged.connect( slot )
-    else:
-        iface.mapCanvas().mapRenderer().destinationSrsChanged.connect( slot )
+    iface.mapCanvas().destinationCrsChanged.connect( slot )
 
 def disconnectDestinationSrsChanged( iface, slot ):
-    if QGis.QGIS_VERSION_INT >= 20300:
-        iface.mapCanvas().destinationCrsChanged.disconnect( slot )
-    else:
-        iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect( slot )
+    iface.mapCanvas().destinationCrsChanged.disconnect( slot )
 
 # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
 # and negative length and precision we overwrite type names according to types and reset length and precision

@@ -85,7 +85,7 @@ class Lrs(QObject):
         self.distanceArea = QgsDistanceArea()
         # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
         self.distanceArea.setSourceCrs( self.crs.srsid() )
-        if self.crs.mapUnits() == QGis.Degrees:
+        if self.crs.mapUnits() == Qgis.Degrees:
             self.distanceArea.setEllipsoidalMode( True )
             ellipsoid = self.crs.ellipsoidAcronym()
             if not ellipsoid: ellipsoid = "WGS84"

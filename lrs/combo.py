@@ -111,7 +111,7 @@ class LrsLayerComboManager(LrsComboManager):
 
     def __init__(self, combo, **kwargs ):
         super(LrsLayerComboManager, self).__init__(combo,**kwargs)
-        self.geometryType = kwargs.get('geometryType', None) # QGis.GeometryType
+        self.geometryType = kwargs.get('geometryType', None) # Qgis.GeometryType
 
         self.combo.currentIndexChanged.connect(self.currentIndexChanged)
 
