@@ -807,17 +807,17 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
         uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapRenderer().destinationCrs() )
-        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-        # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
-        # and negative length and precision we overwrite type names according to types and reset length and precision
-        fieldsList = layer.pendingFields().toList()
-        fixFields( fieldsList )
-        provider.addAttributes( fieldsList )
-        if errorFieldName:
-            provider.addAttributes( [ QgsField( errorFieldName, QVariant.String, "string"), ]) 
-        uri = provider.dataSourceUri()
-        #debug ( 'uri: %s' % uri )
+        
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
+        outputLayer.startEditing() # to add fields
+        for field in layer.pendingFields():
+            if not outputLayer.addAttribute(field):
+                QMessageBox.information( self, 'Information', 'Cannot add attribute %s' % field.name() )
+        
+        if errorFieldName:
+            outputLayer.addAttribute( QgsField( errorFieldName, QVariant.String, "string") ) 
+
+        outputLayer.commitChanges()
 
         # It may happen that event goes slightely outside available lrs because of 
         # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that 
@@ -837,7 +837,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
             outputFeature = QgsFeature( fields ) # fields must exist during feature life!
             for field in layer.pendingFields():
-                outputFeature[field.name()] = feature[field.name()]
+                if outputFeature.fields().indexFromName(field.name()) >= 0:
+                    outputFeature[field.name()] = feature[field.name()]
             
             geo = None
             if endFieldName:
@@ -934,19 +935,19 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         measureFieldName = self.measureMeasureFieldLineEdit.text()
  
         # create new layer
+        # it may happen that memory provider does not support all fields types, see #10, check if fields exists
+        
         #uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapRenderer().destinationCrs() )
-        uri = "Point?crs=%s" %  crsString ( layer.crs() )
-        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-        fieldsList = layer.pendingFields().toList()
-        fixFields( fieldsList )
-        provider.addAttributes( fieldsList )
-        provider.addAttributes( [ 
-            QgsField( routeFieldName, QVariant.String, "string"), 
-            QgsField( measureFieldName, QVariant.Double, "double"), 
-        ]) 
-
-        uri = provider.dataSourceUri()
+        uri = "Point?crs=%s" %  crsString ( layer.crs() )        
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
+        outputLayer.startEditing() # to add fields
+        for field in layer.pendingFields():
+            if not outputLayer.addAttribute(field):
+                QMessageBox.information( self, 'Information', 'Cannot add attribute %s' % field.name() )
+                
+        outputLayer.addAttribute( QgsField( routeFieldName, QVariant.String, "string") )
+        outputLayer.addAttribute( QgsField( measureFieldName, QVariant.Double, "double") )
+        outputLayer.commitChanges()
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
@@ -970,7 +971,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 outputFeature.setGeometry( QgsGeometry.fromPoint( point ) )
                 
                 for field in layer.pendingFields():
-                    outputFeature[field.name()] = feature[field.name()]
+                    if outputFeature.fields().indexFromName(field.name()) >= 0:
+                        outputFeature[field.name()] = feature[field.name()]
                 
                 if transform:
                     point = transform.transform( point )
@@ -988,6 +990,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             self.measureProgressBar.setValue( percent)
 
         outputLayer.dataProvider().addFeatures( outputFeatures )
+        
 
         QgsMapLayerRegistry.instance().addMapLayers( [outputLayer,] )
 
