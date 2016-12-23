@@ -21,16 +21,15 @@
 """
 import time
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
-from route import LrsRoute
-from point import LrsPoint
-from line import LrsLine
-from error import *
-#from line
+from .utils import *
+from .route import LrsRoute
+from .point import LrsPoint
+from .line import LrsLine
+from .error import *
 
 # Main class to keep all data and process them
 

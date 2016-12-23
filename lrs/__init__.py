@@ -49,5 +49,5 @@ def email():
 
 def classFactory(iface):
     # load LrsPlugin class from file LrsPlugin
-    from lrsplugin import LrsPlugin
+    from .lrsplugin import LrsPlugin
     return LrsPlugin(iface)

@@ -20,19 +20,19 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from ui_lrsdockwidget import Ui_LrsDockWidget
-from utils import *
-from error import *
-from layer import *
-from lrs import *
-from combo import *
-from widget import *
-from selectiondialog import *
+from .ui_lrsdockwidget import Ui_LrsDockWidget
+from .utils import *
+from .error import *
+from .layer import *
+from .lrs import *
+from .combo import *
+from .widget import *
+from .selectiondialog import *
 
 try:
     import psycopg2
@@ -1079,7 +1079,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
             conn.close()
             
-        except Exception, e:
+        except Exception as e:
             conn.close()
             QMessageBox.critical( self, 'Error', '%s' % e )
             return
@@ -1123,7 +1123,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 conn = psycopg2.connect( uri.connectionInfo().encode('utf-8') )
                 #debug('connected ok' ) 
                 return conn
-            except Exception,e:
+            except Exception as e:
                 #QMessageBox.critical( self, 'Error', 'Cannot connect: %s' % e )
                 err = '%s' % e
                 (ok, username, password) = QgsCredentials.instance().get(uri.connectionInfo(), username, password, err)
@@ -1209,7 +1209,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             conn.commit()
             conn.close()
 
-        except Exception, e:
+        except Exception as e:
             conn.close()
             QMessageBox.critical( self, 'Error', '%s' % e )
             return

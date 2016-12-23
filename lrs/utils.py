@@ -21,20 +21,20 @@
 """
 import sys, math
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
 # QGis was renamed to Qgis: https://github.com/qgis/QGIS/commit/1a2231f10c
 try:
     from qgis.core import Qgis
-except Exception, e:
+except Exception as e:
     from qgis.core import QGis as Qgis
     
 # QGis::GeometryType was replaced by QgsWkbTypes::GeometryType https://github.com/qgis/QGIS/commit/bb79d1
 try:
     from qgis.core import QgsWkbTypes
-except Exception, e:
+except Exception as e:
     class QgsWkbTypes():
       PointGeometry = Qgis.Point
       LineGeometry = Qgis.Line
@@ -67,7 +67,7 @@ class LrsUnits():
 
 # print debug message
 def debug(msg):
-    print "LRSDEBUG: %s" % msg
+    print ("LRSDEBUG: %s" % msg)
     sys.stdout.flush()
 
 # compare 2 doubles

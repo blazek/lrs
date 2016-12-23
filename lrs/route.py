@@ -21,15 +21,15 @@
 """
 import sys, operator, math
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
-from part import *
-from error import *
-from point import *
-from milestone import *
+from .utils import *
+from .part import *
+from .error import *
+from .point import *
+from .milestone import *
 
 # LrsRoute keeps list of LrsLine 
 

@@ -23,11 +23,11 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import * 
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import * 
 from qgis.core import *
 
-from utils import *
+from .utils import *
 
 class LrsComboManager(QObject):
 
@@ -113,16 +113,17 @@ class LrsLayerComboManager(LrsComboManager):
         super(LrsLayerComboManager, self).__init__(combo,**kwargs)
         self.geometryType = kwargs.get('geometryType', None) # Qgis.GeometryType
 
+# https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
         self.combo.currentIndexChanged.connect(self.currentIndexChanged)
-
+# https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
         self.canvasLayersChanged()
 
-        QgsMapLayerRegistry.instance().layersAdded.connect(self.canvasLayersChanged)
-        QgsMapLayerRegistry.instance().layersRemoved.connect(self.canvasLayersChanged)
+        QgsProject.instance().layersAdded.connect(self.canvasLayersChanged)
+        QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)
     def __del__(self):
-        if not QgsMapLayerRegistry: return
-        QgsMapLayerRegistry.instance().layersAdded.disconnect(self.canvasLayersChanged)
-        QgsMapLayerRegistry.instance().layersRemoved.disconnect(self.canvasLayersChanged)
+        if not QgsProject: return
+        QgsProject.instance().layersAdded.disconnect(self.canvasLayersChanged)
+        QgsProject.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
     def currentIndexChanged(self):
         self.layerChanged.emit()
@@ -134,18 +135,19 @@ class LrsLayerComboManager(LrsComboManager):
         return None
 
     def getLayer(self):
-        if not QgsMapLayerRegistry: return
+        if not QgsProject: return
         lId = self.layerId()
-        return QgsMapLayerRegistry.instance().mapLayer( lId )
+        return QgsProject.instance().mapLayer( lId )
 
     def canvasLayersChanged(self):
         #debug ("canvasLayersChanged")
-        if not QgsMapLayerRegistry: return
-        layerIds = []
-        for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+        if not QgsProject: return
+        layers = []
+        for layer in QgsProject.instance().mapLayers():
+            print(layer)
             if layer.type() != QgsMapLayer.VectorLayer: continue
             if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
-            layerIds.append(layerId)
+            layers.append(layer)
 
         # delete removed layers
         for i in range( self.model.rowCount()-1, -1, -1):
@@ -154,7 +156,8 @@ class LrsLayerComboManager(LrsComboManager):
                 self.model.removeRows(i,1)
 
         # add new layers
-        for layerId, layer in QgsMapLayerRegistry.instance().mapLayers().iteritems():
+        for layer in QgsProject.instance().mapLayers():
+            print(layer)
             if layer.type() != QgsMapLayer.VectorLayer: continue
             if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
 
@@ -194,14 +197,14 @@ class LrsFieldComboManager(LrsComboManager):
         return None
 
     def disconnectFromLayer(self):
-        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer( self.layerId )
         if layer:
             layer.attributeAdded.disconnect( self.resetFields )    
             layer.attributeDeleted.disconnect( self.resetFields )    
 
     def layerChanged(self):
         #debug ("layerChanged settingsName = %s" % self.settingsName )
-        if not QgsMapLayerRegistry: return
+        if not QgsProject: return
 
         self.disconnectFromLayer()
 
@@ -210,13 +213,13 @@ class LrsFieldComboManager(LrsComboManager):
 
         self.resetFields()
 
-        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer( self.layerId )
         if layer:
             layer.attributeAdded.connect( self.resetFields )    
             layer.attributeDeleted.connect( self.resetFields )    
 
     def resetFields(self):
-        layer = QgsMapLayerRegistry.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer( self.layerId )
         if not layer:
             self.combo.clear()
             return            

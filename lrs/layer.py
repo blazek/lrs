@@ -20,12 +20,12 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.core import *
 
-from utils import *
-from error import *
+from .utils import *
+from .error import *
 
 # To add methods on layers, we must use manager, not extended QgsVectorLayer, 
 # because layers may be stored in project and created by QGIS.
