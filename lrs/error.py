@@ -22,12 +22,12 @@
 from hashlib import md5
 
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from utils import *
+from .utils import *
 
 # Origin of geometry part used for error checksums, it allows to update errors when 
 # geometry is changed, but error remains. 
