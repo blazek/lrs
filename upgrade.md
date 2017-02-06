@@ -1,6 +1,6 @@
-## LRS Plugin Upgrade 2017 ##
+## LRS Plugin Upgrade 2017
 
-### Foreword ###
+### Foreword
 
 The LRS Plugin was originally written in 2013 when QGIS internal geometry data structure was limited to x,y coordinates and it was not supporting so called measure (M) coordinate, which is common way to store linear reference data directly in geometry without additional tables. That is why current implementation (2/2017) of the plugin does not support such layers as input and output. It can only write directly to PostGIS. The QGIS geometry classes were refactored in the mean time, which makes it possible to use QGIS layers with measure both for input and output.
  
@@ -10,11 +10,11 @@ The main idea of plugin upgrade is to separate tools for calibration and tools f
 
 Last but not least, the plugin has to be upgraded to the comming QGIS 3, which is using new Qt and Python version and which has different QGIS API. The upgraded plugin will be available for QGIS 3. QGIS 2.x versions will not be supported.
 
-### Terminology ###
+### Terminology
 * LRS layer - layer with measures (with M coordinates)
 * Milestone - point with route and measure attributes
 
-### Description of tools and UI widgets ### 
+### Description of tools and UI widgets
 
 1. **Tools for use of an existing LRS layer.**
     * Common widgets - for tools 1.i.-1.iii.
