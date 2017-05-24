@@ -20,22 +20,20 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from qgis.PyQt.QtCore import *
-#from PyQt4.QtGui import *
-from qgis.core import *
+# from PyQt4.QtGui import *
 
 from .utils import *
 
-class LrsMilestone(object):
 
+class LrsMilestone(object):
     def __init__(self, fid, geoPart, nGeoParts, pnt, measure):
-        self.fid = fid # point 
+        self.fid = fid  # point
         # multigeometry part
         self.geoPart = geoPart
         # number of geometry parts in original feature, used for error checksum
         self.nGeoParts = nGeoParts
-        self.pnt = pnt   # QgsPoint
-        self.measure = measure # field measure
-        self.part = None # part index
+        self.pnt = pnt  # QgsPoint
+        self.measure = measure  # field measure
+        self.part = None  # part index
         # distance from beginning of part to the point on part nearest to pnt
-        self.partMeasure = None 
+        self.partMeasure = None

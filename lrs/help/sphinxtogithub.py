@@ -1,97 +1,86 @@
 #! /usr/bin/env python
- 
-from optparse import OptionParser
 
-import os
-import sys
-import shutil
 import codecs
+import os
+import shutil
+import sys
+from optparse import OptionParser
 
 
 class DirHelper(object):
-
     def __init__(self, is_dir, list_dir, walk, rmtree):
-
         self.is_dir = is_dir
         self.list_dir = list_dir
         self.walk = walk
         self.rmtree = rmtree
 
+
 class FileSystemHelper(object):
-
     def __init__(self, open_, path_join, move, exists):
-
         self.open_ = open_
         self.path_join = path_join
         self.move = move
         self.exists = exists
 
+
 class Replacer(object):
     "Encapsulates a simple text replace"
 
     def __init__(self, from_, to):
-
         self.from_ = from_
         self.to = to
 
     def process(self, text):
+        return text.replace(self.from_, self.to)
 
-        return text.replace( self.from_, self.to )
 
 class FileHandler(object):
     "Applies a series of replacements the contents of a file inplace"
 
     def __init__(self, name, replacers, opener):
-
         self.name = name
         self.replacers = replacers
         self.opener = opener
 
     def process(self):
-
         text = self.opener(self.name, "r").read()
 
         for replacer in self.replacers:
-            text = replacer.process( text )
+            text = replacer.process(text)
 
         self.opener(self.name, "w").write(text)
 
-class Remover(object):
 
+class Remover(object):
     def __init__(self, exists, remove):
         self.exists = exists
         self.remove = remove
 
     def __call__(self, name):
-
         if self.exists(name):
             self.remove(name)
 
+
 class ForceRename(object):
-
     def __init__(self, renamer, remove):
-
         self.renamer = renamer
         self.remove = remove
 
     def __call__(self, from_, to):
-
         self.remove(to)
         self.renamer(from_, to)
 
+
 class VerboseRename(object):
-
     def __init__(self, renamer, stream):
-
         self.renamer = renamer
         self.stream = stream
 
     def __call__(self, from_, to):
-
         self.stream.write(
-                "Renaming directory '%s' -> '%s'\n"
-                    % (os.path.basename(from_), os.path.basename(to))
-                )
+            "Renaming directory '%s' -> '%s'\n"
+            % (os.path.basename(from_), os.path.basename(to))
+        )
 
         self.renamer(from_, to)
 
@@ -100,60 +89,47 @@ class DirectoryHandler(object):
     "Encapsulates renaming a directory by removing its first character"
 
     def __init__(self, name, root, renamer):
-
         self.name = name
         self.new_name = name[1:]
         self.root = root + os.sep
         self.renamer = renamer
 
     def path(self):
-
         return os.path.join(self.root, self.name)
 
     def relative_path(self, directory, filename):
-
         path = directory.replace(self.root, "", 1)
         return os.path.join(path, filename)
 
     def new_relative_path(self, directory, filename):
-
         path = self.relative_path(directory, filename)
         return path.replace(self.name, self.new_name, 1)
 
     def process(self):
-
         from_ = os.path.join(self.root, self.name)
         to = os.path.join(self.root, self.new_name)
         self.renamer(from_, to)
 
 
 class HandlerFactory(object):
-
     def create_file_handler(self, name, replacers, opener):
-
         return FileHandler(name, replacers, opener)
 
     def create_dir_handler(self, name, root, renamer):
-
         return DirectoryHandler(name, root, renamer)
 
 
 class OperationsFactory(object):
-
     def create_force_rename(self, renamer, remover):
-
         return ForceRename(renamer, remover)
 
     def create_verbose_rename(self, renamer, stream):
-
         return VerboseRename(renamer, stream)
 
     def create_replacer(self, from_, to):
-
         return Replacer(from_, to)
 
     def create_remover(self, exists, remove):
-
         return Remover(exists, remove)
 
 
@@ -181,8 +157,10 @@ class NullLayout(object):
     """
     Layout class that does nothing when asked to process
     """
+
     def process(self):
         pass
+
 
 class LayoutFactory(object):
     "Creates a layout object"
@@ -207,24 +185,24 @@ class LayoutFactory(object):
 
         if self.force:
             remove = self.operations_factory.create_remover(self.file_helper.exists, self.dir_helper.rmtree)
-            renamer = self.operations_factory.create_force_rename(renamer, remove) 
+            renamer = self.operations_factory.create_force_rename(renamer, remove)
 
         if self.verbose:
-            renamer = self.operations_factory.create_verbose_rename(renamer, self.output_stream) 
+            renamer = self.operations_factory.create_verbose_rename(renamer, self.output_stream)
 
-        # Build list of directories to process
+            # Build list of directories to process
         directories = [d for d in contents if self.is_underscore_dir(path, d)]
         underscore_directories = [
-                self.handler_factory.create_dir_handler(d, path, renamer)
-                    for d in directories
-                ]
+            self.handler_factory.create_dir_handler(d, path, renamer)
+            for d in directories
+            ]
 
         if not underscore_directories:
             if self.verbose:
                 self.output_stream.write(
-                        "No top level directories starting with an underscore "
-                        "were found in '%s'\n" % path
-                        )
+                    "No top level directories starting with an underscore "
+                    "were found in '%s'\n" % path
+                )
             return NullLayout()
 
         # Build list of files that are in those directories
@@ -233,11 +211,11 @@ class LayoutFactory(object):
             for directory, dirs, files in self.dir_helper.walk(handler.path()):
                 for f in files:
                     replacers.append(
-                            self.operations_factory.create_replacer(
-                                handler.relative_path(directory, f),
-                                handler.new_relative_path(directory, f)
-                                )
-                            )
+                        self.operations_factory.create_replacer(
+                            handler.relative_path(directory, f),
+                            handler.new_relative_path(directory, f)
+                        )
+                    )
 
         # Build list of handlers to process all files
         filelist = []
@@ -245,27 +223,26 @@ class LayoutFactory(object):
             for f in files:
                 if f.endswith(".html"):
                     filelist.append(
-                            self.handler_factory.create_file_handler(
-                                self.file_helper.path_join(root, f),
-                                replacers,
-                                self.file_helper.open_)
-                            )
+                        self.handler_factory.create_file_handler(
+                            self.file_helper.path_join(root, f),
+                            replacers,
+                            self.file_helper.open_)
+                    )
                 if f.endswith(".js"):
                     filelist.append(
-                            self.handler_factory.create_file_handler(
-                                self.file_helper.path_join(root, f),
-                                [self.operations_factory.create_replacer("'_sources/'", "'sources/'")],
-                                self.file_helper.open_
-                                )
-                            )
+                        self.handler_factory.create_file_handler(
+                            self.file_helper.path_join(root, f),
+                            [self.operations_factory.create_replacer("'_sources/'", "'sources/'")],
+                            self.file_helper.open_
+                        )
+                    )
 
         return Layout(underscore_directories, filelist)
 
     def is_underscore_dir(self, path, directory):
 
         return (self.dir_helper.is_dir(self.file_helper.path_join(path, directory))
-            and directory.startswith("_"))
-
+                and directory.startswith("_"))
 
 
 def sphinx_extension(app, exception):
@@ -276,40 +253,42 @@ def sphinx_extension(app, exception):
 
     if not app.config.sphinx_to_github:
         if app.config.sphinx_to_github_verbose:
-            print "Sphinx-to-github: Disabled, doing nothing."
+            print
+            "Sphinx-to-github: Disabled, doing nothing."
         return
 
     if exception:
         if app.config.sphinx_to_github_verbose:
-            print "Sphinx-to-github: Exception raised in main build, doing nothing."
+            print
+            "Sphinx-to-github: Exception raised in main build, doing nothing."
         return
 
     dir_helper = DirHelper(
-            os.path.isdir,
-            os.listdir,
-            os.walk,
-            shutil.rmtree
-            )
+        os.path.isdir,
+        os.listdir,
+        os.walk,
+        shutil.rmtree
+    )
 
     file_helper = FileSystemHelper(
-            lambda f, mode: codecs.open(f, mode, app.config.sphinx_to_github_encoding),
-            os.path.join,
-            shutil.move,
-            os.path.exists
-            )
+        lambda f, mode: codecs.open(f, mode, app.config.sphinx_to_github_encoding),
+        os.path.join,
+        shutil.move,
+        os.path.exists
+    )
 
     operations_factory = OperationsFactory()
     handler_factory = HandlerFactory()
 
     layout_factory = LayoutFactory(
-            operations_factory,
-            handler_factory,
-            file_helper,
-            dir_helper,
-            app.config.sphinx_to_github_verbose,
-            sys.stdout,
-            force=True
-            )
+        operations_factory,
+        handler_factory,
+        file_helper,
+        dir_helper,
+        app.config.sphinx_to_github_verbose,
+        sys.stdout,
+        force=True
+    )
 
     layout = layout_factory.create_layout(app.outdir)
     layout.process()
@@ -326,58 +305,53 @@ def setup(app):
 
 
 def main(args):
-
     usage = "usage: %prog [options] <html directory>"
     parser = OptionParser(usage=usage)
-    parser.add_option("-v","--verbose", action="store_true",
-            dest="verbose", default=False, help="Provides verbose output")
-    parser.add_option("-e","--encoding", action="store",
-            dest="encoding", default="utf-8", help="Encoding for reading and writing files")
+    parser.add_option("-v", "--verbose", action="store_true",
+                      dest="verbose", default=False, help="Provides verbose output")
+    parser.add_option("-e", "--encoding", action="store",
+                      dest="encoding", default="utf-8", help="Encoding for reading and writing files")
     opts, args = parser.parse_args(args)
 
     try:
         path = args[0]
     except IndexError:
         sys.stderr.write(
-                "Error - Expecting path to html directory:"
-                "sphinx-to-github <path>\n"
-                )
+            "Error - Expecting path to html directory:"
+            "sphinx-to-github <path>\n"
+        )
         return
 
     dir_helper = DirHelper(
-            os.path.isdir,
-            os.listdir,
-            os.walk,
-            shutil.rmtree
-            )
+        os.path.isdir,
+        os.listdir,
+        os.walk,
+        shutil.rmtree
+    )
 
     file_helper = FileSystemHelper(
-            lambda f, mode: codecs.open(f, mode, opts.encoding),
-            os.path.join,
-            shutil.move,
-            os.path.exists
-            )
-    
+        lambda f, mode: codecs.open(f, mode, opts.encoding),
+        os.path.join,
+        shutil.move,
+        os.path.exists
+    )
+
     operations_factory = OperationsFactory()
     handler_factory = HandlerFactory()
 
     layout_factory = LayoutFactory(
-            operations_factory,
-            handler_factory,
-            file_helper,
-            dir_helper,
-            opts.verbose,
-            sys.stdout,
-            force=False
-            )
+        operations_factory,
+        handler_factory,
+        file_helper,
+        dir_helper,
+        opts.verbose,
+        sys.stdout,
+        force=False
+    )
 
     layout = layout_factory.create_layout(path)
     layout.process()
-    
 
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
-

@@ -19,10 +19,10 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys, math
-# Import the PyQt and QGIS libraries
+import math
+import sys
+
 from qgis.PyQt.QtCore import *
-#from PyQt4.QtGui import *
 from qgis.core import *
 
 # QGis was renamed to Qgis: https://github.com/qgis/QGIS/commit/1a2231f10c
@@ -30,20 +30,21 @@ try:
     from qgis.core import Qgis
 except Exception as e:
     from qgis.core import QGis as Qgis
-    
+
 # QGis::GeometryType was replaced by QgsWkbTypes::GeometryType https://github.com/qgis/QGIS/commit/bb79d1
 try:
     from qgis.core import QgsWkbTypes
 except Exception as e:
     class QgsWkbTypes():
-      PointGeometry = Qgis.Point
-      LineGeometry = Qgis.Line
-      PolygonGeometry = Qgis.Polygon
-      UnknownGeometry = Qgis.UnknownGeometry
-      NullGeometry = Qgis.NoGeometry
+        PointGeometry = Qgis.Point
+        LineGeometry = Qgis.Line
+        PolygonGeometry = Qgis.Polygon
+        UnknownGeometry = Qgis.UnknownGeometry
+        NullGeometry = Qgis.NoGeometry
 
 # name of plugin in project file
 PROJECT_PLUGIN_NAME = "lrs"
+
 
 class LrsUnits():
     METER = 0
@@ -52,7 +53,7 @@ class LrsUnits():
     MILE = 3
     UNKNOWN = 4
 
-    names = { METER: 'meter', KILOMETER: 'kilometer', FEET: 'feet', MILE: 'mile' }
+    names = {METER: 'meter', KILOMETER: 'kilometer', FEET: 'feet', MILE: 'mile'}
 
     @staticmethod
     def unitName(unit):
@@ -60,35 +61,39 @@ class LrsUnits():
 
     @staticmethod
     def unitFromName(name):
-        for u,n in LrsUnits.names.iteritems():
+        for u, n in LrsUnits.names.iteritems():
             if n == name:
                 return u
         return LrsUnits.UNKNOWN
 
+
 # print debug message
 def debug(msg):
-    print ("LRSDEBUG: %s" % msg)
+    print("LRSDEBUG: %s" % msg)
     sys.stdout.flush()
 
+
 # compare 2 doubles
-def doubleNear( d1, d2 ):
-    return abs(d1-d2) < 1e-10
+def doubleNear(d1, d2):
+    return abs(d1 - d2) < 1e-10
+
 
 # covert route id to lower case string
 # expected types are str, int, double, None
 # TODO: float
-def normalizeRouteId( route ):
+def normalizeRouteId(route):
     if route is None: return None
     if type(route) != str:
-        if type(route) == float: # could be integer, try round
+        if type(route) == float:  # could be integer, try round
             if int(route) == route:
                 route = int(route)
         route = str(route)
     return route.lower()
-    
+
+
 # print measure with decent number of decimal places (meters), 
 # this is used in events error messages
-def formatMeasure(measure,measureUnit):
+def formatMeasure(measure, measureUnit):
     if measureUnit == LrsUnits.METER:
         return "%d" % measure
     elif measureUnit == LrsUnits.KILOMETER:
@@ -97,27 +102,29 @@ def formatMeasure(measure,measureUnit):
         return "%d" % measure
     elif measureUnit == LrsUnits.MILE:
         return "%.3f" % measure
-    
+
     return "%s" % measure
-    
+
 
 # test if two QgsPolyline are identical including reverse order
 # return False - not identical
 #        True - identical
-def polylinesIdentical( polyline1, polyline2 ):
-    if polyline1 == polyline2: 
+def polylinesIdentical(polyline1, polyline2):
+    if polyline1 == polyline2:
         return True
-    
+
     tmp = []
     tmp.extend(polyline2)
     tmp.reverse()
     return polyline1 == tmp
 
-# return hash of QgsPoint (may be used as key in dictionary)
-def pointHash( point ):
-    return "%s-%s" % ( point.x().__hash__(), point.y().__hash__() )
 
-def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
+# return hash of QgsPoint (may be used as key in dictionary)
+def pointHash(point):
+    return "%s-%s" % (point.x().__hash__(), point.y().__hash__())
+
+
+def convertDistanceUnits(distance, qgisUnit, lrsUnit):
     if qgisUnit == Qgis.Meters:
         if lrsUnit == LrsUnits.METER:
             return distance
@@ -137,100 +144,106 @@ def convertDistanceUnits( distance, qgisUnit, lrsUnit ):
         elif lrsUnit == LrsUnits.MILE:
             return distance / 5280
 
-    raise Exception( "Conversion from QGIS unit %s to Lrs unit %s not supported" % ( qgisUnit, lrsUnit ) )
+    raise Exception("Conversion from QGIS unit %s to Lrs unit %s not supported" % (qgisUnit, lrsUnit))
 
-def pointsDistance( p1, p2 ):
+
+def pointsDistance(p1, p2):
     dx = p2.x() - p1.x()
     dy = p2.y() - p1.y()
-    return math.sqrt( dx*dx + dy*dy)
+    return math.sqrt(dx * dx + dy * dy)
 
-def segmentLength( polyline, segment ):
+
+def segmentLength(polyline, segment):
     p1 = polyline[segment]
-    p2 = polyline[segment+1]
-    return pointsDistance( p1, p2 )
+    p2 = polyline[segment + 1]
+    return pointsDistance(p1, p2)
+
 
 # calculate distance along line to pnt
-def measureAlongPolyline( polyline, segment, pnt):
+def measureAlongPolyline(polyline, segment, pnt):
     measure = 0.0
     for i in range(segment):
-        measure += segmentLength( polyline, i )
-    
-    measure += pointsDistance( polyline[segment], pnt )
+        measure += segmentLength(polyline, i)
+
+    measure += pointsDistance(polyline[segment], pnt)
     return measure
 
 
 # delete all features from layer
-#def clearLayer( layer ):
-    #if not layer: return
+# def clearLayer( layer ):
+# if not layer: return
 
-    #iterator = layer.getFeatures()
-    #ids = []
-    #for feature in layer.getFeatures():
-        #ids.append( feature.id() )
+# iterator = layer.getFeatures()
+# ids = []
+# for feature in layer.getFeatures():
+# ids.append( feature.id() )
 
-    #layer.dataProvider().deleteFeatures( ids )
+# layer.dataProvider().deleteFeatures( ids )
 
 # place point on line in distance from point 1
-def pointOnLine( point1, point2, distance ):
+def pointOnLine(point1, point2, distance):
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
     # this gives exception if point1 and point2 have the same coordinate, but duplicate coordinates 
     # clean up was added in LrsRoute.buildParts so that it should no more happen
-    k = distance / math.sqrt(dx*dx+dy*dy)
+    k = distance / math.sqrt(dx * dx + dy * dy)
     x = point1.x() + k * dx
     y = point1.y() + k * dy
-    return QgsPoint( x, y )
+    return QgsPoint(x, y)
+
 
 # returns new QgsPoint on polyline in distance along original polyline
-def polylinePoint( polyline, distance ):
-    #debug( "polylinePoint distance = %s" % distance )
-    #geo = QgsGeometry.fromPolyline( polyline )
-    #length = geo.length()
+def polylinePoint(polyline, distance):
+    # debug( "polylinePoint distance = %s" % distance )
+    # geo = QgsGeometry.fromPolyline( polyline )
+    # length = geo.length()
 
     length = 0
-    for i in range(len(polyline)-1):
+    for i in range(len(polyline) - 1):
         p1 = polyline[i]
-        p2 = polyline[i+1]
-        l = pointsDistance( p1, p2 )
+        p2 = polyline[i + 1]
+        l = pointsDistance(p1, p2)
 
         if distance >= length and distance <= length + l:
             d = distance - length
-            return pointOnLine ( p1, p2, d )
+            return pointOnLine(p1, p2, d)
         length += l
-    #debug ( 'point in distance %s not found on line length = %s' % ( distance, length ) )
+    # debug ( 'point in distance %s not found on line length = %s' % ( distance, length ) )
     return None
 
+
 # returns new polyline 'from - to' measured along original polyline
-def polylineSegment( polyline, frm, to ):
-    geo = QgsGeometry.fromPolyline( polyline )
+def polylineSegment(polyline, frm, to):
+    geo = QgsGeometry.fromPolyline(polyline)
     length = geo.length()
 
-    poly = [] # section
+    poly = []  # section
     length = 0
-    for i in range(len(polyline)-1):
+    for i in range(len(polyline) - 1):
         p1 = polyline[i]
-        p2 = polyline[i+1]
-        l = pointsDistance( p1, p2 )
+        p2 = polyline[i + 1]
+        l = pointsDistance(p1, p2)
 
         if len(poly) == 0 and frm <= length + l:
             d = frm - length
-            p = pointOnLine ( p1, p2, d )
-            poly.append( p )
+            p = pointOnLine(p1, p2, d)
+            poly.append(p)
 
         if len(poly) > 0:
             if to < length + l:
                 d = to - length
-                p = pointOnLine ( p1, p2, d )
-                poly.append( p )
+                p = pointOnLine(p1, p2, d)
+                poly.append(p)
                 break
             else:
-                poly.append( p2 )
+                poly.append(p2)
 
         length += l
 
     return poly
 
-def getLayerFeature( layer, fid ):
+
+def getLayerFeature(layer, fid):
     if not layer: return None
 
     request = QgsFeatureRequest().setFilterFid(fid)
@@ -240,37 +253,45 @@ def getLayerFeature( layer, fid ):
     del request
 
     return feature
-   
+
+
 # QgsCoordinateReferenceSystem.createFromString() does not accept value from authid()
 # if it is type 'USER:'
-def crsString ( crs ):
+def crsString(crs):
     string = crs.authid()
     if not string.lower().startswith('epsg'):
         string = 'internal:%s' % crs.srsid()
     return string
 
+
 # Version independent helpers to avoid DeprecationWarning
-def getHasCrsTransformEnabled( iface ):
+def getHasCrsTransformEnabled(iface):
     iface.mapCanvas().mapSettings().hasCrsTransformEnabled()
 
-def getDestinationCrs( iface ):
+
+def getDestinationCrs(iface):
     iface.mapCanvas().mapSettings().destinationCrs()
 
-def connectHasCrsTransformEnabledChanged( iface, slot ):
-    iface.mapCanvas().hasCrsTransformEnabledChanged.connect( slot )
 
-def disconnectHasCrsTransformEnabledChanged( iface, slot ):
-    iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect( slot )
+def connectHasCrsTransformEnabledChanged(iface, slot):
+    iface.mapCanvas().hasCrsTransformEnabledChanged.connect(slot)
 
-def connectDestinationSrsChanged( iface, slot ):
-    iface.mapCanvas().destinationCrsChanged.connect( slot )
 
-def disconnectDestinationSrsChanged( iface, slot ):
-    iface.mapCanvas().destinationCrsChanged.disconnect( slot )
+def disconnectHasCrsTransformEnabledChanged(iface, slot):
+    iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect(slot)
+
+
+def connectDestinationSrsChanged(iface, slot):
+    iface.mapCanvas().destinationCrsChanged.connect(slot)
+
+
+def disconnectDestinationSrsChanged(iface, slot):
+    iface.mapCanvas().destinationCrsChanged.disconnect(slot)
+
 
 # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
 # and negative length and precision we overwrite type names according to types and reset length and precision
-def fixFields( fieldsList ):
+def fixFields(fieldsList):
     for field in fieldsList:
         if field.type() == QVariant.String:
             field.setTypeName('string')
@@ -284,5 +305,3 @@ def fixFields( fieldsList ):
 
         if field.precision() < 0:
             field.setPrecision(0)
-
-    

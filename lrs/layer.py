@@ -20,120 +20,117 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
-from qgis.core import *
 
-from .utils import *
 from .error import *
 
-# To add methods on layers, we must use manager, not extended QgsVectorLayer, 
+
+# To add methods on layers, we must use manager, not extended QgsVectorLayer,
 # because layers may be stored in project and created by QGIS.
 # Inherited layers are only used to create layer with type and attributes
 class LrsErrorLayer(QgsVectorLayer):
-
-    def __init__(self, uri, baseName ):
-        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-        provider.addAttributes( LRS_ERROR_FIELDS.toList()  )
+    def __init__(self, uri, baseName):
+        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider.addAttributes(LRS_ERROR_FIELDS.toList())
         uri = provider.dataSourceUri()
-        #debug ( 'uri = %s' % uri )
-        super(LrsErrorLayer, self).__init__( uri, baseName, 'memory')
+        # debug ( 'uri = %s' % uri )
+        super(LrsErrorLayer, self).__init__(uri, baseName, 'memory')
+
 
 # changes done to vector layer attributes are not store correctly in project file
 # http://hub.qgis.org/issues/8997 -> recreate temporary provider first to construct uri
 
 class LrsErrorPointLayer(LrsErrorLayer):
+    def __init__(self, crs):
+        uri = "Point?crs=%s" % crsString(crs)
+        super(LrsErrorPointLayer, self).__init__(uri, 'LRS point errors')
 
-    def __init__(self, crs ):
-        uri = "Point?crs=%s" %  crsString( crs )
-        super(LrsErrorPointLayer, self).__init__( uri, 'LRS point errors' )
-        
+
 class LrsErrorLineLayer(LrsErrorLayer):
+    def __init__(self, crs):
+        uri = "LineString?crs=%s" % crsString(crs)
+        super(LrsErrorLineLayer, self).__init__(uri, 'LRS line errors')
 
-    def __init__(self, crs ):
-        uri = "LineString?crs=%s" %  crsString( crs )
-        super(LrsErrorLineLayer, self).__init__( uri, 'LRS line errors' )
 
 class LrsQualityLayer(QgsVectorLayer):
-
-    def __init__(self, crs ):
-        uri = "LineString?crs=%s" %  crsString( crs )
-        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
-        provider.addAttributes( LRS_QUALITY_FIELDS.toList() )
+    def __init__(self, crs):
+        uri = "LineString?crs=%s" % crsString(crs)
+        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider.addAttributes(LRS_QUALITY_FIELDS.toList())
         uri = provider.dataSourceUri()
-        super(LrsQualityLayer, self).__init__( uri, 'LRS quality', 'memory')
+        super(LrsQualityLayer, self).__init__(uri, 'LRS quality', 'memory')
 
         # min, max, color, label
         styles = [
-            [ 0, 10, QColor(Qt.green), '0 - 10 % error' ],
-            [ 10, 30, QColor(Qt.blue), '10 - 30 % error' ],
-            [ 30, 1000000, QColor(Qt.red), '> 30 % error' ]
+            [0, 10, QColor(Qt.green), '0 - 10 % error'],
+            [10, 30, QColor(Qt.blue), '10 - 30 % error'],
+            [30, 1000000, QColor(Qt.red), '> 30 % error']
         ]
         ranges = []
         for style in styles:
-            symbol = QgsSymbolV2.defaultSymbol(  QgsWkbTypes.LineGeometry )
-            symbol.setColor( style[2] )
-            range = QgsRendererRangeV2 ( style[0], style[1], symbol, style[3] )
+            symbol = QgsSymbolV2.defaultSymbol(QgsWkbTypes.LineGeometry)
+            symbol.setColor(style[2])
+            range = QgsRendererRangeV2(style[0], style[1], symbol, style[3])
             ranges.append(range)
 
-        renderer = QgsGraduatedSymbolRendererV2( 'err_perc', ranges)
-        self.setRendererV2 ( renderer )
+        renderer = QgsGraduatedSymbolRendererV2('err_perc', ranges)
+        self.setRendererV2(renderer)
 
 
 # Keeps track of features by checksum.
 class LrsLayerManager(object):
-
-    def __init__(self, layer ):
+    def __init__(self, layer):
         super(LrsLayerManager, self).__init__()
         self.layer = layer
-        self.featureIds = {} # dictionary of features with checksum keys
+        self.featureIds = {}  # dictionary of features with checksum keys
 
     # remove all features
     def clear(self):
         if not self.layer: return
         fids = []
         for feature in self.layer.getFeatures():
-            fids.append( feature.id() )
+            fids.append(feature.id())
 
-        self.layer.dataProvider().deleteFeatures( fids )
-        
+        self.layer.dataProvider().deleteFeatures(fids)
+
         for fid in fids:
             # hack to update attribute table
-            self.layer.featureDeleted.emit( fid )
+            self.layer.featureDeleted.emit(fid)
 
     # transform features if necessary to layer crs
     # modifies original feature geometry
     def transformFeatures(self, features, crs):
         if crs != self.layer.crs():
-            transform = QgsCoordinateTransform( crs, self.layer.crs())   
+            transform = QgsCoordinateTransform(crs, self.layer.crs())
             for feature in features:
-                feature.geometry().transform( transform )
-        return features 
+                feature.geometry().transform(transform)
+        return features
 
-    # add features with getChecksum() method
+        # add features with getChecksum() method
+
     def addFeatures(self, features, crs):
         features = self.transformFeatures(features, crs)
- 
-        status, addedFeatures = self.layer.dataProvider().addFeatures( features )
-        for feature, addedFeature in zip(features,addedFeatures):
+
+        status, addedFeatures = self.layer.dataProvider().addFeatures(features)
+        for feature, addedFeature in zip(features, addedFeatures):
             self.featureIds[feature.getChecksum()] = addedFeature.id()
             # hack to update attribute table
-            self.layer.featureAdded.emit( addedFeature.id() )
+            self.layer.featureAdded.emit(addedFeature.id())
 
     # delete features by checksums
-    def deleteChecksums(self,checksums):
+    def deleteChecksums(self, checksums):
         fids = []
         for checksum in checksums:
-            fid = self.featureIds.get( checksum , None )
+            fid = self.featureIds.get(checksum, None)
             if fid:
-                fids.append ( fid )
+                fids.append(fid)
 
-        if len (fids) > 0:
-            self.layer.dataProvider().deleteFeatures( fids )
+        if len(fids) > 0:
+            self.layer.dataProvider().deleteFeatures(fids)
 
         for fid in fids:
             # hack to update attribute table
-            self.layer.featureDeleted.emit( fid )
+            self.layer.featureDeleted.emit(fid)
 
     def updateFeatures(self, features, crs):
         features = self.transformFeatures(features, crs)
@@ -141,30 +138,29 @@ class LrsLayerManager(object):
         changedAttributes = {}
         for feature in features:
             checksum = feature.getChecksum()
-            fid = self.featureIds.get( checksum , None ) 
-            if not fid: raise Exception( "Error feature not found" )
+            fid = self.featureIds.get(checksum, None)
+            if not fid: raise Exception("Error feature not found")
             changedGeometries[fid] = feature.geometry()
             changedAttributes[fid] = feature.getAttributeMap()
-        #debug ( "changedGeometries: %s" % changedGeometries )
+        # debug ( "changedGeometries: %s" % changedGeometries )
         self.layer.dataProvider().changeGeometryValues(changedGeometries)
         self.layer.dataProvider().changeAttributeValues(changedAttributes)
 
         # hack to update attribute table
         for fid, attr in changedAttributes.iteritems():
             for i, value in attr.iteritems():
-                self.layer.attributeValueChanged.emit(fid, i, value )
+                self.layer.attributeValueChanged.emit(fid, i, value)
+
 
 class LrsErrorLayerManager(LrsLayerManager):
-
-    def __init__(self, layer ):
+    def __init__(self, layer):
         super(LrsErrorLayerManager, self).__init__(layer)
-        
+
     # test if error geometry type matches this layer
-    def errorTypeMatch(self, error): 
+    def errorTypeMatch(self, error):
         if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.wkbType() != Qgis.WKBPoint: return False
         if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.wkbType() != Qgis.WKBLineString: return False
         return True
-
 
     # get errors of layer type (point or line)
     def addErrors(self, errors, crs):
@@ -172,47 +168,44 @@ class LrsErrorLayerManager(LrsLayerManager):
 
         features = []
         for error in errors:
-            if not self.errorTypeMatch( error): continue
-            feature = LrsErrorFeature( error )
-            features.append( feature )
+            if not self.errorTypeMatch(error): continue
+            feature = LrsErrorFeature(error)
+            features.append(feature)
 
         self.addFeatures(features, crs)
 
-
-
     def updateErrors(self, errorUpdates):
-        #debug ( "%s" % errorUpdates )
+        # debug ( "%s" % errorUpdates )
         if not self.layer: return
 
         # delete
-        self.deleteChecksums( errorUpdates['removedErrorChecksums'] )
+        self.deleteChecksums(errorUpdates['removedErrorChecksums'])
 
         # update 
         features = []
         for error in errorUpdates['updatedErrors']:
-            if not self.errorTypeMatch( error): continue
+            if not self.errorTypeMatch(error): continue
 
-            feature = LrsErrorFeature( error )
-            features.append( feature)
+            feature = LrsErrorFeature(error)
+            features.append(feature)
         self.updateFeatures(features, errorUpdates['crs'])
 
         # add new
-        self.addErrors( errorUpdates['addedErrors'], errorUpdates['crs'] ) 
+        self.addErrors(errorUpdates['addedErrors'], errorUpdates['crs'])
+
 
 class LrsQualityLayerManager(LrsLayerManager):
-
-    def __init__(self, layer ):
+    def __init__(self, layer):
         super(LrsQualityLayerManager, self).__init__(layer)
-        
 
     def update(self, errorUpdates):
-        #debug ( "%s" % errorUpdates )
+        # debug ( "%s" % errorUpdates )
         if not self.layer: return
 
         # delete
-        self.deleteChecksums( errorUpdates['removedQualityChecksums'] )
+        self.deleteChecksums(errorUpdates['removedQualityChecksums'])
 
         # no update, only remove and add
 
         # add new
-        self.addFeatures( errorUpdates['addedQualityFeatures'], errorUpdates['crs'] ) 
+        self.addFeatures(errorUpdates['addedQualityFeatures'], errorUpdates['crs'])

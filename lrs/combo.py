@@ -23,21 +23,19 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import * 
-from qgis.core import *
+from qgis.PyQt.QtGui import *
 
 from .utils import *
 
-class LrsComboManager(QObject):
 
-    def __init__(self, combo, **kwargs ):
+class LrsComboManager(QObject):
+    def __init__(self, combo, **kwargs):
         super(LrsComboManager, self).__init__()
-        self.combo = combo # QComboBox
+        self.combo = combo  # QComboBox
         self.settingsName = kwargs.get('settingsName')
-        self.allowNone = kwargs.get('allowNone', False) # allow select none
-        self.sort = kwargs.get('sort', True) # sort values
-        #debug ( "sort = %s" % self.sort ) 
+        self.allowNone = kwargs.get('allowNone', False)  # allow select none
+        self.sort = kwargs.get('sort', True)  # sort values
+        # debug ( "sort = %s" % self.sort )
         self.defaultValue = kwargs.get('defaultValue', None)
 
         self.model = QStandardItemModel(0, 1, self)
@@ -51,7 +49,7 @@ class LrsComboManager(QObject):
             self.combo.setModel(self.model)
 
         # options is dict with of [value,label] pairs
-        self.setOptions( kwargs.get('options', []) )
+        self.setOptions(kwargs.get('options', []))
 
     def clear(self):
         self.options = []
@@ -62,64 +60,66 @@ class LrsComboManager(QObject):
         self.model.clear()
         if options:
             for opt in options:
-                item = QStandardItem( opt[1] )
-                item.setData( opt[0], Qt.UserRole )
-                self.model.appendRow( item )
+                item = QStandardItem(opt[1])
+                item.setData(opt[0], Qt.UserRole)
+                self.model.appendRow(item)
 
     def value(self):
         idx = self.combo.currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole )
+            return self.combo.itemData(idx, Qt.UserRole)
         return None
 
     def writeToProject(self):
         idx = self.combo.currentIndex()
-        val = self.combo.itemData(idx, Qt.UserRole )
-        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val )
+        val = self.combo.itemData(idx, Qt.UserRole)
+        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val)
 
     def readFromProject(self):
-        val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
-        if val == '': val = None # to set correctly none
+        val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName)[0]
+        if val == '': val = None  # to set correctly none
 
         idx = self.combo.findData(val, Qt.UserRole)
-        #debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
+        # debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
         if idx == -1:
-            idx = self.combo.findData( self.defaultValue, Qt.UserRole)
-        
+            idx = self.combo.findData(self.defaultValue, Qt.UserRole)
+
         self.combo.setCurrentIndex(idx)
 
     # reset to index -1
     def reset(self):
         if self.defaultValue is not None:
-            idx = self.combo.findData( self.defaultValue, Qt.UserRole )
-            #debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
-            self.combo.setCurrentIndex( idx )
+            idx = self.combo.findData(self.defaultValue, Qt.UserRole)
+            # debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
+            self.combo.setCurrentIndex(idx)
         else:
             self.combo.setCurrentIndex(-1)
 
-    def findItemByData(self, data ):
+    def findItemByData(self, data):
         # QStandardItemModel.match() is not suitable, with Qt.MatchExactly it seems to comare objects
         # (must be treference to the same object?) and with Qt.MatchFixedString it works like with Qt.MatchContains
         # so we do our loop
-        for i in range( self.model.rowCount()-1, -1, -1):
-            itemData = self.model.item(i).data( Qt.UserRole )
+        for i in range(self.model.rowCount() - 1, -1, -1):
+            itemData = self.model.item(i).data(Qt.UserRole)
             if itemData == data: return self.model.item(i)
         return None
+
 
 class LrsLayerComboManager(LrsComboManager):
     layerChanged = pyqtSignal()
 
-    def __init__(self, combo, **kwargs ):
-        super(LrsLayerComboManager, self).__init__(combo,**kwargs)
-        self.geometryType = kwargs.get('geometryType', None) # Qgis.GeometryType
+    def __init__(self, combo, **kwargs):
+        super(LrsLayerComboManager, self).__init__(combo, **kwargs)
+        self.geometryType = kwargs.get('geometryType', None)  # Qgis.GeometryType
 
-# https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
+        # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
         self.combo.currentIndexChanged.connect(self.currentIndexChanged)
-# https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
+        # https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
         self.canvasLayersChanged()
 
         QgsProject.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)
+
     def __del__(self):
         if not QgsProject: return
         QgsProject.instance().layersAdded.disconnect(self.canvasLayersChanged)
@@ -131,16 +131,16 @@ class LrsLayerComboManager(LrsComboManager):
     def layerId(self):
         idx = self.combo.currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole )
+            return self.combo.itemData(idx, Qt.UserRole)
         return None
 
     def getLayer(self):
         if not QgsProject: return
         lId = self.layerId()
-        return QgsProject.instance().mapLayer( lId )
+        return QgsProject.instance().mapLayer(lId)
 
     def canvasLayersChanged(self):
-        #debug ("canvasLayersChanged")
+        # debug ("canvasLayersChanged")
         if not QgsProject: return
         layers = []
         for layer in QgsProject.instance().mapLayers():
@@ -150,10 +150,10 @@ class LrsLayerComboManager(LrsComboManager):
             layers.append(layer)
 
         # delete removed layers
-        for i in range( self.model.rowCount()-1, -1, -1):
-            lid = self.model.item(i).data( Qt.UserRole )
+        for i in range(self.model.rowCount() - 1, -1, -1):
+            lid = self.model.item(i).data(Qt.UserRole)
             if not lid in layerIds:
-                self.model.removeRows(i,1)
+                self.model.removeRows(i, 1)
 
         # add new layers
         for layer in QgsProject.instance().mapLayers():
@@ -161,27 +161,26 @@ class LrsLayerComboManager(LrsComboManager):
             if layer.type() != QgsMapLayer.VectorLayer: continue
             if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
 
-            start = self.model.index(0,0, QModelIndex())
-            indexes = self.model.match( start, Qt.UserRole, layerId, Qt.MatchFixedString )
-            if len(indexes) == 0: # add new
-                item = QStandardItem( layer.name() )
-                item.setData( layerId, Qt.UserRole )
-                self.model.appendRow( item )
-            else: # update text
+            start = self.model.index(0, 0, QModelIndex())
+            indexes = self.model.match(start, Qt.UserRole, layerId, Qt.MatchFixedString)
+            if len(indexes) == 0:  # add new
+                item = QStandardItem(layer.name())
+                item.setData(layerId, Qt.UserRole)
+                self.model.appendRow(item)
+            else:  # update text
                 index = indexes[0]
-                item = self.model.item( index.row(), index.column())
-                item.setText( layer.name() )
+                item = self.model.item(index.row(), index.column())
+                item.setText(layer.name())
 
         self.proxy.sort(0)
 
 
 class LrsFieldComboManager(LrsComboManager):
-
-    def __init__(self, combo, layerComboManager, **kwargs ):
+    def __init__(self, combo, layerComboManager, **kwargs):
         super(LrsFieldComboManager, self).__init__(combo, **kwargs)
-        self.types = kwargs.get('types', None) # QVariant.type
+        self.types = kwargs.get('types', None)  # QVariant.type
         self.layerComboManager = layerComboManager
-        self.layerId = None # current layer id
+        self.layerId = None  # current layer id
 
         self.layerChanged()
 
@@ -193,103 +192,103 @@ class LrsFieldComboManager(LrsComboManager):
     def getFieldName(self):
         idx = self.combo.currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole )
+            return self.combo.itemData(idx, Qt.UserRole)
         return None
 
     def disconnectFromLayer(self):
-        layer = QgsProject.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer(self.layerId)
         if layer:
-            layer.attributeAdded.disconnect( self.resetFields )    
-            layer.attributeDeleted.disconnect( self.resetFields )    
+            layer.attributeAdded.disconnect(self.resetFields)
+            layer.attributeDeleted.disconnect(self.resetFields)
 
     def layerChanged(self):
-        #debug ("layerChanged settingsName = %s" % self.settingsName )
+        # debug ("layerChanged settingsName = %s" % self.settingsName )
         if not QgsProject: return
 
         self.disconnectFromLayer()
 
         self.layerId = self.layerComboManager.layerId()
-        #debug ("layerId = %s" % layerId)
+        # debug ("layerId = %s" % layerId)
 
         self.resetFields()
 
-        layer = QgsProject.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer(self.layerId)
         if layer:
-            layer.attributeAdded.connect( self.resetFields )    
-            layer.attributeDeleted.connect( self.resetFields )    
+            layer.attributeAdded.connect(self.resetFields)
+            layer.attributeDeleted.connect(self.resetFields)
 
     def resetFields(self):
-        layer = QgsProject.instance().mapLayer( self.layerId )
+        layer = QgsProject.instance().mapLayer(self.layerId)
         if not layer:
             self.combo.clear()
-            return            
-            
-        # Add none item
+            return
+
+            # Add none item
         if self.allowNone:
             item = self.findItemByData(None)
             if not item:
-                item = QStandardItem( "-----" )
-                item.setData( None, Qt.UserRole )
-                self.model.appendRow( item )
+                item = QStandardItem("-----")
+                item.setData(None, Qt.UserRole)
+                self.model.appendRow(item)
 
         fieldsNames = []
         for idx, field in enumerate(layer.pendingFields()):
             if self.types and not field.type() in self.types: continue
-            fieldsNames.append( field.name() )
+            fieldsNames.append(field.name())
 
         # delete removed
-        for i in range( self.model.rowCount()-1, -1, -1):
-            fieldName = self.model.item(i).data( Qt.UserRole )
+        for i in range(self.model.rowCount() - 1, -1, -1):
+            fieldName = self.model.item(i).data(Qt.UserRole)
             if self.allowNone and fieldName is None: continue
             if not fieldName in fieldsNames:
-                self.model.removeRows(i,1)
-        
+                self.model.removeRows(i, 1)
+
         # add new fields
         for idx, field in enumerate(layer.pendingFields()):
-            #debug ("%s %s %s" % ( field.name(), field.type(), self.types) )
+            # debug ("%s %s %s" % ( field.name(), field.type(), self.types) )
             if self.types and not field.type() in self.types: continue
             fieldName = field.name()
             fieldLabel = layer.attributeDisplayName(idx)
 
             item = self.findItemByData(fieldName)
-            if not item: # add new
-                item = QStandardItem( fieldLabel )
-                item.setData( fieldName, Qt.UserRole )
-                self.model.appendRow( item )
-            else: # update text
-                item.setText( fieldLabel )
-        
+            if not item:  # add new
+                item = QStandardItem(fieldLabel)
+                item.setData(fieldName, Qt.UserRole)
+                self.model.appendRow(item)
+            else:  # update text
+                item.setText(fieldLabel)
+
         self.proxy.sort(0)
 
+
 class LrsUnitComboManager(LrsComboManager):
-
-    def __init__(self, combo, **kwargs ):
+    def __init__(self, combo, **kwargs):
         kwargs['sort'] = False
-        super(LrsUnitComboManager, self).__init__(combo,**kwargs)
+        super(LrsUnitComboManager, self).__init__(combo, **kwargs)
 
-        for unit in [ LrsUnits.METER, LrsUnits.KILOMETER, LrsUnits.FEET, LrsUnits.MILE]:
-            item = QStandardItem( LrsUnits.unitName( unit ) )
-            item.setData( unit, Qt.UserRole )
-            self.model.appendRow( item )
+        for unit in [LrsUnits.METER, LrsUnits.KILOMETER, LrsUnits.FEET, LrsUnits.MILE]:
+            item = QStandardItem(LrsUnits.unitName(unit))
+            item.setData(unit, Qt.UserRole)
+            self.model.appendRow(item)
 
         self.reset()
 
     def unit(self):
         idx = self.combo.currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole )
+            return self.combo.itemData(idx, Qt.UserRole)
         return LrsUnits.UNKNOWN
 
     def writeToProject(self):
-        name = LrsUnits.unitName( self.unit() )
-        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, name )
+        name = LrsUnits.unitName(self.unit())
+        QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, name)
 
     def readFromProject(self):
-        name = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName )[0]
+        name = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName)[0]
 
-        unit = LrsUnits.unitFromName( name )
-        idx = self.combo.findData( unit, Qt.UserRole)
-        #debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
+        unit = LrsUnits.unitFromName(name)
+        idx = self.combo.findData(unit, Qt.UserRole)
+        # debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
         if idx != -1:
             self.combo.setCurrentIndex(idx)
         else:

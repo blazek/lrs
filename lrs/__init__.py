@@ -41,11 +41,14 @@ def icon():
 def qgisMinimumVersion():
     return "2.0"
 
+
 def author():
     return "Radim Blažek"
 
+
 def email():
     return "radim.blazek@gmail.com"
+
 
 def classFactory(iface):
     # load LrsPlugin class from file LrsPlugin

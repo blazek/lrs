@@ -20,23 +20,21 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from qgis.PyQt.QtCore import *
-#from PyQt4.QtGui import *
-from qgis.core import *
+# from PyQt4.QtGui import *
 
 from .utils import *
 
-class LrsLine(object):
 
-    def __init__(self, fid, routeId, geo ):
-        self.fid = fid # line
+class LrsLine(object):
+    def __init__(self, fid, routeId, geo):
+        self.fid = fid  # line
         self.routeId = routeId
-        self.geo = QgsGeometry(geo) # store copy of QgsGeometry, may be None
+        self.geo = QgsGeometry(geo)  # store copy of QgsGeometry, may be None
 
     def getNumParts(self):
         if not self.geo: return 0
 
         if self.geo.isMultipart():
-            return len( self.geo.asMultiPolyline() )
+            return len(self.geo.asMultiPolyline())
 
         return 1

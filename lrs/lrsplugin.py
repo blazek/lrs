@@ -20,22 +20,17 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
-from qgis.core import *
-# Initialize Qt resources from file resources.py
-import resources_rc
-# Import the code for the dialog
-from .lrsdockwidget import LrsDockWidget
 import os.path
 
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from .lrsdockwidget import LrsDockWidget
 from .utils import *
 
-class LrsPlugin:
 
+class LrsPlugin:
     def __init__(self, iface):
-        #debug( "LrsPlugin.__init__" )
+        # debug( "LrsPlugin.__init__" )
         # Save reference to the QGIS interface
         self.iface = iface
 
@@ -52,9 +47,8 @@ class LrsPlugin:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-
     def initGui(self):
-        #debug( "LrsPlugin.initGui" )
+        # debug( "LrsPlugin.initGui" )
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/lrs/icon.svg"),
@@ -68,13 +62,12 @@ class LrsPlugin:
         self.iface.addPluginToVectorMenu(u"&LRS", self.action)
 
         # Create the docked panel 
-        #print "self.iface.mainWindow = %s" % self.iface.mainWindow()
+        # print "self.iface.mainWindow = %s" % self.iface.mainWindow()
         self.dockWidget = LrsDockWidget(self.iface.mainWindow(), self.iface)
-        self.iface.addDockWidget(Qt.RightDockWidgetArea,self.dockWidget)
-
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget)
 
     def unload(self):
-        #debug( "LrsPlugin.unload" )
+        # debug( "LrsPlugin.unload" )
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
@@ -83,8 +76,7 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        #debug( "LrsPlugin.run" )
+        # debug( "LrsPlugin.run" )
 
         # show the dialog
         self.dockWidget.show()
-

@@ -21,36 +21,33 @@
 """
 
 from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
-from qgis.core import *
-from qgis.gui import *
 
 from .ui_selectiondialog import Ui_LrsSelectionDialog
 
-class LrsSelectionDialog( QDialog, Ui_LrsSelectionDialog ):
-    def __init__( self, parent = None ):
-        #debug( "LrsDockWidget.__init__")
- 
-        super(LrsSelectionDialog, self).__init__(parent )
-        
+
+class LrsSelectionDialog(QDialog, Ui_LrsSelectionDialog):
+    def __init__(self, parent=None):
+        # debug( "LrsDockWidget.__init__")
+
+        super(LrsSelectionDialog, self).__init__(parent)
+
         # Set up the user interface from Designer.
-        self.setupUi( self )
+        self.setupUi(self)
 
-        #self.model = 
+        # self.model =
 
-        #self.proxy = QSortFilterProxyModel()
-        #self.proxy.setFilterKeyColumn(0)
-        #self.proxy.setFilterCaseSensitivity( Qt.CaseInsensitive )
-        #self.proxy.setSourceModel( self.model )
+        # self.proxy = QSortFilterProxyModel()
+        # self.proxy.setFilterKeyColumn(0)
+        # self.proxy.setFilterCaseSensitivity( Qt.CaseInsensitive )
+        # self.proxy.setSourceModel( self.model )
 
         self.tableWidget.insertColumn(0)
-        self.tableWidget.setHorizontalHeaderItem(0, QTableWidgetItem( 'Route' ) )
+        self.tableWidget.setHorizontalHeaderItem(0, QTableWidgetItem('Route'))
         self.tableWidget.setSelectionMode(QTableView.ExtendedSelection)
 
-
     # select is list of values to be selected
-    def load( self, layer, fieldName, select ):
+    def load(self, layer, fieldName, select):
         while self.tableWidget.rowCount() > 0:
             self.tableWidget.removeRow(0)
         if not layer or not fieldName: return
@@ -61,24 +58,24 @@ class LrsSelectionDialog( QDialog, Ui_LrsSelectionDialog ):
         values = set()
         for feature in layer.getFeatures():
             value = feature[fieldName]
-            values.add( value )
+            values.add(value)
 
         if field.type() == QVariant.String:
-            values = sorted( values, key=lambda s: s.lower() if type(s) is not QPyNullVariant else '' )
+            values = sorted(values, key=lambda s: s.lower() if type(s) is not QPyNullVariant else '')
         else:
-            values = sorted( values )
+            values = sorted(values)
 
         for i in range(len(values)):
             strValue = '%s' % values[i]
-            item = QTableWidgetItem( strValue )
-            item.setData( Qt.UserRole, values[i] )
-            self.tableWidget.insertRow( i )
-            self.tableWidget.setItem( i, 0, item )
+            item = QTableWidgetItem(strValue)
+            item.setData(Qt.UserRole, values[i])
+            self.tableWidget.insertRow(i)
+            self.tableWidget.setItem(i, 0, item)
             if strValue in select:
-                self.tableWidget.setRangeSelected( QTableWidgetSelectionRange(i, 0, i, 0), True )
+                self.tableWidget.setRangeSelected(QTableWidgetSelectionRange(i, 0, i, 0), True)
 
     def selected(self):
         selected = []
         for item in self.tableWidget.selectedItems():
-            selected.append( item.data(Qt.UserRole) )
+            selected.append(item.data(Qt.UserRole))
         return selected
