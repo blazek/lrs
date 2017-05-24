@@ -21,15 +21,15 @@
 """
 import sys, operator, math
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
-from part import *
-from error import *
-from point import *
-from milestone import *
+from .utils import *
+from .part import *
+from .error import *
+from .point import *
+from .milestone import *
 
 # LrsRoute keeps list of LrsLine 
 
@@ -70,28 +70,28 @@ class LrsRoute:
         if self.routeId == None: # special case 
             for line in self.lines:
                 if not line.geo: continue
-                origin = LrsOrigin( QGis.Line, line.fid )
+                origin = LrsOrigin( QgsWkbTypes.LineGeometry, line.fid )
                 self.errors.append( LrsError( LrsError.NO_ROUTE_ID, line.geo, origins = [ origin ] ) )  
 
             for point in self.points:
                 if not point.geo: continue
-                origin = LrsOrigin( QGis.Point, point.fid )
+                origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid )
                 self.errors.append( LrsError( LrsError.NO_ROUTE_ID, point.geo, origins = [ origin ] ) )  
 
                 # in addition it may be without measure
                 if point.measure == None:
-                    origin = LrsOrigin( QGis.Point, point.fid )
+                    origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid )
                     self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, origins = [ origin ] ) )
 
         elif len( self.lines ) == 0: # no lines -> orphan points
             for point in self.points:
                 if not point.geo: continue
-                origin = LrsOrigin( QGis.Point, point.fid )
+                origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid )
                 self.errors.append( LrsError( LrsError.ORPHAN, point.geo, routeId = self.routeId, measure = point.measure, origins = [ origin ] ) )
 
                 # in addition it may be without measure
                 if point.measure == None:
-                    origin = LrsOrigin( QGis.Point, point.fid )
+                    origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid )
                     self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, routeId = self.routeId, origins = [ origin ] ) )
 
         else:
@@ -214,12 +214,12 @@ class LrsRoute:
         polylines = [] # list of { polyline:, fid:, geoPart:, nGeoParts: }
         for line in self.lines:
             if not line.geo: continue
-            # QGis::singleType and flatType are not in bindings (2.0)
+            # Qgis::singleType and flatType are not in bindings (2.0)
             polys = None # list of QgsPolyline
-            if line.geo.wkbType() in [ QGis.WKBLineString, QGis.WKBLineString25D]:
+            if line.geo.wkbType() in [ Qgis.WKBLineString, Qgis.WKBLineString25D]:
                 #polylines.append( line.geo.asPolyline() )
                 polys = [ line.geo.asPolyline() ]
-            elif line.geo.wkbType() in [ QGis.WKBMultiLineString, QGis.WKBMultiLineString25D]:
+            elif line.geo.wkbType() in [ Qgis.WKBMultiLineString, Qgis.WKBMultiLineString25D]:
                 #polylines.extend ( line.geo.asMultiPolyline() )
                 polys = line.geo.asMultiPolyline()
 
@@ -287,7 +287,7 @@ class LrsRoute:
         duplicates.sort(reverse=True)
         for d in duplicates: # delete going down (sorted reverse)
             geo = QgsGeometry.fromPolyline( polylines[d]['polyline'] )
-            origin = LrsOrigin( QGis.Line, polylines[d]['fid'], polylines[d]['geoPart'], polylines[d]['nGeoParts'] )
+            origin = LrsOrigin( QgsWkbTypes.LineGeometry, polylines[d]['fid'], polylines[d]['geoPart'], polylines[d]['nGeoParts'] )
             self.errors.append( LrsError( LrsError.DUPLICATE_LINE, geo, routeId = self.routeId, origins = [ origin ] ) )
             del  polylines[d]
              
@@ -316,7 +316,7 @@ class LrsRoute:
             #polyline = polylines.pop(0)
             poly = polylines.pop(0)
             polyline = poly['polyline']
-            origin = LrsOrigin( QGis.Line, poly['fid'], poly['geoPart'], poly['nGeoParts'] )
+            origin = LrsOrigin( QgsWkbTypes.LineGeometry, poly['fid'], poly['geoPart'], poly['nGeoParts'] )
             origins = [ origin ]
             while True: # connect parts
                 connected = False
@@ -355,7 +355,7 @@ class LrsRoute:
 
                     if connected: 
                         #print '%s part connected' % i
-                        origin = LrsOrigin( QGis.Line, polylines[i]['fid'], polylines[i]['geoPart'], polylines[i]['nGeoParts'] )
+                        origin = LrsOrigin( QgsWkbTypes.LineGeometry, polylines[i]['fid'], polylines[i]['geoPart'], polylines[i]['nGeoParts'] )
                         origins.append( origin )
                         del polylines[i]
                         break
@@ -472,14 +472,14 @@ class LrsRoute:
             if not point.geo: continue
 
             if point.measure == None:
-                origin = LrsOrigin( QGis.Point, point.fid )
+                origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid )
                 self.errors.append( LrsError( LrsError.NO_MEASURE, point.geo, routeId = self.routeId, origins = [ origin ] ) )
                 continue
 
             pts = []
-            if point.geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+            if point.geo.wkbType() in [ Qgis.WKBPoint, Qgis.WKBPoint25D]:
                 pts = [ point.geo.asPoint() ]
-            elif point.geo.wkbType() in [ QGis.WKBMultiPoint, QGis.WKBMultiPoint25D]: 
+            elif point.geo.wkbType() in [ Qgis.WKBMultiPoint, Qgis.WKBMultiPoint25D]: 
                 # multi (makes little sense)
                 pts = point.geo.asMultiPoint()
 
@@ -491,7 +491,7 @@ class LrsRoute:
                 pnt = p['point']
                 ph = pointHash( pnt )
 
-                origin = LrsOrigin( QGis.Point, point.fid, p['geoPart'], p['nGeoParts'] )
+                origin = LrsOrigin( QgsWkbTypes.PointGeometry, point.fid, p['geoPart'], p['nGeoParts'] )
         
                 if not nodes.has_key( ph ):
                     nodes[ ph ] = { 
@@ -551,7 +551,7 @@ class LrsRoute:
 
                 nearPart.milestones.append( milestone )
             else:   
-                origin = LrsOrigin( QGis.Point, milestone.fid, milestone.geoPart, milestone.nGeoParts )
+                origin = LrsOrigin( QgsWkbTypes.PointGeometry, milestone.fid, milestone.geoPart, milestone.nGeoParts )
                 self.errors.append( LrsError( LrsError.OUTSIDE_THRESHOLD, pointGeo, routeId = self.routeId, measure = milestone.measure, origins = [ origin ] ) )    
                  
     def calibrateParts(self):
@@ -613,7 +613,7 @@ class LrsRoute:
             m_len = segment.record.milestoneTo - segment.record.milestoneFrom
             #length = segment.geo.length()
             length = self.distanceArea.measure( segment.geo )
-            qgisUnit = QGis.Meters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
+            qgisUnit = Qgis.Meters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
             length = convertDistanceUnits( length, qgisUnit, self.measureUnit )
             err_abs = m_len - length
             err_rel = err_abs / length if length > 0 else 0

@@ -20,12 +20,12 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.core import *
 
-from utils import *
-from error import *
+from .utils import *
+from .error import *
 
 # To add methods on layers, we must use manager, not extended QgsVectorLayer, 
 # because layers may be stored in project and created by QGIS.
@@ -71,7 +71,7 @@ class LrsQualityLayer(QgsVectorLayer):
         ]
         ranges = []
         for style in styles:
-            symbol = QgsSymbolV2.defaultSymbol(  QGis.Line )
+            symbol = QgsSymbolV2.defaultSymbol(  QgsWkbTypes.LineGeometry )
             symbol.setColor( style[2] )
             range = QgsRendererRangeV2 ( style[0], style[1], symbol, style[3] )
             ranges.append(range)
@@ -161,8 +161,8 @@ class LrsErrorLayerManager(LrsLayerManager):
         
     # test if error geometry type matches this layer
     def errorTypeMatch(self, error): 
-        if self.layer.geometryType() == QGis.Point and error.geo.wkbType() != QGis.WKBPoint: return False
-        if self.layer.geometryType() == QGis.Line and error.geo.wkbType() != QGis.WKBLineString: return False
+        if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.wkbType() != Qgis.WKBPoint: return False
+        if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.wkbType() != Qgis.WKBLineString: return False
         return True
 
 

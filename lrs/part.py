@@ -20,12 +20,12 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
-from error import *
+from .utils import *
+from .error import *
 
 # calibration record
 class LrsRecord:
@@ -203,7 +203,7 @@ class LrsRoutePart:
                 if scores[i] == minScore:
                     m = milestones[i]
                     geo = QgsGeometry.fromPoint( m.pnt )
-                    origin = LrsOrigin( QGis.Point, m.fid, m.geoPart, m.nGeoParts )
+                    origin = LrsOrigin( QgsWkbTypes.PointGeometry, m.fid, m.geoPart, m.nGeoParts )
                     self.errors.append( LrsError( LrsError.WRONG_MEASURE, geo, routeId = self.routeId, measure = m.measure, origins = [ origin ] ))
                     del  milestones[i]
 
@@ -224,7 +224,7 @@ class LrsRoutePart:
             polyline = polylineSegment( self.polyline, partFrom, partTo )
             geo = QgsGeometry.fromPolyline( polyline )
             length = self.distanceArea.measure( geo )
-            qgisUnit = QGis.Meters
+            qgisUnit = Qgis.Meters
         else:
             length = partTo - partFrom    
             qgisUnit = self.crs.mapUnits()

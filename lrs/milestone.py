@@ -20,11 +20,11 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
+from .utils import *
 
 class LrsMilestone(object):
 

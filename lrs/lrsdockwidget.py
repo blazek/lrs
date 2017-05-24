@@ -20,19 +20,19 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from ui_lrsdockwidget import Ui_LrsDockWidget
-from utils import *
-from error import *
-from layer import *
-from lrs import *
-from combo import *
-from widget import *
-from selectiondialog import *
+from .ui_lrsdockwidget import Ui_LrsDockWidget
+from .utils import *
+from .error import *
+from .layer import *
+from .lrs import *
+from .combo import *
+from .widget import *
+from .selectiondialog import *
 
 try:
     import psycopg2
@@ -78,9 +78,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # initLayer, initField, fieldType did not work, fixed and created pull request
         # https://github.com/3nids/qgiscombomanager/pull/1
 
-        self.genLineLayerCM = LrsLayerComboManager( self.genLineLayerCombo, geometryType = QGis.Line, settingsName = 'lineLayerId' )
+        self.genLineLayerCM = LrsLayerComboManager( self.genLineLayerCombo, geometryType = QgsWkbTypes.LineGeometry, settingsName = 'lineLayerId' )
         self.genLineRouteFieldCM = LrsFieldComboManager( self.genLineRouteFieldCombo, self.genLineLayerCM, settingsName = 'lineRouteField' )
-        self.genPointLayerCM = LrsLayerComboManager( self.genPointLayerCombo, geometryType = QGis.Point, settingsName = 'pointLayerId' )
+        self.genPointLayerCM = LrsLayerComboManager( self.genPointLayerCombo, geometryType = QgsWkbTypes.PointGeometry, settingsName = 'pointLayerId' )
         self.genPointRouteFieldCM = LrsFieldComboManager( self.genPointRouteFieldCombo, self.genPointLayerCM, settingsName = 'pointRouteField' )
         self.genPointMeasureFieldCM = LrsFieldComboManager( self.genPointMeasureFieldCombo, self.genPointLayerCM, types = [ QVariant.Int, QVariant.Double ], settingsName = 'pointMeasureField' )
 
@@ -161,7 +161,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.eventsProgressBar.hide()
 
         #### measureTab
-        self.measureLayerCM = LrsLayerComboManager( self.measureLayerCombo, geometryType = QGis.Point, settingsName = 'measureLayerId' )
+        self.measureLayerCM = LrsLayerComboManager( self.measureLayerCombo, geometryType = QgsWkbTypes.PointGeometry, settingsName = 'measureLayerId' )
         self.measureThresholdWM = LrsWidgetManager( self.measureThresholdSpin, settingsName = 'measureThreshold', defaultValue = 100.0 )
         self.measureOutputNameWM = LrsWidgetManager( self.measureOutputNameLineEdit, settingsName = 'measureOutputName', defaultValue = 'LRS measure' )
 
@@ -214,10 +214,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         
         QgsProject.instance().readProject.connect( self.projectRead )
 
-        #self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.connect(self.mapRendererCrsChanged)
-        connectHasCrsTransformEnabledChanged( self.iface, self.mapRendererCrsChanged )
-        #self.iface.mapCanvas().mapRenderer().destinationSrsChanged.connect(self.mapRendererCrsChanged)
-        connectDestinationSrsChanged( self.iface, self.mapRendererCrsChanged )
+        connectHasCrsTransformEnabledChanged( self.iface, self.mapSettingsCrsChanged )
+        connectDestinationSrsChanged( self.iface, self.mapSettingsCrsChanged )
         self.updateLabelsUnits()
 
 
@@ -285,10 +283,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         self.deleteLrs()
         QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect( self.projectRead )
-        #self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled.disconnect(self.mapRendererCrsChanged)
-        disconnectHasCrsTransformEnabledChanged( self.iface, self.mapRendererCrsChanged)
-        #self.iface.mapCanvas().mapRenderer().destinationSrsChanged.disconnect(self.mapRendererCrsChanged)
-        disconnectDestinationSrsChanged( self.iface, self.mapRendererCrsChanged )
+        disconnectHasCrsTransformEnabledChanged( self.iface, self.mapSettingsCrsChanged)
+        disconnectDestinationSrsChanged( self.iface, self.mapSettingsCrsChanged )
 
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
@@ -337,12 +333,12 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if self.tabWidget.widget(index) == self.exportTab:
            self.exportTabBecameVisible() 
 
-    def mapRendererCrsChanged(self):
+    def mapSettingsCrsChanged(self):
         self.updateLabelsUnits()
 
     def getUnitsLabel(self, crs):
         label = ""
-        units = { QGis.Meters: 'meters', QGis.Feet: 'feets', QGis.Degrees: 'degrees' }
+        units = { Qgis.Meters: 'meters', Qgis.Feet: 'feets', Qgis.Degrees: 'degrees' }
         if crs and units.has_key( crs.mapUnits() ):
             label = " (%s)" % units[crs.mapUnits()]
         return label
@@ -449,10 +445,8 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             crs = lineLayer.crs()
 
         #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
-        #if self.iface.mapCanvas().mapRenderer().hasCrsTransformEnabled():
         if getHasCrsTransformEnabled( self.iface ):
-            #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapRenderer().destinationCrs().authid() )
-            #crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapSettings().destinationCrs().authid() )
             crs = getDestinationCrs ( self.iface )
         return crs
 
@@ -687,9 +681,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             point, error = self.lrs.eventPoint(routeId, measure)
 
             if point:
-                mapRenderer = self.iface.mapCanvas().mapRenderer()
-                if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != self.lrs.crs:
-                    transform = QgsCoordinateTransform( self.lrs.crs, mapRenderer.destinationCrs() )
+                mapSettings = self.iface.mapCanvas().mapSettings()
+                if mapSettings.hasCrsTransformEnabled() and mapSettings.destinationCrs() != self.lrs.crs:
+                    transform = QgsCoordinateTransform( self.lrs.crs, mapSettings.destinationCrs() )
                     point = transform.transform( point )
 
                 coordinates = "%s,%s" % ( point.x(), point.y() )
@@ -717,9 +711,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         if not self.locateHighlightCheckBox.isChecked(): return
 
         mapCanvas = self.iface.mapCanvas()
-        mapRenderer = mapCanvas.mapRenderer()
+        mapSettings = mapCanvas.mapSettings()
         # QgsHighlight does reprojection from layer CRS
-        crs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else self.lrs.crs
+        crs = mapSettings.destinationCrs() if mapSettings.hasCrsTransformEnabled() else self.lrs.crs
         layer = QgsVectorLayer( 'Point?crs=' + crsString( crs ), 'LRS locate highlight', 'memory' ) 
         self.locateHighlight = QgsHighlight( mapCanvas, QgsGeometry.fromPoint( self.locatePoint ), layer )
         # highlight point size is hardcoded in QgsHighlight
@@ -806,8 +800,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
         # create new layer
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
-        uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapRenderer().destinationCrs() )
-        
+        uri += "?crs=%s" %  crsString( self.iface.mapCanvas().mapSettings().destinationCrs() )
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
+        # and negative length and precision we overwrite type names according to types and reset length and precision
+        fieldsList = layer.pendingFields().toList()
+        fixFields( fieldsList )
+        provider.addAttributes( fieldsList )
+        if errorFieldName:
+            provider.addAttributes( [ QgsField( errorFieldName, QVariant.String, "string"), ]) 
+        uri = provider.dataSourceUri()
+        #debug ( 'uri: %s' % uri )
+
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
         outputLayer.startEditing() # to add fields
         for field in layer.pendingFields():
@@ -854,7 +858,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             # was not set on feature. OTOH, if empty geometry (created by QgsGeometry()
             # which does not construct correct WKBNoGeometry) was set on a feature, 
             # QgsVectorFileWriter was giving errors when saving memory layer.
-            if QGis.QGIS_VERSION_INT < 20100:
+            if Qgis.QGIS_VERSION_INT < 20100:
                 if not geo: 
                     # QgsGeometry() does not construct correct WKBNoGeometry
                     # QgsGeometry.fromWkt('MULTILINESTRING/POINT EMPTY') is cousing later crash
@@ -936,9 +940,18 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
  
         # create new layer
         # it may happen that memory provider does not support all fields types, see #10, check if fields exists
-        
-        #uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapRenderer().destinationCrs() )
-        uri = "Point?crs=%s" %  crsString ( layer.crs() )        
+        #uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapSettings().destinationCrs() )
+        uri = "Point?crs=%s" %  crsString ( layer.crs() )
+        provider = QgsProviderRegistry.instance().provider( 'memory', uri )
+        fieldsList = layer.pendingFields().toList()
+        fixFields( fieldsList )
+        provider.addAttributes( fieldsList )
+        provider.addAttributes( [ 
+            QgsField( routeFieldName, QVariant.String, "string"), 
+            QgsField( measureFieldName, QVariant.Double, "double"), 
+        ]) 
+
+        uri = provider.dataSourceUri()
         outputLayer = QgsVectorLayer ( uri, outputName, 'memory')
         outputLayer.startEditing() # to add fields
         for field in layer.pendingFields():
@@ -961,9 +974,9 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             
             geo = feature.geometry()
             if geo:
-                if geo.wkbType() in [ QGis.WKBPoint, QGis.WKBPoint25D]:
+                if geo.wkbType() in [ Qgis.WKBPoint, Qgis.WKBPoint25D]:
                     points = [ geo.asPoint() ]
-                elif geo.wkbType() in [ QGis.WKBMultiPoint, QGis.WKBMultiPoint25D]:
+                elif geo.wkbType() in [ Qgis.WKBMultiPoint, Qgis.WKBMultiPoint25D]:
                     points = geo.asMultiPoint()
 
             for point in points:
@@ -1088,7 +1101,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
 
             conn.close()
             
-        except Exception, e:
+        except Exception as e:
             conn.close()
             QMessageBox.critical( self, 'Error', '%s' % e )
             return
@@ -1132,7 +1145,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
                 conn = psycopg2.connect( uri.connectionInfo().encode('utf-8') )
                 #debug('connected ok' ) 
                 return conn
-            except Exception,e:
+            except Exception as e:
                 #QMessageBox.critical( self, 'Error', 'Cannot connect: %s' % e )
                 err = '%s' % e
                 (ok, username, password) = QgsCredentials.instance().get(uri.connectionInfo(), username, password, err)
@@ -1218,7 +1231,7 @@ class LrsDockWidget( QDockWidget, Ui_LrsDockWidget ):
             conn.commit()
             conn.close()
 
-        except Exception, e:
+        except Exception as e:
             conn.close()
             QMessageBox.critical( self, 'Error', '%s' % e )
             return

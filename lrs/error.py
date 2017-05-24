@@ -22,12 +22,12 @@
 from hashlib import md5
 
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from utils import *
+from .utils import *
 
 # Origin of geometry part used for error checksums, it allows to update errors when 
 # geometry is changed, but error remains. 
@@ -35,7 +35,7 @@ from utils import *
 # geoPart numbers are changed. That is why there is also nGeoParts
 class LrsOrigin(object):
     def __init__(self, geoType, fid, geoPart = -1, nGeoParts = -1 ):
-        self.geoType = geoType # QGis.Point or QGis.Line
+        self.geoType = geoType # QgsWkbTypes.PointGeometry or QgsWkbTypes.LineGeometry
         self.fid = fid
         # geoPart and nGeoParts are -1 if the origin is full geometry, e.g. NO_ROUTE_ID
         self.geoPart = geoPart
@@ -407,15 +407,15 @@ class LrsErrorVisualizer(object):
     def zoom(self, error, crs):
         if not error: return
         geo = error.geo
-        mapRenderer = self.mapCanvas.mapRenderer()
-        if mapRenderer.hasCrsTransformEnabled() and mapRenderer.destinationCrs() != crs:
+        mapSettings = self.mapCanvas.mapSettings()
+        if mapSettings.hasCrsTransformEnabled() and mapSettings.destinationCrs() != crs:
             geo = QgsGeometry( error.geo )
-            transform = QgsCoordinateTransform( crs, mapRenderer.destinationCrs() )
+            transform = QgsCoordinateTransform( crs, mapSettings.destinationCrs() )
             geo.transform( transform )
 
-        if geo.wkbType() == QGis.WKBPoint:
+        if geo.wkbType() == Qgis.WKBPoint:
             p = geo.asPoint()
-            bufferCrs = mapRenderer.destinationCrs() if mapRenderer.hasCrsTransformEnabled() else crs
+            bufferCrs = mapSettings.destinationCrs() if mapSettings.hasCrsTransformEnabled() else crs
             b = 2000 if not bufferCrs.geographicFlag() else 2000/100000  # buffer
             extent = QgsRectangle(p.x()-b, p.y()-b, p.x()+b, p.y()+b)
         else: #line

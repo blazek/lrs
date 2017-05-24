@@ -21,16 +21,15 @@
 """
 import time
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
+from qgis.PyQt.QtCore import *
 #from PyQt4.QtGui import *
 from qgis.core import *
 
-from utils import *
-from route import LrsRoute
-from point import LrsPoint
-from line import LrsLine
-from error import *
-#from line
+from .utils import *
+from .route import LrsRoute
+from .point import LrsPoint
+from .line import LrsLine
+from .error import *
 
 # Main class to keep all data and process them
 
@@ -85,7 +84,7 @@ class Lrs(QObject):
         self.distanceArea = QgsDistanceArea()
         # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
         self.distanceArea.setSourceCrs( self.crs.srsid() )
-        if self.crs.mapUnits() == QGis.Degrees:
+        if self.crs.mapUnits() == Qgis.Degrees:
             self.distanceArea.setEllipsoidalMode( True )
             ellipsoid = self.crs.ellipsoidAcronym()
             if not ellipsoid: ellipsoid = "WGS84"

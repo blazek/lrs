@@ -20,16 +20,17 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
-from lrsdockwidget import LrsDockWidget
+from .lrsdockwidget import LrsDockWidget
 import os.path
 
-from utils import *
+from .utils import *
 
 class LrsPlugin:
 
@@ -37,11 +38,6 @@ class LrsPlugin:
         #debug( "LrsPlugin.__init__" )
         # Save reference to the QGIS interface
         self.iface = iface
-
-        # There is bug in SIP (Transfer of QgsMapRenderer) 
-        # http://lists.osgeo.org/pipermail/qgis-developer/2013-December/029816.html
-        # so we have to keep reference to QgsMapRenderer
-        self.mapRenderer = iface.mapCanvas().mapRenderer()
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
@@ -72,7 +68,7 @@ class LrsPlugin:
         self.iface.addPluginToVectorMenu(u"&LRS", self.action)
 
         # Create the docked panel 
-        print "self.iface.mainWindow = %s" % self.iface.mainWindow()
+        #print "self.iface.mainWindow = %s" % self.iface.mainWindow()
         self.dockWidget = LrsDockWidget(self.iface.mainWindow(), self.iface)
         self.iface.addDockWidget(Qt.RightDockWidgetArea,self.dockWidget)
 
