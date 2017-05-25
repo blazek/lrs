@@ -3,6 +3,7 @@
     <words>
       <w>multipolyline</w>
       <w>nlines</w>
+      <w>reprojection</w>
     </words>
   </dictionary>
 </component>

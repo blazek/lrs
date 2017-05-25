@@ -401,14 +401,14 @@ class LrsErrorVisualizer(object):
         if not error: return
         geo = error.geo
         mapSettings = self.mapCanvas.mapSettings()
-        if mapSettings.hasCrsTransformEnabled() and mapSettings.destinationCrs() != crs:
+        if isProjectCrsEnabled() and getProjectCrs() != crs:
             geo = QgsGeometry(error.geo)
-            transform = QgsCoordinateTransform(crs, mapSettings.destinationCrs())
+            transform = QgsCoordinateTransform(crs, QgsProject().instance().crs())
             geo.transform(transform)
 
         if geo.wkbType() == Qgis.WKBPoint:
             p = geo.asPoint()
-            bufferCrs = mapSettings.destinationCrs() if mapSettings.hasCrsTransformEnabled() else crs
+            bufferCrs = getProjectCrs() if isProjectCrsEnabled() else crs
             b = 2000 if not bufferCrs.geographicFlag() else 2000 / 100000  # buffer
             extent = QgsRectangle(p.x() - b, p.y() - b, p.x() + b, p.y() + b)
         else:  # line

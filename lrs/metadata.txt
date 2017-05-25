@@ -10,7 +10,8 @@
 
 [general]
 name=LRS
-qgisMinimumVersion=2.0
+qgisMinimumVersion=2.99
+qgisMaximumVersion=3.99
 description=Linear reference system builder and editor 
 about=The plugin supports calibration, creation of punctual and linear events and calculation of measures for points
 version=0.3.7

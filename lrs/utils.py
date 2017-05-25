@@ -61,7 +61,7 @@ class LrsUnits():
 
     @staticmethod
     def unitFromName(name):
-        for u, n in LrsUnits.names.iteritems():
+        for u, n in LrsUnits.names.items():
             if n == name:
                 return u
         return LrsUnits.UNKNOWN
@@ -258,35 +258,18 @@ def getLayerFeature(layer, fid):
 # QgsCoordinateReferenceSystem.createFromString() does not accept value from authid()
 # if it is type 'USER:'
 def crsString(crs):
-    string = crs.authid()
-    if not string.lower().startswith('epsg'):
-        string = 'internal:%s' % crs.srsid()
-    return string
+    crs_string = crs.authid()
+    if not crs_string.lower().startswith('epsg'):
+        crs_string = 'internal:%s' % crs.srsid()
+    return crs_string
 
 
-# Version independent helpers to avoid DeprecationWarning
-def getHasCrsTransformEnabled(iface):
-    iface.mapCanvas().mapSettings().hasCrsTransformEnabled()
+def isProjectCrsEnabled():
+    return QgsProject().instance().crs().isValid()
 
 
-def getDestinationCrs(iface):
-    iface.mapCanvas().mapSettings().destinationCrs()
-
-
-def connectHasCrsTransformEnabledChanged(iface, slot):
-    iface.mapCanvas().hasCrsTransformEnabledChanged.connect(slot)
-
-
-def disconnectHasCrsTransformEnabledChanged(iface, slot):
-    iface.mapCanvas().hasCrsTransformEnabledChanged.disconnect(slot)
-
-
-def connectDestinationSrsChanged(iface, slot):
-    iface.mapCanvas().destinationCrsChanged.connect(slot)
-
-
-def disconnectDestinationSrsChanged(iface, slot):
-    iface.mapCanvas().destinationCrsChanged.disconnect(slot)
+def getProjectCrs():
+    return QgsProject().instance().crs()
 
 
 # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)

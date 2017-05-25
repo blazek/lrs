@@ -148,7 +148,7 @@ class Lrs(QObject):
 
         self.wasEdited = False  # true if layers were edited since calibration
 
-        QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
+        QgsProject.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
 
     def __del__(self):
         self.disconnect()
@@ -166,7 +166,7 @@ class Lrs(QObject):
         self.lineLayer.editingStopped.disconnect(self.lineLayerEditingStopped)
 
     def disconnect(self):
-        QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
+        QgsProject.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         self.pointLayerDisconnect()
         self.lineLayerDisconnect()
 

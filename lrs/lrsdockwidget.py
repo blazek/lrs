@@ -54,7 +54,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.qualityLayer = None
         self.qualityLayerManager = None
 
-        self.pluginDir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "python/plugins/lrs"
+        self.pluginDir = QFileInfo(QgsApplication.qgisUserDatabaseFilePath()).path() + "python/plugins/lrs"
         # remember if export schema options has to be reset to avoid asking credential until necessary
         self.resetExportSchemaOptionsOnVisible = False
 
@@ -229,12 +229,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         #####
         self.enableTabs()
 
-        QgsMapLayerRegistry.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
+        QgsProject.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
 
         QgsProject.instance().readProject.connect(self.projectRead)
 
-        connectHasCrsTransformEnabledChanged(self.iface, self.mapSettingsCrsChanged)
-        connectDestinationSrsChanged(self.iface, self.mapSettingsCrsChanged)
+        QgsProject().instance().crsChanged.connect(self.mapSettingsCrsChanged)
+
         self.updateLabelsUnits()
 
         # newProject is currently missing in sip
@@ -260,21 +260,19 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.readMeasureOptions()
         self.readExportOptions()
 
-        registry = QgsMapLayerRegistry.instance()
-
         ##### set error layers if stored in project
         errorLineLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId")[0]
-        self.errorLineLayer = registry.mapLayer(errorLineLayerId)
+        self.errorLineLayer = project.mapLayer(errorLineLayerId)
         if self.errorLineLayer:
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
 
         errorPointLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorPointLayerId")[0]
-        self.errorPointLayer = registry.mapLayer(errorPointLayerId)
+        self.errorPointLayer = project.mapLayer(errorPointLayerId)
         if self.errorPointLayer:
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
 
         qualityLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "qualityLayerId")[0]
-        self.qualityLayer = registry.mapLayer(qualityLayerId)
+        self.qualityLayer = project.mapLayer(qualityLayerId)
         if self.qualityLayer:
             self.qualityLayerManager = LrsQualityLayerManager(self.qualityLayer)
 
@@ -299,10 +297,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def close(self):
         # debug( "LrsDockWidget.close")
         self.deleteLrs()
-        QgsMapLayerRegistry.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
+        QgsProject.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect(self.projectRead)
-        disconnectHasCrsTransformEnabledChanged(self.iface, self.mapSettingsCrsChanged)
-        disconnectDestinationSrsChanged(self.iface, self.mapSettingsCrsChanged)
+        QgsProject().instance().crsChanged.disconnect(self.mapSettingsCrsChanged)
 
         # Must delete combo managers to disconnect!
         del self.genLineLayerCM
@@ -352,14 +349,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.exportTabBecameVisible()
 
     def mapSettingsCrsChanged(self):
+        debug("mapSettingsCrsChanged")
         self.updateLabelsUnits()
 
-    def getUnitsLabel(self, crs):
-        label = ""
-        units = {Qgis.Meters: 'meters', Qgis.Feet: 'feets', Qgis.Degrees: 'degrees'}
-        if crs and units.has_key(crs.mapUnits()):
-            label = " (%s)" % units[crs.mapUnits()]
-        return label
+    @staticmethod
+    def getUnitsLabel(crs):
+        return " (%s)" % QgsUnitTypes.encodeUnit(crs.mapUnits())
 
     def getThresholdLabel(self, crs):
         label = "Max point distance" + self.getUnitsLabel(crs)
@@ -463,9 +458,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             crs = lineLayer.crs()
 
         # debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
-        if getHasCrsTransformEnabled(self.iface):
+        if isProjectCrsEnabled():
             # debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapSettings().destinationCrs().authid() )
-            crs = getDestinationCrs(self.iface)
+            crs = getProjectCrs()
         return crs
 
     # set threshold units according to current crs
@@ -602,7 +597,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
             self.errorLineLayer.rendererV2().symbol().setColor(QColor(Qt.red))
             self.resetErrorLineLayer()
-            QgsMapLayerRegistry.instance().addMapLayers([self.errorLineLayer, ])
+            QgsProject.instance().addMapLayers([self.errorLineLayer, ])
             project.writeEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id())
 
         if not self.errorPointLayer:
@@ -610,7 +605,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
             self.errorPointLayer.rendererV2().symbol().setColor(QColor(Qt.red))
             self.resetErrorPointLayer()
-            QgsMapLayerRegistry.instance().addMapLayers([self.errorPointLayer, ])
+            QgsProject.instance().addMapLayers([self.errorPointLayer, ])
             project.writeEntry(PROJECT_PLUGIN_NAME, "errorPointLayerId", self.errorPointLayer.id())
 
     # reset error layers content (features)
@@ -648,7 +643,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.qualityLayerManager = LrsQualityLayerManager(self.qualityLayer)
 
             self.resetQualityLayer()
-            QgsMapLayerRegistry.instance().addMapLayers([self.qualityLayer, ])
+            QgsProject.instance().addMapLayers([self.qualityLayer, ])
             project = QgsProject.instance()
             project.writeEntry(PROJECT_PLUGIN_NAME, "qualityLayerId", self.qualityLayer.id())
 
@@ -705,7 +700,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
             if point:
                 mapSettings = self.iface.mapCanvas().mapSettings()
-                if mapSettings.hasCrsTransformEnabled() and mapSettings.destinationCrs() != self.lrs.crs:
+                if isProjectCrsEnabled() and getProjectCrs() != self.lrs.crs:
                     transform = QgsCoordinateTransform(self.lrs.crs, mapSettings.destinationCrs())
                     point = transform.transform(point)
 
@@ -736,7 +731,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         mapCanvas = self.iface.mapCanvas()
         mapSettings = mapCanvas.mapSettings()
         # QgsHighlight does reprojection from layer CRS
-        crs = mapSettings.destinationCrs() if mapSettings.hasCrsTransformEnabled() else self.lrs.crs
+        crs = getProjectCrs() if isProjectCrsEnabled() else self.lrs.crs
         layer = QgsVectorLayer('Point?crs=' + crsString(crs), 'LRS locate highlight', 'memory')
         self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry.fromPoint(self.locatePoint), layer)
         # highlight point size is hardcoded in QgsHighlight
@@ -901,7 +896,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         outputLayer.dataProvider().addFeatures(outputFeatures)
 
-        QgsMapLayerRegistry.instance().addMapLayers([outputLayer, ])
+        QgsProject.instance().addMapLayers([outputLayer, ])
 
         self.eventsProgressBar.hide()
 
@@ -1029,7 +1024,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         outputLayer.dataProvider().addFeatures(outputFeatures)
 
-        QgsMapLayerRegistry.instance().addMapLayers([outputLayer, ])
+        QgsProject.instance().addMapLayers([outputLayer, ])
 
         self.measureProgressBar.hide()
 

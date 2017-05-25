@@ -30,7 +30,7 @@ from .utils import *
 
 class LrsPlugin:
     def __init__(self, iface):
-        # debug( "LrsPlugin.__init__" )
+        #debug("LrsPlugin.__init__")
         # Save reference to the QGIS interface
         self.iface = iface
 
@@ -48,7 +48,8 @@ class LrsPlugin:
                 QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
-        # debug( "LrsPlugin.initGui" )
+        #debug("LrsPlugin.initGui")
+
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/lrs/icon.svg"),
@@ -76,7 +77,6 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        # debug( "LrsPlugin.run" )
-
+        #debug("LrsPlugin.run")
         # show the dialog
         self.dockWidget.show()

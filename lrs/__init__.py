@@ -22,35 +22,34 @@
 """
 
 
-def name():
-    return "LRS"
-
-
-def description():
-    return "Linear reference system builder and editor"
-
-
-def version():
-    return "Version 0.1"
-
-
-def icon():
-    return "icon.png"
-
-
-def qgisMinimumVersion():
-    return "2.0"
-
-
-def author():
-    return "Radim Blažek"
-
-
-def email():
-    return "radim.blazek@gmail.com"
-
-
 def classFactory(iface):
-    # load LrsPlugin class from file LrsPlugin
     from .lrsplugin import LrsPlugin
     return LrsPlugin(iface)
+
+# def name():
+#     return "LRS"
+#
+#
+# def description():
+#     return "Linear reference system builder and editor"
+#
+#
+# def version():
+#     return "Version 0.1"
+#
+#
+# def icon():
+#     return "icon.png"
+#
+#
+# def qgisMinimumVersion():
+#     return "2.0"
+#
+#
+# def author():
+#     return "Radim Blažek"
+#
+#
+# def email():
+#     return "radim.blazek@gmail.com"
+

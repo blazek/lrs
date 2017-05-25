@@ -1,6 +1,7 @@
 *.*~
 *~
 .*.swp
+core
 
 *.py[cod]
 resources_rc.py
