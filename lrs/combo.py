@@ -143,7 +143,7 @@ class LrsLayerComboManager(LrsComboManager):
         # debug ("canvasLayersChanged")
         if not QgsProject: return
         layers = []
-        for layer in QgsProject.instance().mapLayers():
+        for layer in QgsProject.instance().mapLayers().values():
             print(layer)
             if layer.type() != QgsMapLayer.VectorLayer: continue
             if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
@@ -152,20 +152,20 @@ class LrsLayerComboManager(LrsComboManager):
         # delete removed layers
         for i in range(self.model.rowCount() - 1, -1, -1):
             lid = self.model.item(i).data(Qt.UserRole)
-            if not lid in layerIds:
+            if not lid in QgsProject.instance().mapLayers().keys():
                 self.model.removeRows(i, 1)
 
         # add new layers
-        for layer in QgsProject.instance().mapLayers():
+        for layer in QgsProject.instance().mapLayers().values():
             print(layer)
             if layer.type() != QgsMapLayer.VectorLayer: continue
             if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
 
             start = self.model.index(0, 0, QModelIndex())
-            indexes = self.model.match(start, Qt.UserRole, layerId, Qt.MatchFixedString)
+            indexes = self.model.match(start, Qt.UserRole, layer.id(), Qt.MatchFixedString)
             if len(indexes) == 0:  # add new
                 item = QStandardItem(layer.name())
-                item.setData(layerId, Qt.UserRole)
+                item.setData(layer.id(), Qt.UserRole)
                 self.model.appendRow(item)
             else:  # update text
                 index = indexes[0]

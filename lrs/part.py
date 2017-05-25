@@ -225,7 +225,7 @@ class LrsRoutePart:
             polyline = polylineSegment(self.polyline, partFrom, partTo)
             geo = QgsGeometry.fromPolyline(polyline)
             length = self.distanceArea.measure(geo)
-            qgisUnit = Qgis.Meters
+            qgisUnit = QgsUnitTypes.DistanceMeters
         else:
             length = partTo - partFrom
             qgisUnit = self.crs.mapUnits()

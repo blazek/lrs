@@ -125,7 +125,7 @@ def pointHash(point):
 
 
 def convertDistanceUnits(distance, qgisUnit, lrsUnit):
-    if qgisUnit == Qgis.Meters:
+    if qgisUnit == QgsUnitTypes.DistanceMeters:
         if lrsUnit == LrsUnits.METER:
             return distance
         elif lrsUnit == LrsUnits.KILOMETER:

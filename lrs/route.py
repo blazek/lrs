@@ -618,7 +618,7 @@ class LrsRoute:
             m_len = segment.record.milestoneTo - segment.record.milestoneFrom
             # length = segment.geo.length()
             length = self.distanceArea.measure(segment.geo)
-            qgisUnit = Qgis.Meters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
+            qgisUnit = QgsUnitTypes.DistanceMeters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
             length = convertDistanceUnits(length, qgisUnit, self.measureUnit)
             err_abs = m_len - length
             err_rel = err_abs / length if length > 0 else 0

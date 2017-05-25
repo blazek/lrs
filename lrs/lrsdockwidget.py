@@ -354,7 +354,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     @staticmethod
     def getUnitsLabel(crs):
-        return " (%s)" % QgsUnitTypes.encodeUnit(crs.mapUnits())
+        if crs:
+            return " (%s)" % QgsUnitTypes.encodeUnit(crs.mapUnits())
+        else:
+            return ""
 
     def getThresholdLabel(self, crs):
         label = "Max point distance" + self.getUnitsLabel(crs)
