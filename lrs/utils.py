@@ -263,9 +263,16 @@ def getProjectCrs():
 # and negative length and precision we overwrite type names according to types and reset length and precision
 def fixFields(fieldsList):
     for field in fieldsList:
+        #debug("fixFields %s %s %s" % (field.name(), field.typeName(), QVariant.typeToName(field.type())))
         if field.type() == QVariant.String:
             field.setTypeName('string')
+        elif field.type() == QVariant.UInt:
+            field.setTypeName('int')
         elif field.type() == QVariant.Int:
+            field.setTypeName('int')
+        elif field.type() == QVariant.LongLong:
+            field.setTypeName('int')
+        elif field.type() == QVariant.ULongLong:
             field.setTypeName('int')
         elif field.type() == QVariant.Double:
             field.setTypeName('double')
@@ -275,3 +282,5 @@ def fixFields(fieldsList):
 
         if field.precision() < 0:
             field.setPrecision(0)
+
+        #debug("fixFields %s" % (field.typeName()))

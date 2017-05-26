@@ -30,7 +30,7 @@ from .error import *
 # Inherited layers are only used to create layer with type and attributes
 class LrsErrorLayer(QgsVectorLayer):
     def __init__(self, uri, baseName):
-        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         provider.addAttributes(LRS_ERROR_FIELDS.toList())
         uri = provider.dataSourceUri()
         # debug ( 'uri = %s' % uri )
@@ -55,7 +55,7 @@ class LrsErrorLineLayer(LrsErrorLayer):
 class LrsQualityLayer(QgsVectorLayer):
     def __init__(self, crs):
         uri = "LineString?crs=%s" % crsString(crs)
-        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         provider.addAttributes(LRS_QUALITY_FIELDS.toList())
         uri = provider.dataSourceUri()
         super(LrsQualityLayer, self).__init__(uri, 'LRS quality', 'memory')

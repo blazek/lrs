@@ -283,7 +283,7 @@ class LrsErrorModel(QAbstractTableModel):
         for error in errorUpdates['addedErrors']:
             # debug ( 'add row' )
             idx = len(self.errors)
-            sePointGeometrylf.beginInsertRows(QModelIndex(), idx, idx)
+            self.beginInsertRows(QModelIndex(), idx, idx)
             self.errors.append(error)
             self.endInsertRows()
 

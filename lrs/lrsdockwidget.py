@@ -349,7 +349,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.exportTabBecameVisible()
 
     def mapSettingsCrsChanged(self):
-        debug("mapSettingsCrsChanged")
+        #debug("mapSettingsCrsChanged")
         self.updateLabelsUnits()
 
     @staticmethod
@@ -822,7 +822,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
         uri += "?crs=%s" % crsString(self.iface.mapCanvas().mapSettings().destinationCrs())
-        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
         # and negative length and precision we overwrite type names according to types and reset length and precision
         fieldsList = layer.pendingFields().toList()
@@ -831,18 +831,32 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if errorFieldName:
             provider.addAttributes([QgsField(errorFieldName, QVariant.String, "string"), ])
         uri = provider.dataSourceUri()
-        # debug ( 'uri: %s' % uri )
+        #debug('uri: %s' % uri)
 
         outputLayer = QgsVectorLayer(uri, outputName, 'memory')
-        outputLayer.startEditing()  # to add fields
+        if not outputLayer.isValid():
+            QMessageBox.information(self, 'Information', 'Cannot create memory layer with uri %s' % uri)
+
+        # Check if all attributes were parsed correctly, memory provider may fail to parse attribute
+        # types and adds names including types in such case
+        missingFields = []
         for field in layer.pendingFields():
-            if not outputLayer.addAttribute(field):
-                QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
+            if outputLayer.fields().indexFromName(field.name()) < 0:
+                missingFields.append(field.name())
 
-        if errorFieldName:
-            outputLayer.addAttribute(QgsField(errorFieldName, QVariant.String, "string"))
+        if missingFields:
+            QMessageBox.information(self, 'Information', 'Could not copy field %s. The type is not probably supported by memory provider, try to change field type.' % " ".join(missingFields))
 
-        outputLayer.commitChanges()
+        # Not sure why attributes were set again here, the attributes are already in uri
+        # outputLayer.startEditing()  # to add fields
+        #for field in layer.pendingFields():
+        #    if not outputLayer.addAttribute(field):
+        #        QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
+
+        #if errorFieldName:
+        #    outputLayer.addAttribute(QgsField(errorFieldName, QVariant.String, "string"))
+
+        #outputLayer.commitChanges()
 
         # It may happen that event goes slightely outside available lrs because of 
         # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that 
@@ -858,7 +872,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None
-            # debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
+            #debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
 
             outputFeature = QgsFeature(fields)  # fields must exist during feature life!
             for field in layer.pendingFields():
@@ -955,7 +969,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # it may happen that memory provider does not support all fields types, see #10, check if fields exists
         # uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapSettings().destinationCrs() )
         uri = "Point?crs=%s" % crsString(layer.crs())
-        provider = QgsProviderRegistry.instance().provider('memory', uri)
+        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         fieldsList = layer.pendingFields().toList()
         fixFields(fieldsList)
         provider.addAttributes(fieldsList)
