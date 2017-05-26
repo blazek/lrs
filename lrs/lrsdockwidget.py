@@ -837,15 +837,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not outputLayer.isValid():
             QMessageBox.information(self, 'Information', 'Cannot create memory layer with uri %s' % uri)
 
-        # Check if all attributes were parsed correctly, memory provider may fail to parse attribute
-        # types and adds names including types in such case
-        missingFields = []
-        for field in layer.pendingFields():
-            if outputLayer.fields().indexFromName(field.name()) < 0:
-                missingFields.append(field.name())
-
-        if missingFields:
-            QMessageBox.information(self, 'Information', 'Could not copy field %s. The type is not probably supported by memory provider, try to change field type.' % " ".join(missingFields))
+        checkFields(layer, outputLayer)
 
         # Not sure why attributes were set again here, the attributes are already in uri
         # outputLayer.startEditing()  # to add fields
@@ -858,7 +850,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         #outputLayer.commitChanges()
 
-        # It may happen that event goes slightely outside available lrs because of 
+        # It may happen that event goes slightly outside available lrs because of
         # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that 
         # tolerance and skip smaller linear event errors (gaps)
         # 0.1m is too much and less than 0.01 m does not make sense in standard GIS
@@ -980,14 +972,18 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         uri = provider.dataSourceUri()
         outputLayer = QgsVectorLayer(uri, outputName, 'memory')
-        outputLayer.startEditing()  # to add fields
-        for field in layer.pendingFields():
-            if not outputLayer.addAttribute(field):
-                QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
 
-        outputLayer.addAttribute(QgsField(routeFieldName, QVariant.String, "string"))
-        outputLayer.addAttribute(QgsField(measureFieldName, QVariant.Double, "double"))
-        outputLayer.commitChanges()
+        checkFields(layer, outputLayer)
+
+        # Not sure why attributes were set again here, the attributes are already in uri
+        # outputLayer.startEditing()  # to add fields
+        # for field in layer.pendingFields():
+        #     if not outputLayer.addAttribute(field):
+        #         QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
+        #
+        # outputLayer.addAttribute(QgsField(routeFieldName, QVariant.String, "string"))
+        # outputLayer.addAttribute(QgsField(measureFieldName, QVariant.Double, "double"))
+        # outputLayer.commitChanges()
 
         outputFeatures = []
         fields = outputLayer.pendingFields()

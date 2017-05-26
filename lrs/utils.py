@@ -284,3 +284,18 @@ def fixFields(fieldsList):
             field.setPrecision(0)
 
         #debug("fixFields %s" % (field.typeName()))
+
+
+# Check if all attributes were parsed correctly, memory provider may fail to parse attribute
+# types and adds names including types in such case
+def checkFields(inputLayer, outputLayer):
+    missingFields = []
+    for field in inputLayer.pendingFields():
+        if outputLayer.fields().indexFromName(field.name()) < 0:
+            missingFields.append(field.name())
+
+    if missingFields:
+        QMessageBox.information(self, 'Information',
+                                'Could not copy field %s. The type is not probably supported by memory provider, try to change field type.' % " ".join(
+                                    missingFields))
+
