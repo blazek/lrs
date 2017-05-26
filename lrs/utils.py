@@ -57,6 +57,7 @@ class LrsUnits():
 def debug(msg):
     print("LRSDEBUG: %s" % msg)
     sys.stdout.flush()
+    QgsMessageLog.logMessage(msg, 'LRS Plugin', QgsMessageLog.INFO)
 
 
 # compare 2 doubles

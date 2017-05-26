@@ -21,6 +21,8 @@
 """
 from hashlib import md5
 
+from qgis.gui import QgsHighlight
+
 from .utils import *
 
 
@@ -94,6 +96,9 @@ class LrsError(QObject):
             self.FORK_LINE: self.tr('Fork line'),
         }
 
+    def __str__(self):
+        return "error: %s %s %s %s %s" % (self.type, self.typeLabel(), self.message, self.routeId, self.measure)
+
     def typeLabel(self):
         if not self.type in self.typeLabels:
             return "Unknown error"
@@ -165,7 +170,7 @@ class LrsError(QObject):
             elif self.type == self.DUPLICATE_REFERENCING:
                 m.update(str(self.routeId).encode())
                 m.update(self.geo.exportToWkb())
-                m.update(self.getMeasureString())
+                m.update(self.getMeasureString().encode())
             elif self.type == self.PARALLEL:
                 m.update(self.getOriginChecksum())
             elif self.type == self.FORK_LINE:
@@ -278,7 +283,7 @@ class LrsErrorModel(QAbstractTableModel):
         for error in errorUpdates['addedErrors']:
             # debug ( 'add row' )
             idx = len(self.errors)
-            self.beginInsertRows(QModelIndex(), idx, idx)
+            sePointGeometrylf.beginInsertRows(QModelIndex(), idx, idx)
             self.errors.append(error)
             self.endInsertRows()
 
@@ -326,6 +331,16 @@ class LrsErrorFeature(LrsFeature):
         }
         for name, value in values.items():
             self.setAttribute(name, value)
+
+    def __str__(self):
+        attributes = []
+        for i in range(len(self.fields())):
+            name = self.fields()[i].name()
+            attributes.append( "%s:%s" % ( name, self.attribute(name) ) )
+        s = "errorFeature: " + " ".join(attributes)
+        if self.geometry():
+            s += " " + self.geometry().exportToWkt()
+        return s
 
     def getChecksum(self):
         return self.checksum
@@ -410,7 +425,7 @@ class LrsErrorVisualizer(object):
         if geo.type() == QgsWkbTypes.PointGeometry:
             p = geo.asPoint()
             bufferCrs = getProjectCrs() if isProjectCrsEnabled() else crs
-            b = 2000 if not bufferCrs.geographicFlag() else 2000 / 100000  # buffer
+            b = 2000 if not bufferCrs.isGeographic() else 2000 / 100000  # buffer
             extent = QgsRectangle(p.x() - b, p.y() - b, p.x() + b, p.y() + b)
         else:  # line
             extent = geo.boundingBox()

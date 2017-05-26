@@ -158,25 +158,33 @@ class LrsErrorLayerManager(LrsLayerManager):
 
     # test if error geometry type matches this layer
     def errorTypeMatch(self, error):
-        if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.type() != QgsWkbTypes.PointGeometry: return False
-        if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.type() != QgsWkbTypes.PointGeometry: return False
+        if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.type() != QgsWkbTypes.PointGeometry:
+            return False
+        if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.type() != QgsWkbTypes.LineGeometry:
+            return False
         return True
 
     # get errors of layer type (point or line)
     def addErrors(self, errors, crs):
-        if not self.layer: return
+        if not self.layer:
+            return
+        #debug("addErrors geometryType = %s" % self.layer.geometryType())
 
         features = []
         for error in errors:
-            if not self.errorTypeMatch(error): continue
+            #debug("addErrors %s" % error)
+            if not self.errorTypeMatch(error):
+                continue
             feature = LrsErrorFeature(error)
+            #debug("addErrors %s" % feature)
             features.append(feature)
 
         self.addFeatures(features, crs)
 
     def updateErrors(self, errorUpdates):
         # debug ( "%s" % errorUpdates )
-        if not self.layer: return
+        if not self.layer:
+            return
 
         # delete
         self.deleteChecksums(errorUpdates['removedErrorChecksums'])
@@ -184,7 +192,8 @@ class LrsErrorLayerManager(LrsLayerManager):
         # update 
         features = []
         for error in errorUpdates['updatedErrors']:
-            if not self.errorTypeMatch(error): continue
+            if not self.errorTypeMatch(error):
+                continue
 
             feature = LrsErrorFeature(error)
             features.append(feature)
@@ -200,7 +209,8 @@ class LrsQualityLayerManager(LrsLayerManager):
 
     def update(self, errorUpdates):
         # debug ( "%s" % errorUpdates )
-        if not self.layer: return
+        if not self.layer:
+            return
 
         # delete
         self.deleteChecksums(errorUpdates['removedQualityChecksums'])
