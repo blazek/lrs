@@ -38,7 +38,7 @@ class LrsOrigin(object):
 
     def getChecksum(self):
         s = "%s-%s-%s-%s" % (self.geoType, self.fid, self.geoPart, self.nGeoParts)
-        m = md5(s)
+        m = md5(s.encode())
         return m.digest()
 
 
@@ -95,7 +95,7 @@ class LrsError(QObject):
         }
 
     def typeLabel(self):
-        if not self.typeLabels.has_key(self.type):
+        if not self.type in self.typeLabels:
             return "Unknown error"
         return self.typeLabels[self.type]
 
@@ -138,21 +138,21 @@ class LrsError(QObject):
     # calculation depends on error type
     def getChecksum(self):
         if not self.checksum_:
-            m = md5("%s" % self.type)
+            m = md5(str(self.type).encode())
 
             if self.type == self.DUPLICATE_LINE:
-                m.update(self.geo.asWkb())
+                m.update(self.geo.exportToWkb())
             elif self.type == self.DUPLICATE_POINT:
-                m.update(self.geo.asWkb())
+                m.update(self.geo.exportToWkb())
             elif self.type == self.FORK:
-                m.update('%s' % self.routeId)
-                m.update(self.geo.asWkb())
+                m.update(str(self.routeId).encode())
+                m.update(self.geo.exportToWkb())
             elif self.type == self.ORPHAN:
                 m.update(self.getOriginChecksum())
             elif self.type == self.OUTSIDE_THRESHOLD:
                 m.update(self.getOriginChecksum())
             elif self.type == self.NOT_ENOUGH_MILESTONES:
-                m.update('%s' % self.routeId)
+                m.update(str(self.routeId).encode())
                 m.update(self.getOriginChecksum())
             elif self.type == self.NO_ROUTE_ID:
                 m.update(self.getOriginChecksum())
@@ -163,8 +163,8 @@ class LrsError(QObject):
             elif self.type == self.WRONG_MEASURE:
                 m.update(self.getOriginChecksum())
             elif self.type == self.DUPLICATE_REFERENCING:
-                m.update('%s' % self.routeId)
-                m.update(self.geo.asWkb())
+                m.update(str(self.routeId).encode())
+                m.update(self.geo.exportToWkb())
                 m.update(self.getMeasureString())
             elif self.type == self.PARALLEL:
                 m.update(self.getOriginChecksum())
@@ -177,7 +177,7 @@ class LrsError(QObject):
         # full checksum
         # def getFullChecksum(self):
         # if not self.fullChecksum_:
-        # s  = "%s-%s-%s-%s-%s" % ( self.type, self.geo.asWkb(), self.routeId, self.getMeasureString(), self.getOriginChecksum() )
+        # s  = "%s-%s-%s-%s-%s" % ( self.type, self.geo.exportToWkb(), self.routeId, self.getMeasureString(), self.getOriginChecksum() )
         # m = md5( s )
         # self.fullChecksum_ = m.digest()
         # return self.fullChecksum_
@@ -203,7 +203,7 @@ class LrsErrorModel(QAbstractTableModel):
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if not Qt or role != Qt.DisplayRole: return None
         if orientation == Qt.Horizontal:
-            if self.headerLabels.has_key(section):
+            if section in self.headerLabels:
                 return self.headerLabels[section]
             else:
                 return ""
@@ -324,7 +324,7 @@ class LrsErrorFeature(LrsFeature):
             'route': '%s' % error.routeId,
             'measure': error.getMeasureString()
         }
-        for name, value in values.iteritems():
+        for name, value in values.items():
             self.setAttribute(name, value)
 
     def getChecksum(self):
@@ -361,10 +361,11 @@ class LrsQualityFeature(LrsFeature):
     # geometry + all attributes
     def getChecksum(self):
         if not self.checksum_:
-            m = md5("%s" % self.geometry().asWkb())
+            #m = md5("%s" % self.geometry().exportToWkb())
+            m = md5(self.geometry().exportToWkb())
 
             for attribute in self.attributes():
-                m.update('%s' % attribute)
+                m.update(str(attribute).encode())
 
             self.checksum_ = m.digest()
         return self.checksum_
@@ -406,7 +407,7 @@ class LrsErrorVisualizer(object):
             transform = QgsCoordinateTransform(crs, QgsProject().instance().crs())
             geo.transform(transform)
 
-        if geo.wkbType() == Qgis.WKBPoint:
+        if geo.type() == QgsWkbTypes.PointGeometry:
             p = geo.asPoint()
             bufferCrs = getProjectCrs() if isProjectCrsEnabled() else crs
             b = 2000 if not bufferCrs.geographicFlag() else 2000 / 100000  # buffer

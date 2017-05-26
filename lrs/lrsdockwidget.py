@@ -875,16 +875,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
                 if point:
                     geo = QgsGeometry.fromPoint(point)
 
-            # Because of bug #9309 in memory provider in 2.0 it was crashing if geometry
-            # was not set on feature. OTOH, if empty geometry (created by QgsGeometry()
-            # which does not construct correct WKBNoGeometry) was set on a feature, 
-            # QgsVectorFileWriter was giving errors when saving memory layer.
-            if Qgis.QGIS_VERSION_INT < 20100:
-                if not geo:
-                    # QgsGeometry() does not construct correct WKBNoGeometry
-                    # QgsGeometry.fromWkt('MULTILINESTRING/POINT EMPTY') is cousing later crash
-                    geo = QgsGeometry()
-
             if geo:
                 outputFeature.setGeometry(geo)
 
@@ -997,9 +987,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
             geo = feature.geometry()
             if geo:
-                if geo.wkbType() in [Qgis.WKBPoint, Qgis.WKBPoint25D]:
+                if QgsWkbTypes.isSingleType(geo.wkbType()):
                     points = [geo.asPoint()]
-                elif geo.wkbType() in [Qgis.WKBMultiPoint, Qgis.WKBMultiPoint25D]:
+                else:
                     points = geo.asMultiPoint()
 
             for point in points:

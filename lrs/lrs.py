@@ -80,9 +80,8 @@ class Lrs(QObject):
 
         self.distanceArea = QgsDistanceArea()
         # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
-        self.distanceArea.setSourceCrs(self.crs.srsid())
-        if self.crs.mapUnits() == Qgis.Degrees:
-            self.distanceArea.setEllipsoidalMode(True)
+        self.distanceArea.setSourceCrs(self.crs)
+        if self.crs.mapUnits() == QgsUnitTypes.DistanceDegrees:
             ellipsoid = self.crs.ellipsoidAcronym()
             if not ellipsoid: ellipsoid = "WGS84"
             self.distanceArea.setEllipsoid(ellipsoid)
@@ -249,7 +248,7 @@ class Lrs(QObject):
     def getRoute(self, routeId):
         normalId = normalizeRouteId(routeId)
         # debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
-        if not self.routes.has_key(normalId):
+        if not normalId in self.routes:
             self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs,
                                              self.measureUnit, self.distanceArea, parallelMode=self.parallelMode)
         return self.routes[normalId]
@@ -258,7 +257,8 @@ class Lrs(QObject):
     # routeId does not have to be normalized
     def getRouteIfExists(self, routeId):
         normalId = normalizeRouteId(routeId)
-        if not self.routes.has_key(normalId): return None
+        if not normalId in self.routes:
+            return None
         return self.routes[normalId]
 
     ####### register / unregister features
@@ -268,7 +268,8 @@ class Lrs(QObject):
         if routeId == '' or routeId == NULL: routeId = None
         # debug ( "fid = %s routeId = %s" % ( feature.id(), routeId ) )
 
-        if not self.routeIdSelected(routeId): return None
+        if not self.routeIdSelected(routeId):
+            return None
 
         geo = feature.geometry()
         if geo:
@@ -294,7 +295,7 @@ class Lrs(QObject):
             # self.stats['lineFeatures'] += 1
             length = 0
             if feature.geometry():
-                length = self.distanceArea.measure(feature.geometry())
+                length = self.distanceArea.measureLength(feature.geometry())
             self.stats['length'] += length
             if line:
                 # self.stats['lineFeaturesIncluded'] += 1
@@ -379,7 +380,8 @@ class Lrs(QObject):
     # get list of available measures ( (from, to),.. )
     def getRouteMeasureRanges(self, routeId):
         routeId = normalizeRouteId(routeId)
-        if not self.routes.has_key(routeId): return []
+        if not routeId in self.routes:
+            return []
         return self.routes[routeId].getMeasureRanges()
 
     def getQualityFeatures(self):

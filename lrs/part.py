@@ -192,7 +192,7 @@ class LrsRoutePart:
             if done: break  # all in crorrect order
 
             # find lowest score
-            minScore = sys.maxint
+            minScore = sys.maxsize
             for i in range(len(scores)):
                 if scores[i] < minScore: minScore = scores[i]
 
@@ -210,7 +210,7 @@ class LrsRoutePart:
 
         self.goodMilestones = milestones
 
-        # create calibrarion table 
+        # create calibration table
         for i in range(len(milestones) - 1):
             m1 = milestones[i]
             m2 = milestones[i + 1]
@@ -221,10 +221,10 @@ class LrsRoutePart:
 
     # calculate segment measure in measure units, used for extrapolate
     def segmentLengthInMeasureUnits(self, partFrom, partTo):
-        if self.distanceArea.ellipsoidalEnabled():
+        if self.distanceArea.willUseEllipsoid():
             polyline = polylineSegment(self.polyline, partFrom, partTo)
             geo = QgsGeometry.fromPolyline(polyline)
-            length = self.distanceArea.measure(geo)
+            length = self.distanceArea.measureLength(geo)
             qgisUnit = QgsUnitTypes.DistanceMeters
         else:
             length = partTo - partFrom

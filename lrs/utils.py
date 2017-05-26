@@ -25,22 +25,8 @@ import sys
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 
-# QGis was renamed to Qgis: https://github.com/qgis/QGIS/commit/1a2231f10c
-try:
-    from qgis.core import Qgis
-except Exception as e:
-    from qgis.core import QGis as Qgis
-
-# QGis::GeometryType was replaced by QgsWkbTypes::GeometryType https://github.com/qgis/QGIS/commit/bb79d1
-try:
-    from qgis.core import QgsWkbTypes
-except Exception as e:
-    class QgsWkbTypes():
-        PointGeometry = Qgis.Point
-        LineGeometry = Qgis.Line
-        PolygonGeometry = Qgis.Polygon
-        UnknownGeometry = Qgis.UnknownGeometry
-        NullGeometry = Qgis.NoGeometry
+from qgis.core import Qgis
+from qgis.core import QgsWkbTypes
 
 # name of plugin in project file
 PROJECT_PLUGIN_NAME = "lrs"
@@ -134,7 +120,7 @@ def convertDistanceUnits(distance, qgisUnit, lrsUnit):
             return distance * 3.2808399
         elif lrsUnit == LrsUnits.MILE:
             return distance / 1609.344
-    elif qgisUnit == Qgis.Feet:
+    elif qgisUnit == QgsUnitTypes.DistanceFeet:
         if lrsUnit == LrsUnits.METER:
             return distance / 3.2808399
         elif lrsUnit == LrsUnits.KILOMETER:

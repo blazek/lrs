@@ -21,6 +21,8 @@
 """
 import operator
 
+from functools import reduce
+
 from .error import *
 from .milestone import *
 from .part import *
@@ -144,7 +146,7 @@ class LrsRoute:
         for part in parts:
             for i in [0, -1]:
                 ph = pointHash(part.polyline[i])
-                if not nodes.has_key(ph):
+                if not ph in nodes:
                     nodes[ph] = {'pnt': part.polyline[i], 'parts': [part]}
                 else:
                     nodes[ph]['parts'].append(part)
@@ -211,11 +213,9 @@ class LrsRoute:
             if not line.geo: continue
             # Qgis::singleType and flatType are not in bindings (2.0)
             polys = None  # list of QgsPolyline
-            if line.geo.wkbType() in [Qgis.WKBLineString, Qgis.WKBLineString25D]:
-                # polylines.append( line.geo.asPolyline() )
+            if QgsWkbTypes.isSingleType(line.geo.wkbType()):
                 polys = [line.geo.asPolyline()]
-            elif line.geo.wkbType() in [Qgis.WKBMultiLineString, Qgis.WKBMultiLineString25D]:
-                # polylines.extend ( line.geo.asMultiPolyline() )
+            else:  # multi line
                 polys = line.geo.asMultiPolyline()
 
             for i in range(len(polys)):
@@ -292,7 +292,7 @@ class LrsRoute:
             polyline = poly['polyline']
             for i in [0, -1]:
                 ph = pointHash(polyline[i])
-                if not nodes.has_key(ph):
+                if not ph in nodes:
                     nodes[ph] = {'pnt': polyline[i], 'nlines': 1}
                 else:
                     nodes[ph]['nlines'] += 1
@@ -428,7 +428,7 @@ class LrsRoute:
                 geo = QgsGeometry.fromPoint(node['pnt'])
                 self.errors.append(LrsError(LrsError.FORK, geo, routeId=self.routeId))
                 # mark shortest forked parts as errors
-        for ph, node in nodes.iteritems():
+        for ph, node in nodes.items():
             parts = node['parts']
             if len(parts) <= 2: continue
 
@@ -475,9 +475,9 @@ class LrsRoute:
                 continue
 
             pts = []
-            if point.geo.wkbType() in [Qgis.WKBPoint, Qgis.WKBPoint25D]:
+            if QgsWkbTypes.isSingleType(point.geo.wkbType()):
                 pts = [point.geo.asPoint()]
-            elif point.geo.wkbType() in [Qgis.WKBMultiPoint, Qgis.WKBMultiPoint25D]:
+            else:
                 # multi (makes little sense)
                 pts = point.geo.asMultiPoint()
 
@@ -491,7 +491,7 @@ class LrsRoute:
 
                 origin = LrsOrigin(QgsWkbTypes.PointGeometry, point.fid, p['geoPart'], p['nGeoParts'])
 
-                if not nodes.has_key(ph):
+                if not ph in nodes:
                     nodes[ph] = {
                         'pnt': pnt,
                         'npoints': 1,
@@ -617,8 +617,8 @@ class LrsRoute:
             # m_len = self.mapUnitsPerMeasureUnit * (segment.record.milestoneTo - segment.record.milestoneFrom)
             m_len = segment.record.milestoneTo - segment.record.milestoneFrom
             # length = segment.geo.length()
-            length = self.distanceArea.measure(segment.geo)
-            qgisUnit = QgsUnitTypes.DistanceMeters if self.distanceArea.ellipsoidalEnabled() else self.crs.mapUnits()
+            length = self.distanceArea.measureLength(segment.geo)
+            qgisUnit = QgsUnitTypes.DistanceMeters if self.distanceArea.willUseEllipsoid() else self.crs.mapUnits()
             length = convertDistanceUnits(length, qgisUnit, self.measureUnit)
             err_abs = m_len - length
             err_rel = err_abs / length if length > 0 else 0

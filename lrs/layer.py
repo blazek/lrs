@@ -147,8 +147,8 @@ class LrsLayerManager(object):
         self.layer.dataProvider().changeAttributeValues(changedAttributes)
 
         # hack to update attribute table
-        for fid, attr in changedAttributes.iteritems():
-            for i, value in attr.iteritems():
+        for fid, attr in changedAttributes.items():
+            for i, value in attr.items():
                 self.layer.attributeValueChanged.emit(fid, i, value)
 
 
@@ -158,8 +158,8 @@ class LrsErrorLayerManager(LrsLayerManager):
 
     # test if error geometry type matches this layer
     def errorTypeMatch(self, error):
-        if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.wkbType() != Qgis.WKBPoint: return False
-        if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.wkbType() != Qgis.WKBLineString: return False
+        if self.layer.geometryType() == QgsWkbTypes.PointGeometry and error.geo.type() != QgsWkbTypes.PointGeometry: return False
+        if self.layer.geometryType() == QgsWkbTypes.LineGeometry and error.geo.type() != QgsWkbTypes.PointGeometry: return False
         return True
 
     # get errors of layer type (point or line)
