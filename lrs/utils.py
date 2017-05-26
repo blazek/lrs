@@ -22,6 +22,8 @@
 import math
 import sys
 
+from PyQt5.QtWidgets import QMessageBox
+
 from qgis.PyQt.QtCore import *
 from qgis.core import *
 
@@ -295,7 +297,7 @@ def checkFields(inputLayer, outputLayer):
             missingFields.append(field.name())
 
     if missingFields:
-        QMessageBox.information(self, 'Information',
+        QMessageBox.information(None, 'Information',
                                 'Could not copy field %s. The type is not probably supported by memory provider, try to change field type.' % " ".join(
                                     missingFields))
 

@@ -19,7 +19,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-
+from .postgis import ExportPostgis
+from .measures import LrsMeasures
+from .events import LrsEvents
 from .combo import *
 from .layer import *
 from .lrs import *
@@ -89,15 +91,16 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
                                                     defaultValue=LrsUnits.KILOMETER)
 
         self.genSelectionModeCM = LrsComboManager(self.genSelectionModeCombo, options=(
-        ('all', self.tr('All routes')), ('include', self.tr('Include routes')), ('exclude', self.tr('Exclude routes'))),
+            ('all', self.tr('All routes')), ('include', self.tr('Include routes')),
+            ('exclude', self.tr('Exclude routes'))),
                                                   defaultValue='all', settingsName='selectionMode')
         self.genSelectionWM = LrsWidgetManager(self.genSelectionLineEdit, settingsName='selection')
 
         self.genThresholdWM = LrsWidgetManager(self.genThresholdSpin, settingsName='threshold', defaultValue=100.0)
         self.genSnapWM = LrsWidgetManager(self.genSnapSpin, settingsName='snap', defaultValue=0.0)
         self.genParallelModeCM = LrsComboManager(self.genParallelModeCombo, options=(
-        ('error', self.tr('Mark as errors')), ('span', self.tr('Span by straight line')),
-        ('exclude', self.tr('Exclude'))), defaultValue='error', settingsName='parallelMode')
+            ('error', self.tr('Mark as errors')), ('span', self.tr('Span by straight line')),
+            ('exclude', self.tr('Exclude'))), defaultValue='error', settingsName='parallelMode')
         self.genExtrapolateWM = LrsWidgetManager(self.genExtrapolateCheckBox, settingsName='extrapolate',
                                                  defaultValue=False)
 
@@ -349,7 +352,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.exportTabBecameVisible()
 
     def mapSettingsCrsChanged(self):
-        #debug("mapSettingsCrsChanged")
+        # debug("mapSettingsCrsChanged")
         self.updateLabelsUnits()
 
     @staticmethod
@@ -818,86 +821,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
 
-        # create new layer
-        geometryType = "MultiLineString" if endFieldName else "Point"
-        uri = geometryType
-        uri += "?crs=%s" % crsString(self.iface.mapCanvas().mapSettings().destinationCrs())
-        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
-        # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
-        # and negative length and precision we overwrite type names according to types and reset length and precision
-        fieldsList = layer.pendingFields().toList()
-        fixFields(fieldsList)
-        provider.addAttributes(fieldsList)
-        if errorFieldName:
-            provider.addAttributes([QgsField(errorFieldName, QVariant.String, "string"), ])
-        uri = provider.dataSourceUri()
-        #debug('uri: %s' % uri)
-
-        outputLayer = QgsVectorLayer(uri, outputName, 'memory')
-        if not outputLayer.isValid():
-            QMessageBox.information(self, 'Information', 'Cannot create memory layer with uri %s' % uri)
-
-        checkFields(layer, outputLayer)
-
-        # Not sure why attributes were set again here, the attributes are already in uri
-        # outputLayer.startEditing()  # to add fields
-        #for field in layer.pendingFields():
-        #    if not outputLayer.addAttribute(field):
-        #        QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
-
-        #if errorFieldName:
-        #    outputLayer.addAttribute(QgsField(errorFieldName, QVariant.String, "string"))
-
-        #outputLayer.commitChanges()
-
-        # It may happen that event goes slightly outside available lrs because of
-        # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that 
-        # tolerance and skip smaller linear event errors (gaps)
-        # 0.1m is too much and less than 0.01 m does not make sense in standard GIS
-        eventTolerance = convertDistanceUnits(0.01, LrsUnits.METER, self.lrs.measureUnit)
-
-        outputFeatures = []
-        fields = outputLayer.pendingFields()
-        total = layer.featureCount()
-        count = 0
-        for feature in layer.getFeatures():
-            routeId = feature[routeFieldName]
-            start = feature[startFieldName]
-            end = feature[endFieldName] if endFieldName else None
-            #debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
-
-            outputFeature = QgsFeature(fields)  # fields must exist during feature life!
-            for field in layer.pendingFields():
-                if outputFeature.fields().indexFromName(field.name()) >= 0:
-                    outputFeature[field.name()] = feature[field.name()]
-
-            geo = None
-            if endFieldName:
-                line, error = self.lrs.eventMultiPolyLine(routeId, start, end, eventTolerance)
-                if line:
-                    geo = QgsGeometry.fromMultiPolyline(line)
-            else:
-                point, error = self.lrs.eventPoint(routeId, start, eventTolerance)
-                if point:
-                    geo = QgsGeometry.fromPoint(point)
-
-            if geo:
-                outputFeature.setGeometry(geo)
-
-            if errorFieldName and error:
-                outputFeature[errorFieldName] = error
-
-            outputFeatures.append(outputFeature)
-
-            count += 1
-            percent = 100 * count / total;
-            self.eventsProgressBar.setValue(percent)
-
-        outputLayer.dataProvider().addFeatures(outputFeatures)
-
-        QgsProject.instance().addMapLayers([outputLayer, ])
-
-        self.eventsProgressBar.hide()
+        events = LrsEvents(self.iface, self.lrs, self.eventsProgressBar)
+        events.create(layer, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
 
     ############################# MEASURE ####################################
 
@@ -957,121 +882,15 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         routeFieldName = self.measureRouteFieldLineEdit.text()
         measureFieldName = self.measureMeasureFieldLineEdit.text()
 
-        # create new layer
-        # it may happen that memory provider does not support all fields types, see #10, check if fields exists
-        # uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapSettings().destinationCrs() )
-        uri = "Point?crs=%s" % crsString(layer.crs())
-        provider = QgsProviderRegistry.instance().createProvider('memory', uri)
-        fieldsList = layer.pendingFields().toList()
-        fixFields(fieldsList)
-        provider.addAttributes(fieldsList)
-        provider.addAttributes([
-            QgsField(routeFieldName, QVariant.String, "string"),
-            QgsField(measureFieldName, QVariant.Double, "double"),
-        ])
-
-        uri = provider.dataSourceUri()
-        outputLayer = QgsVectorLayer(uri, outputName, 'memory')
-
-        checkFields(layer, outputLayer)
-
-        # Not sure why attributes were set again here, the attributes are already in uri
-        # outputLayer.startEditing()  # to add fields
-        # for field in layer.pendingFields():
-        #     if not outputLayer.addAttribute(field):
-        #         QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
-        #
-        # outputLayer.addAttribute(QgsField(routeFieldName, QVariant.String, "string"))
-        # outputLayer.addAttribute(QgsField(measureFieldName, QVariant.Double, "double"))
-        # outputLayer.commitChanges()
-
-        outputFeatures = []
-        fields = outputLayer.pendingFields()
-        total = layer.featureCount()
-        count = 0
-        transform = None
-        if layer.crs() != self.lrs.crs:
-            transform = QgsCoordinateTransform(layer.crs(), self.lrs.crs)
-        for feature in layer.getFeatures():
-            points = []
-
-            geo = feature.geometry()
-            if geo:
-                if QgsWkbTypes.isSingleType(geo.wkbType()):
-                    points = [geo.asPoint()]
-                else:
-                    points = geo.asMultiPoint()
-
-            for point in points:
-                outputFeature = QgsFeature(fields)  # fields must exist during feature life!
-                outputFeature.setGeometry(QgsGeometry.fromPoint(point))
-
-                for field in layer.pendingFields():
-                    if outputFeature.fields().indexFromName(field.name()) >= 0:
-                        outputFeature[field.name()] = feature[field.name()]
-
-                if transform:
-                    point = transform.transform(point)
-                routeId, measure = self.lrs.pointMeasure(point, threshold)
-                # debug ( "routeId = %s merasure = %s" % (routeId, measure) )
-
-                if routeId is not None:
-                    outputFeature[routeFieldName] = '%s' % routeId
-                outputFeature[measureFieldName] = measure
-
-                outputFeatures.append(outputFeature)
-
-            count += 1
-            percent = 100 * count / total;
-            self.measureProgressBar.setValue(percent)
-
-        outputLayer.dataProvider().addFeatures(outputFeatures)
-
-        QgsProject.instance().addMapLayers([outputLayer, ])
-
-        self.measureProgressBar.hide()
+        measures = LrsMeasures(self.iface, self.lrs, self.measureProgressBar)
+        measures.calculate(layer, routeFieldName, measureFieldName, threshold, outputName)
 
     ############################ EXPORT ##################################
 
-    def getPostgisConnection(self, connectionName):
-        settings = QSettings()
-        key = '/PostgreSQL/connections'
-
-        settings.beginGroup(u'/%s/%s' % (key, connectionName))
-
-        if not settings.contains('database'): return None
-
-        connection = {'name': connectionName}
-
-        settingsList = ['service', 'host', 'port', 'database', 'username', 'password']
-        service, host, port, database, username, password = map(lambda x: settings.value(x, '', type=str), settingsList)
-
-        sslmode = settings.value("sslmode", QgsDataSourceURI.SSLprefer, type=int)
-
-        uri = QgsDataSourceURI()
-        if service:
-            uri.setConnection(service, database, username, password, sslmode)
-        else:
-            uri.setConnection(host, port, database, username, password, sslmode)
-
-        connection['uri'] = uri
-
-        return connection
-
-    def getPostgisConnections(self):
-        settings = QSettings()
-        connections = []
-        key = '/PostgreSQL/connections'
-        settings.beginGroup(key);
-        for connectionName in settings.childGroups():
-            connection = self.getPostgisConnection(connectionName)
-            if connection:
-                connections.append(connection)
-        return connections
-
     def resetExportOptions(self):
         options = []
-        for connection in self.getPostgisConnections():
+
+        for connection in ExportPostgis.getPostgisConnections():
             options.append([connection['name'], connection['name']])
         self.exportPostgisConnectionCM.setOptions(options)
         self.exportPostgisConnectionCM.reset()
@@ -1149,47 +968,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.exportPostgisSchemaCM.readFromProject()
         self.exportPostgisTableWM.readFromProject()
 
-    # open connection asking credentials in cycle
-    def openPostgisConnection(self):
-        connectionName = self.exportPostgisConnectionCM.value()
-        connection = self.getPostgisConnection(connectionName)
-        if not connection:  # should not happen
-            QMessageBox.critical(self, 'Error', 'Connection not defined')
-            return
-
-        uri = connection['uri']
-
-        username = uri.username()
-        password = uri.password()
-        while True:
-            uri.setUsername(username)
-            uri.setPassword(password)
-
-            # debug('connection: %s' % uri.connectionInfo() )
-            try:
-                conn = psycopg2.connect(uri.connectionInfo().encode('utf-8'))
-                # debug('connected ok' )
-                return conn
-            except Exception as e:
-                # QMessageBox.critical( self, 'Error', 'Cannot connect: %s' % e )
-                err = '%s' % e
-                (ok, username, password) = QgsCredentials.instance().get(uri.connectionInfo(), username, password, err)
-                # Put the credentials back (for yourself and the provider), as QGIS removes it when you "get" it
-                if ok:
-                    QgsCredentials.instance().put(uri.connectionInfo(), username, password)
-                else:
-                    return None
-
-    def postgisExecute(self, conn, sql):
-        # debug('sql: %s' % sql )
-        cur = conn.cursor()
-        cur.execute(sql)
-
-    def postgisSelect(self, conn, sql):
-        # debug('sql: %s' % sql )
-        cur = conn.cursor()
-        cur.execute(sql)
-        return cur.fetchall()
 
     def export(self):
         # debug('export')
@@ -1200,75 +978,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             QMessageBox.critical(self, 'Error', 'psycopg2 not installed')
             return
 
-        conn = self.openPostgisConnection()
-        # debug('conn: %s' % conn )
-        if not conn: return
+        connectionName = self.exportPostgisConnectionCM.value()
+        outputSchema = self.exportPostgisSchemaCM.value()
+        outputTable = self.exportPostgisTableLineEdit.text()
 
-        try:
-            outputSchema = self.exportPostgisSchemaCM.value()
-            tables = [r[0] for r in self.postgisSelect(conn,
-                                                       "SELECT table_name FROM information_schema.tables where table_schema = '%s'" % outputSchema)]
-            # debug('tables: %s' % tables)
-
-            outputTable = self.exportPostgisTableLineEdit.text()
-            if outputTable in tables:
-                answer = QMessageBox.question(self, 'Table exists',
-                                              "Table '%s' already exists in schema '%s'. Overwrite?" % (
-                                              outputTable, outputSchema), QMessageBox.Yes | QMessageBox.Abort)
-                if answer == QMessageBox.Abort:
-                    return
-                else:
-                    sql = "drop table %s.%s" % (outputSchema, outputTable)
-                    self.postgisExecute(conn, sql)
-
-            routeField = self.lrs.routeField
-            routeFieldName = routeField.name().replace(" ", "_")
-            routeFieldStr = "%s " % routeFieldName
-            if routeField.type() == QVariant.String:
-                routeFieldStr += "varchar(%s)" % routeField.length()
-            elif routeField.type() == QVariant.Int:
-                routeFieldStr += "int"
-            elif routeField.type() == QVariant.Double:
-                routeFieldStr += "double precision"
-            else:
-                routeFieldStr += "varchar(20)"
-
-            sql = "create table %s.%s ( %s, m_from double precision, m_to double precision)" % (
-            outputSchema, outputTable, routeFieldStr)
-            self.postgisExecute(conn, sql)
-
-            srid = -1
-            authid = self.lrs.crs.authid()
-            if authid.lower().startswith('epsg:'):
-                srid = authid.split(':')[1]
-            sql = "select AddGeometryColumn('%s', '%s', 'geom', %s, 'LINESTRINGM', 3)" % (
-            outputSchema, outputTable, srid)
-            self.postgisExecute(conn, sql)
-
-            for part in self.lrs.getParts():
-                if not part.records: continue
-                wkt = part.getWktWithMeasures()
-                if not wkt: continue
-
-                if routeField.type() == QVariant.Int or routeField.type() == QVariant.Double:
-                    routeVal = part.routeId
-                else:
-                    routeVal = "'%s'" % part.routeId
-
-                sql = "insert into %s.%s ( %s, m_from, m_to, geom) values ( %s, %s, %s, ST_GeometryFromText('%s', %s))" % (
-                outputSchema, outputTable, routeFieldName, routeVal, part.milestoneMeasureFrom(),
-                part.milestoneMeasureTo(), wkt, srid)
-                self.postgisExecute(conn, sql)
-
-            conn.commit()
-            conn.close()
-
-        except Exception as e:
-            conn.close()
-            QMessageBox.critical(self, 'Error', '%s' % e)
-            return
-
-        QMessageBox.information(self, 'Information', 'Exported successfully')
+        export = ExportPostgis(self.iface, self.lrs)
+        export.export(connectionName, outputSchema, outputTable)
 
     ################################## STATS ##########################################
 
