@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from .output import LrsOutput
 from .postgis import ExportPostgis
 from .measures import LrsMeasures
 from .events import LrsEvents
@@ -104,6 +105,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genExtrapolateWM = LrsWidgetManager(self.genExtrapolateCheckBox, settingsName='extrapolate',
                                                  defaultValue=False)
 
+        self.genOutputNameWM = LrsWidgetManager(self.genOutputNameLineEdit, settingsName='lrsOutputName',
+                                                defaultValue='LRS')
+
         self.genLineLayerCombo.currentIndexChanged.connect(self.resetGenerateButtons)
         self.genLineLayerCombo.currentIndexChanged.connect(self.updateLabelsUnits)
         self.genLineRouteFieldCombo.currentIndexChanged.connect(self.resetGenerateButtons)
@@ -135,6 +139,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.errorButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
 
         #### locateTab
+        self.locateLrsRouteLayerCM = LrsLayerComboManager(self.locateLrsLayerCombo,
+                                                          geometryType=QgsWkbTypes.LineGeometry,
+                                                          geometryHasM=True, settingsName='lrsLayerId')
+        self.locateLrsRouteFieldCM = LrsFieldComboManager(self.locateLrsRouteFieldCombo, self.locateLrsRouteLayerCM,
+                                                          settingsName='lrsRouteField')
         self.locateRouteCM = LrsComboManager(self.locateRouteCombo)
         self.locateHighlightWM = LrsWidgetManager(self.locateHighlightCheckBox, settingsName='locateHighlight',
                                                   defaultValue=True)
@@ -339,12 +348,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def enableTabs(self):
         enable = bool(self.lrs)
-        self.errorTab.setEnabled(enable)
-        self.locateTab.setEnabled(enable)
-        self.eventsTab.setEnabled(enable)
-        self.measureTab.setEnabled(enable)
-        self.exportTab.setEnabled(enable)
-        self.statsTab.setEnabled(enable)
+        # self.errorTab.setEnabled(enable)
+        # self.locateTab.setEnabled(enable)
+        # self.eventsTab.setEnabled(enable)
+        # self.measureTab.setEnabled(enable)
+        # self.exportTab.setEnabled(enable)
+        # self.statsTab.setEnabled(enable)
 
     def tabChanged(self, index):
         # debug("tabChanged index = %s" % index )
@@ -395,6 +404,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapWM.reset()
         self.genParallelModeCM.reset()
         self.genExtrapolateWM.reset()
+        self.genOutputNameWM.reset()
 
         self.resetGenerateButtons()
 
@@ -421,6 +431,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapWM.writeToProject()
         self.genParallelModeCM.writeToProject()
         self.genExtrapolateWM.writeToProject()
+        self.genOutputNameWM.writeToProject()
 
     def readGenerateOptions(self):
         self.genLineLayerCM.readFromProject()
@@ -435,6 +446,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapWM.readFromProject()
         self.genParallelModeCM.readFromProject()
         self.genExtrapolateWM.readFromProject()
+        self.genOutputNameWM.readFromProject()
 
     def getGenerateSelection(self):
         return map(unicode.strip, self.genSelectionLineEdit.text().split(','))
@@ -500,8 +512,14 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
                        selection=selection, crs=crs, snap=snap, threshold=threshold, parallelMode=parallelMode,
                        extrapolate=extrapolate, measureUnit=measureUnit)
 
+        self.genProgressLabel.setText("Writing features")
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
+
+        if self.genOutputNameLineEdit.text():
+            output = LrsOutput(self.iface, self.lrs, self.genProgressBar)
+            output.output(self.genOutputNameLineEdit.text())
+
         self.hideGenProgress()
 
         self.resetStats()
@@ -967,7 +985,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.exportPostgisConnectionCM.readFromProject()
         self.exportPostgisSchemaCM.readFromProject()
         self.exportPostgisTableWM.readFromProject()
-
 
     def export(self):
         # debug('export')

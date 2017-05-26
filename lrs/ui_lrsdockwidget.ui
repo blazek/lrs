@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>501</width>
-    <height>478</height>
+    <width>614</width>
+    <height>494</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,514 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
+      <widget class="QWidget" name="locateTab">
+       <attribute name="title">
+        <string>Locate</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="1" column="0">
+           <widget class="QLabel" name="locateLrsRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="locateRouteCombo">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="locateLrsLayerCombo"/>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLabel" name="locateCoordinates">
+            <property name="text">
+             <string>&lt;coordinates&gt;</string>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" colspan="2">
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QCheckBox" name="locateHighlightCheckBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="locateCoordinatesLabel">
+            <property name="text">
+             <string>Coordinates</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="locateMeasureLabel">
+            <property name="text">
+             <string>Measure</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QDoubleSpinBox" name="locateMeasureSpin">
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QDoubleSpinBox" name="locateBufferSpin">
+            <property name="toolTip">
+             <string>Buffer around event in map units used for zoom.</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>50.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>200.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLabel" name="locateRanges">
+            <property name="text">
+             <string>&lt;measures&gt;</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="locateLrsLayerLabel">
+            <property name="text">
+             <string>Layer with measures</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="locateLrsRouteFieldCombo"/>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="Line" name="line_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="locateRouteLabel">
+            <property name="text">
+             <string>Route</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="locateRangesLabel">
+            <property name="text">
+             <string>Available measures</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="QLabel" name="locateBufferLabel">
+            <property name="toolTip">
+             <string>Buffer around event in map units used for zoom.</string>
+            </property>
+            <property name="text">
+             <string>Zoom buffer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="locateHighlightLabel">
+            <property name="text">
+             <string>Highlight</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QPushButton" name="locateCenterButton">
+            <property name="text">
+             <string>Center</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="locateZoomButton">
+            <property name="text">
+             <string>Zoom</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>193</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="eventsTab">
+       <attribute name="title">
+        <string>Events</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QGridLayout" name="eventsGridLayout">
+          <item row="4" column="0">
+           <widget class="QLabel" name="eventsLrsRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" colspan="2">
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="eventsErrorFieldLabel">
+            <property name="text">
+             <string>Output error field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="eventsRouteFieldLabel">
+            <property name="text">
+             <string>Events route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="eventsMeasureStartFieldLabel">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
+            <property name="text">
+             <string>Start measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="eventsLayerLabel">
+            <property name="text">
+             <string>Events layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="eventsOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="eventsMeasureEndFieldLabel">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
+            <property name="text">
+             <string>End measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="eventsLrsLayerLabel">
+            <property name="text">
+             <string>Layer with measures</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="Line" name="line_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLineEdit" name="eventsErrorFieldLineEdit"/>
+          </item>
+          <item row="11" column="1">
+           <widget class="QLineEdit" name="eventsOutputNameLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QComboBox" name="eventsMeasureEndFieldCombo">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="eventsMeasureStartFieldCombo">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="eventsRouteFieldCombo"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="eventsLayerCombo"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QComboBox" name="eventsLrsRouteFieldCombo"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="eventsLrsLayerCombo"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QDialogButtonBox" name="eventsButtonBox">
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="eventsProgressBar">
+          <property name="value">
+           <number>24</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+       <zorder>eventsButtonBox</zorder>
+       <zorder>verticalSpacer_2</zorder>
+       <zorder>eventsProgressBar</zorder>
+      </widget>
+      <widget class="QWidget" name="measureTab">
+       <attribute name="title">
+        <string>Measures</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="7" column="0">
+           <widget class="QLabel" name="measureLayerLabel">
+            <property name="text">
+             <string>Layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="measureOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" colspan="2">
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="QLabel" name="measureRouteFieldLabel">
+            <property name="text">
+             <string>Output route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0">
+           <widget class="QLabel" name="measureMeasureFieldLabel">
+            <property name="text">
+             <string>Output measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="measureThresholdLabel">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
+            <property name="text">
+             <string>Max point distance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="measureLrsLayerLabel">
+            <property name="text">
+             <string>Layer with measures</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="Line" name="line_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="measureLrsRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="Line" name="line_9">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1">
+           <widget class="QLineEdit" name="measureMeasureFieldLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QLineEdit" name="measureRouteFieldLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLineEdit" name="measureOutputNameLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QDoubleSpinBox" name="measureThresholdSpin">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="measureLayerCombo"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="measureLrsRouteFieldCombo"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="measureLrsLayerCombo"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QDialogButtonBox" name="measureButtonBox">
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="measureProgressBar">
+          <property name="value">
+           <number>24</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="genTab">
        <attribute name="title">
         <string>Calibration</string>
@@ -33,6 +539,36 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QGridLayout" name="genGridLayout">
+          <item row="19" column="0">
+           <widget class="QLabel" name="genOutputNameLabel">
+            <property name="text">
+             <string>Output layer name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0" colspan="2">
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="15" column="1">
+           <widget class="QDoubleSpinBox" name="genThresholdSpin">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="maximum">
+             <double>1000000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
           <item row="14" column="0">
            <widget class="QLabel" name="genSnapLabel">
             <property name="toolTip">
@@ -42,6 +578,49 @@
              <string>Max lines snap</string>
             </property>
            </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="genLineRouteFieldLabel">
+            <property name="text">
+             <string>Lines route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="genMeasureUnitCombo"/>
+          </item>
+          <item row="17" column="0">
+           <widget class="QLabel" name="genExtrapolateLabel">
+            <property name="toolTip">
+             <string>Extrapolate before and after calibration points.</string>
+            </property>
+            <property name="text">
+             <string>Extrapolate</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QComboBox" name="genPointRouteFieldCombo"/>
+          </item>
+          <item row="15" column="0">
+           <widget class="QLabel" name="genThresholdLabel">
+            <property name="toolTip">
+             <string>Maximum distance of point from line.</string>
+            </property>
+            <property name="text">
+             <string>Max point distance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="genPointRouteFieldLabel">
+            <property name="text">
+             <string>Points route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="genPointLayerCombo"/>
           </item>
           <item row="14" column="1">
            <widget class="QDoubleSpinBox" name="genSnapSpin">
@@ -56,17 +635,13 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="genPointLayerLabel">
-            <property name="text">
-             <string>Points layer</string>
+          <item row="13" column="0">
+           <widget class="QComboBox" name="genSelectionModeCombo">
+            <property name="toolTip">
+             <string>Routes selection mode.</string>
             </property>
            </widget>
           </item>
@@ -87,29 +662,6 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="genLineRouteFieldLabel">
-            <property name="text">
-             <string>Lines route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="0">
-           <widget class="QLabel" name="genThresholdLabel">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="text">
-             <string>Max point distance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="genLineRouteFieldCombo"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QComboBox" name="genPointRouteFieldCombo"/>
-          </item>
           <item row="5" column="0">
            <widget class="QLabel" name="genPointMeasureFieldLabel">
             <property name="text">
@@ -117,81 +669,12 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="genPointRouteFieldLabel">
+          <item row="16" column="0">
+           <widget class="QLabel" name="genParallelModeLabel">
             <property name="text">
-             <string>Points route field</string>
+             <string>Parallels</string>
             </property>
            </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="genPointLayerCombo"/>
-          </item>
-          <item row="15" column="1">
-           <widget class="QDoubleSpinBox" name="genThresholdSpin">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="0">
-           <widget class="QComboBox" name="genSelectionModeCombo">
-            <property name="toolTip">
-             <string>Routes selection mode.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0" colspan="2">
-           <widget class="Line" name="line_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="genMeasureUnitLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map units per measure unit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Measure unit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="0">
-           <widget class="QLabel" name="genExtrapolateLabel">
-            <property name="toolTip">
-             <string>Extrapolate before and after calibration points.</string>
-            </property>
-            <property name="text">
-             <string>Extrapolate</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="1">
-           <widget class="QCheckBox" name="genExtrapolateCheckBox">
-            <property name="toolTip">
-             <string>Extrapolate before and after calibration points.</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QComboBox" name="genMeasureUnitCombo"/>
           </item>
           <item row="13" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout">
@@ -211,15 +694,59 @@
             </item>
            </layout>
           </item>
-          <item row="16" column="0">
-           <widget class="QLabel" name="genParallelModeLabel">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="genLineRouteFieldCombo"/>
+          </item>
+          <item row="19" column="1">
+           <widget class="QLineEdit" name="genOutputNameLineEdit">
             <property name="text">
-             <string>Parallels</string>
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="16" column="1">
            <widget class="QComboBox" name="genParallelModeCombo"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="genPointLayerLabel">
+            <property name="text">
+             <string>Points layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="17" column="1">
+           <widget class="QCheckBox" name="genExtrapolateCheckBox">
+            <property name="toolTip">
+             <string>Extrapolate before and after calibration points.</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="genMeasureUnitLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map units per measure unit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Measure unit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="18" column="0" colspan="2">
+           <widget class="Line" name="line_10">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -380,431 +907,6 @@
            </widget>
           </item>
          </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="locateTab">
-       <attribute name="title">
-        <string>Locate</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_8">
-        <item>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="4" column="0" colspan="2">
-           <widget class="Line" name="line_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="locateRouteLabel">
-            <property name="text">
-             <string>Route</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="locateMeasureLabel">
-            <property name="text">
-             <string>Measure</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="locateRouteCombo">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="locateCoordinatesLabel">
-            <property name="text">
-             <string>Coordinates</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="locateCoordinates">
-            <property name="text">
-             <string>&lt;coordinates&gt;</string>
-            </property>
-            <property name="textInteractionFlags">
-             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="locateBufferLabel">
-            <property name="toolTip">
-             <string>Buffer around event in map units used for zoom.</string>
-            </property>
-            <property name="text">
-             <string>Zoom buffer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QDoubleSpinBox" name="locateBufferSpin">
-            <property name="toolTip">
-             <string>Buffer around event in map units used for zoom.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>50.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>200.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="locateRangesLabel">
-            <property name="text">
-             <string>Available measures</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="locateRanges">
-            <property name="text">
-             <string>&lt;measures&gt;</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-            <property name="textInteractionFlags">
-             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="locateMeasureSpin">
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>1.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="locateHighlightLabel">
-            <property name="text">
-             <string>Highlight</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QCheckBox" name="locateHighlightCheckBox">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QPushButton" name="locateCenterButton">
-            <property name="text">
-             <string>Center</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="locateZoomButton">
-            <property name="text">
-             <string>Zoom</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>193</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="eventsTab">
-       <attribute name="title">
-        <string>Events</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <layout class="QGridLayout" name="eventsGridLayout">
-          <item row="6" column="0">
-           <widget class="QLabel" name="eventsErrorFieldLabel">
-            <property name="text">
-             <string>Output error field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="eventsRouteFieldLabel">
-            <property name="text">
-             <string>Route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="eventsRouteFieldCombo"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="eventsMeasureStartFieldCombo">
-            <property name="toolTip">
-             <string>Measure of punctual or start of linear event.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="eventsMeasureEndFieldCombo">
-            <property name="toolTip">
-             <string>End of linear event. Leave blank for punctual events.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="eventsMeasureStartFieldLabel">
-            <property name="toolTip">
-             <string>Measure of punctual or start of linear event.</string>
-            </property>
-            <property name="text">
-             <string>Start measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="eventsLayerLabel">
-            <property name="text">
-             <string>Events layer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="eventsOutputNameLabel">
-            <property name="text">
-             <string>Output layer name</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="eventsLayerCombo"/>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="eventsMeasureEndFieldLabel">
-            <property name="toolTip">
-             <string>End of linear event. Leave blank for punctual events.</string>
-            </property>
-            <property name="text">
-             <string>End measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="eventsOutputNameLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="eventsErrorFieldLineEdit"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QDialogButtonBox" name="eventsButtonBox">
-          <property name="standardButtons">
-           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QProgressBar" name="eventsProgressBar">
-          <property name="value">
-           <number>24</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-       <zorder>eventsButtonBox</zorder>
-       <zorder>verticalSpacer_2</zorder>
-       <zorder>eventsProgressBar</zorder>
-      </widget>
-      <widget class="QWidget" name="measureTab">
-       <attribute name="title">
-        <string>Measures</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="1">
-           <widget class="QComboBox" name="measureLayerCombo"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="measureLayerLabel">
-            <property name="text">
-             <string>Layer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLineEdit" name="measureRouteFieldLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="measureOutputNameLabel">
-            <property name="text">
-             <string>Output layer name</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="Line" name="line_4">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="measureRouteFieldLabel">
-            <property name="text">
-             <string>Output route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="measureOutputNameLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="measureMeasureFieldLabel">
-            <property name="text">
-             <string>Output measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QLineEdit" name="measureMeasureFieldLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="measureThresholdSpin">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="measureThresholdLabel">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="text">
-             <string>Max point distance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="Line" name="line_5">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QDialogButtonBox" name="measureButtonBox">
-          <property name="standardButtons">
-           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QProgressBar" name="measureProgressBar">
-          <property name="value">
-           <number>24</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>

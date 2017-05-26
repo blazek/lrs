@@ -98,7 +98,7 @@ class LrsMeasures(QObject):
                 outputFeatures.append(outputFeature)
 
             count += 1
-            percent = 100 * count / total;
+            percent = 100 * count / total
             self.progressBar.setValue(percent)
 
         outputLayer.dataProvider().addFeatures(outputFeatures)

@@ -452,3 +452,15 @@ class LrsRoutePart:
         if not coors or len(coors) < 2: return None
         coors = ['%f %f %f' % (c[0], c[1], c[2]) for c in coors]
         return 'LINESTRINGM ( %s )' % ", ".join(coors)
+
+    def getGeometryWithMeasures(self):
+        # debug('getGeometryWithMeasures')
+        coors = self.getCoordinatesWithMeasures()
+        if not coors or len(coors) < 2: return None
+
+        linestring = QgsLineString()
+        for c in coors:
+            point = QgsPointV2(c[0], c[1])
+            point.addMValue(c[2])
+            linestring.addVertex(point)
+        return 	QgsGeometry(linestring)

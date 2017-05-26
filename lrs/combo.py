@@ -77,7 +77,8 @@ class LrsComboManager(QObject):
 
     def readFromProject(self):
         val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName)[0]
-        if val == '': val = None  # to set correctly none
+        if val == '':
+            val = None  # to set correctly none
 
         idx = self.combo.findData(val, Qt.UserRole)
         # debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
@@ -101,7 +102,8 @@ class LrsComboManager(QObject):
         # so we do our loop
         for i in range(self.model.rowCount() - 1, -1, -1):
             itemData = self.model.item(i).data(Qt.UserRole)
-            if itemData == data: return self.model.item(i)
+            if itemData == data:
+                return self.model.item(i)
         return None
 
 
@@ -110,7 +112,8 @@ class LrsLayerComboManager(LrsComboManager):
 
     def __init__(self, combo, **kwargs):
         super(LrsLayerComboManager, self).__init__(combo, **kwargs)
-        self.geometryType = kwargs.get('geometryType', None)  # Qgis.GeometryType
+        self.geometryType = kwargs.get('geometryType', None)  # QgsWkbTypes.GeometryType
+        self.geometryHasM = kwargs.get('geometryHasM', False)  # has measure
 
         # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
         self.combo.currentIndexChanged.connect(self.currentIndexChanged)
@@ -121,7 +124,8 @@ class LrsLayerComboManager(LrsComboManager):
         QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)
 
     def __del__(self):
-        if not QgsProject: return
+        if not QgsProject:
+            return
         QgsProject.instance().layersAdded.disconnect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
@@ -135,19 +139,25 @@ class LrsLayerComboManager(LrsComboManager):
         return None
 
     def getLayer(self):
-        if not QgsProject: return
+        if not QgsProject:
+            return
         lId = self.layerId()
         return QgsProject.instance().mapLayer(lId)
 
     def canvasLayersChanged(self):
         # debug ("canvasLayersChanged")
-        if not QgsProject: return
-        layers = []
-        for layer in QgsProject.instance().mapLayers().values():
-            print(layer)
-            if layer.type() != QgsMapLayer.VectorLayer: continue
-            if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
-            layers.append(layer)
+        if not QgsProject:
+            return
+        # layers = []
+        # for layer in QgsProject.instance().mapLayers().values():
+        #     print(layer)
+        #     if layer.type() != QgsMapLayer.VectorLayer:
+        #         continue
+        #     if self.geometryType is not None and layer.geometryType() != self.geometryType:
+        #         continue
+        #     if self.geometryHasM and not QgsWkbTypes.hasM(layer.wkbType()):
+        #         continue
+        #     layers.append(layer)
 
         # delete removed layers
         for i in range(self.model.rowCount() - 1, -1, -1):
@@ -158,8 +168,12 @@ class LrsLayerComboManager(LrsComboManager):
         # add new layers
         for layer in QgsProject.instance().mapLayers().values():
             print(layer)
-            if layer.type() != QgsMapLayer.VectorLayer: continue
-            if self.geometryType is not None and layer.geometryType() != self.geometryType: continue
+            if layer.type() != QgsMapLayer.VectorLayer:
+                continue
+            if self.geometryType is not None and layer.geometryType() != self.geometryType:
+                continue
+            if self.geometryHasM and not QgsWkbTypes.hasM(layer.wkbType()):
+                continue
 
             start = self.model.index(0, 0, QModelIndex())
             indexes = self.model.match(start, Qt.UserRole, layer.id(), Qt.MatchFixedString)
@@ -203,7 +217,8 @@ class LrsFieldComboManager(LrsComboManager):
 
     def layerChanged(self):
         # debug ("layerChanged settingsName = %s" % self.settingsName )
-        if not QgsProject: return
+        if not QgsProject:
+            return
 
         self.disconnectFromLayer()
 
