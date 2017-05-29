@@ -138,12 +138,17 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.addQualityLayerButton.clicked.connect(self.addQualityLayer)
         self.errorButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
 
-        #### locateTab
-        self.locateLrsRouteLayerCM = LrsLayerComboManager(self.locateLrsLayerCombo,
+        # ------------- locate, events, measure have synchronized lrs layer and route field --------
+        lrsLayerComboList = [self.locateLrsLayerCombo, self.eventsLrsLayerCombo, self.measureLrsLayerCombo]
+        self.lrsRouteLayerCM = LrsLayerComboManager(lrsLayerComboList,
                                                           geometryType=QgsWkbTypes.LineGeometry,
                                                           geometryHasM=True, settingsName='lrsLayerId')
-        self.locateLrsRouteFieldCM = LrsFieldComboManager(self.locateLrsRouteFieldCombo, self.locateLrsRouteLayerCM,
+        lrsRouteFieldComboList = [self.locateLrsRouteFieldCombo, self.eventsLrsRouteFieldCombo,
+                                  self.measureLrsRouteFieldCombo]
+        self.lrsRouteFieldCM = LrsFieldComboManager(lrsRouteFieldComboList, self.lrsRouteLayerCM,
                                                           settingsName='lrsRouteField')
+
+        # ----------------------- locateTab ---------------------------
         self.locateRouteCM = LrsComboManager(self.locateRouteCombo)
         self.locateHighlightWM = LrsWidgetManager(self.locateHighlightCheckBox, settingsName='locateHighlight',
                                                   defaultValue=True)
@@ -156,7 +161,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateHighlightCheckBox.stateChanged.connect(self.locateHighlightChanged)
         self.locateZoomButton.clicked.connect(self.locateZoom)
 
-        #### eventsTab
+        # ----------------------- eventsTab ---------------------------
         self.eventsLayerCM = LrsLayerComboManager(self.eventsLayerCombo, settingsName='eventsLayerId')
         self.eventsRouteFieldCM = LrsFieldComboManager(self.eventsRouteFieldCombo, self.eventsLayerCM,
                                                        settingsName='eventsRouteField')
@@ -186,7 +191,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetEventsButtons()
         self.eventsProgressBar.hide()
 
-        #### measureTab
+        # ----------------------- measureTab ---------------------------
         self.measureLayerCM = LrsLayerComboManager(self.measureLayerCombo, geometryType=QgsWkbTypes.PointGeometry,
                                                    settingsName='measureLayerId')
         self.measureThresholdWM = LrsWidgetManager(self.measureThresholdSpin, settingsName='measureThreshold',

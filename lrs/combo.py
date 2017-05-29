@@ -27,11 +27,15 @@ from qgis.PyQt.QtGui import *
 
 from .utils import *
 
-
+# combo is QComboBox or list of QComboBox
 class LrsComboManager(QObject):
-    def __init__(self, combo, **kwargs):
+    def __init__(self, comboOrList, **kwargs):
         super(LrsComboManager, self).__init__()
-        self.combo = combo  # QComboBox
+
+        if isinstance(comboOrList, list):
+            self.comboList = comboOrList
+        else:
+            self.comboList = [comboOrList]  # QComboBox list
         self.settingsName = kwargs.get('settingsName')
         self.allowNone = kwargs.get('allowNone', False)  # allow select none
         self.sort = kwargs.get('sort', True)  # sort values
@@ -43,13 +47,29 @@ class LrsComboManager(QObject):
         if self.sort:
             self.proxy = QSortFilterProxyModel(self)
             self.proxy.setSourceModel(self.model)
-            self.combo.setModel(self.proxy);
         else:
             self.proxy = None
-            self.combo.setModel(self.model)
+
+        for combo in self.comboList:
+            if self.proxy:
+                combo.setModel(self.proxy);
+            else:
+                combo.setModel(self.model)
+
+        # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
+        for combo in self.comboList:
+            combo.currentIndexChanged.connect(self.currentIndexChanged)
 
         # options is dict with of [value,label] pairs
         self.setOptions(kwargs.get('options', []))
+
+    def currentIndexChanged(self, idx):
+        # reset other combos
+        #debug("currentIndexChanged sender = %s" % self.sender())
+        for combo in self.comboList:
+            if combo == self.sender():
+                continue
+            combo.setCurrentIndex(idx)
 
     def clear(self):
         self.options = []
@@ -65,14 +85,14 @@ class LrsComboManager(QObject):
                 self.model.appendRow(item)
 
     def value(self):
-        idx = self.combo.currentIndex()
+        idx = self.comboList[0].currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole)
+            return self.comboList[0].itemData(idx, Qt.UserRole)
         return None
 
     def writeToProject(self):
-        idx = self.combo.currentIndex()
-        val = self.combo.itemData(idx, Qt.UserRole)
+        idx = self.comboList[0].currentIndex()
+        val = self.comboList[0].itemData(idx, Qt.UserRole)
         QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val)
 
     def readFromProject(self):
@@ -80,21 +100,22 @@ class LrsComboManager(QObject):
         if val == '':
             val = None  # to set correctly none
 
-        idx = self.combo.findData(val, Qt.UserRole)
-        # debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
-        if idx == -1:
-            idx = self.combo.findData(self.defaultValue, Qt.UserRole)
-
-        self.combo.setCurrentIndex(idx)
+        for combo in self.comboList:
+            idx = combo.findData(val, Qt.UserRole)
+            # debug( "readFromProject settingsName = %s val = %s idx = %s" % ( self.settingsName, val, idx) )
+            if idx == -1:
+                idx = combo.findData(self.defaultValue, Qt.UserRole)
+            combo.setCurrentIndex(idx)
 
     # reset to index -1
     def reset(self):
-        if self.defaultValue is not None:
-            idx = self.combo.findData(self.defaultValue, Qt.UserRole)
-            # debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
-            self.combo.setCurrentIndex(idx)
-        else:
-            self.combo.setCurrentIndex(-1)
+        for combo in self.comboList:
+            if self.defaultValue is not None:
+                idx = combo.findData(self.defaultValue, Qt.UserRole)
+                # debug( "defaultValue = %s idx = %s" % ( self.defaultValue, idx ) )
+                combo.setCurrentIndex(idx)
+            else:
+                combo.setCurrentIndex(-1)
 
     def findItemByData(self, data):
         # QStandardItemModel.match() is not suitable, with Qt.MatchExactly it seems to comare objects
@@ -110,18 +131,18 @@ class LrsComboManager(QObject):
 class LrsLayerComboManager(LrsComboManager):
     layerChanged = pyqtSignal()
 
-    def __init__(self, combo, **kwargs):
-        super(LrsLayerComboManager, self).__init__(combo, **kwargs)
+    def __init__(self, comboOrList, **kwargs):
+        super(LrsLayerComboManager, self).__init__(comboOrList, **kwargs)
         self.geometryType = kwargs.get('geometryType', None)  # QgsWkbTypes.GeometryType
         self.geometryHasM = kwargs.get('geometryHasM', False)  # has measure
 
-        # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
-        self.combo.currentIndexChanged.connect(self.currentIndexChanged)
         # https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
         self.canvasLayersChanged()
 
         QgsProject.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)
+        # nameChanged is emitted by layer, see canvasLayersChanged
+
 
     def __del__(self):
         if not QgsProject:
@@ -129,13 +150,15 @@ class LrsLayerComboManager(LrsComboManager):
         QgsProject.instance().layersAdded.disconnect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
-    def currentIndexChanged(self):
+
+    def currentIndexChanged(self, idx):
+        super(LrsLayerComboManager, self).currentIndexChanged(idx)
         self.layerChanged.emit()
 
     def layerId(self):
-        idx = self.combo.currentIndex()
+        idx = self.comboList[0].currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole)
+            return self.comboList[0].itemData(idx, Qt.UserRole)
         return None
 
     def getLayer(self):
@@ -181,6 +204,7 @@ class LrsLayerComboManager(LrsComboManager):
                 item = QStandardItem(layer.name())
                 item.setData(layer.id(), Qt.UserRole)
                 self.model.appendRow(item)
+                layer.nameChanged.connect(self.canvasLayersChanged)
             else:  # update text
                 index = indexes[0]
                 item = self.model.item(index.row(), index.column())
@@ -190,8 +214,8 @@ class LrsLayerComboManager(LrsComboManager):
 
 
 class LrsFieldComboManager(LrsComboManager):
-    def __init__(self, combo, layerComboManager, **kwargs):
-        super(LrsFieldComboManager, self).__init__(combo, **kwargs)
+    def __init__(self, comboOrList, layerComboManager, **kwargs):
+        super(LrsFieldComboManager, self).__init__(comboOrList, **kwargs)
         self.types = kwargs.get('types', None)  # QVariant.type
         self.layerComboManager = layerComboManager
         self.layerId = None  # current layer id
@@ -204,9 +228,9 @@ class LrsFieldComboManager(LrsComboManager):
         self.disconnectFromLayer()
 
     def getFieldName(self):
-        idx = self.combo.currentIndex()
+        idx = self.comboList[0].currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole)
+            return self.comboList[0].itemData(idx, Qt.UserRole)
         return None
 
     def disconnectFromLayer(self):
@@ -216,7 +240,7 @@ class LrsFieldComboManager(LrsComboManager):
             layer.attributeDeleted.disconnect(self.resetFields)
 
     def layerChanged(self):
-        # debug ("layerChanged settingsName = %s" % self.settingsName )
+        debug("layerChanged settingsName = %s" % self.settingsName )
         if not QgsProject:
             return
 
@@ -235,8 +259,9 @@ class LrsFieldComboManager(LrsComboManager):
     def resetFields(self):
         layer = QgsProject.instance().mapLayer(self.layerId)
         if not layer:
-            self.combo.clear()
-            return
+            for combo in self.comboList:
+                combo.clear()
+                return
 
             # Add none item
         if self.allowNone:
@@ -277,9 +302,9 @@ class LrsFieldComboManager(LrsComboManager):
 
 
 class LrsUnitComboManager(LrsComboManager):
-    def __init__(self, combo, **kwargs):
+    def __init__(self, comboOrList, **kwargs):
         kwargs['sort'] = False
-        super(LrsUnitComboManager, self).__init__(combo, **kwargs)
+        super(LrsUnitComboManager, self).__init__(comboOrList, **kwargs)
 
         for unit in [LrsUnits.METER, LrsUnits.KILOMETER, LrsUnits.FEET, LrsUnits.MILE]:
             item = QStandardItem(LrsUnits.unitName(unit))
@@ -289,9 +314,9 @@ class LrsUnitComboManager(LrsComboManager):
         self.reset()
 
     def unit(self):
-        idx = self.combo.currentIndex()
+        idx = self.comboList[0].currentIndex()
         if idx != -1:
-            return self.combo.itemData(idx, Qt.UserRole)
+            return self.comboList[0].itemData(idx, Qt.UserRole)
         return LrsUnits.UNKNOWN
 
     def writeToProject(self):
@@ -302,9 +327,10 @@ class LrsUnitComboManager(LrsComboManager):
         name = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName)[0]
 
         unit = LrsUnits.unitFromName(name)
-        idx = self.combo.findData(unit, Qt.UserRole)
+        idx = self.comboList[0].findData(unit, Qt.UserRole)
         # debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
         if idx != -1:
-            self.combo.setCurrentIndex(idx)
+            for combo in self.comboList:
+                combo.setCurrentIndex(idx)
         else:
             self.reset()

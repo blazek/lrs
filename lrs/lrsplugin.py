@@ -31,9 +31,7 @@ from .utils import *
 class LrsPlugin:
     def __init__(self, iface):
         #debug("LrsPlugin.__init__")
-        # Save reference to the QGIS interface
         self.iface = iface
-
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -50,10 +48,11 @@ class LrsPlugin:
     def initGui(self):
         #debug("LrsPlugin.initGui")
 
-        # Create action that will start plugin configuration
         self.action = QAction(
-            QIcon(":/plugins/lrs/icon.svg"),
+            QIcon(os.path.join(os.path.dirname(__file__), "icon.svg")),
             u"LRS", self.iface.mainWindow())
+
+        # Create action that will start plugin configuration
         self.action.setObjectName("lrsAction")
         # connect the action to the run method
         self.action.triggered.connect(self.run)
