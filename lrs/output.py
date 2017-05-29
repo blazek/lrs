@@ -71,7 +71,7 @@ class LrsOutput(QObject):
             if routeField.type() == QVariant.Int or routeField.type() == QVariant.Double:
                 routeVal = part.routeId
             else:
-                routeVal = "'%s'" % part.routeId
+                routeVal = "%s" % part.routeId
 
             outputFeature = QgsFeature(outputLayer.fields())  # fields must exist during feature life!
             outputFeature.setGeometry(geo)

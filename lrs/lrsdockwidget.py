@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from .output import LrsOutput
 from .postgis import ExportPostgis
 from .measures import LrsMeasures
@@ -26,6 +27,7 @@ from .events import LrsEvents
 from .combo import *
 from .layer import *
 from .lrs import *
+from .lrslayer import LrsLayer
 from .selectiondialog import *
 from .ui_lrsdockwidget import Ui_LrsDockWidget
 from .widget import *
@@ -47,6 +49,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # debug( "LrsDockWidget.__init__")
         self.iface = iface
         self.lrs = None  # Lrs object
+        self.lrsLayer = None  # Common input LrsLayer for locate/events/measure
         self.genSelectionDialog = None
         self.locatePoint = None  # QgsPoint
         self.locateHighlight = None  # QgsHighlight
@@ -72,7 +75,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
 
-        ##### genTab 
+        # ------------- errorTab -----------------------
         # initLayer, initField, fieldType did not work, fixed and created pull request
         # https://github.com/3nids/qgiscombomanager/pull/1
 
@@ -124,7 +127,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         self.enableGenerateSelection()
 
-        ##### errorTab
+        # ------------- errorTab -----------------------
         self.errorVisualizer = LrsErrorVisualizer(self.iface.mapCanvas())
         self.errorModel = None
         self.errorView.horizontalHeader().setStretchLastSection(True)
@@ -140,13 +143,16 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         # ------------- locate, events, measure have synchronized lrs layer and route field --------
         lrsLayerComboList = [self.locateLrsLayerCombo, self.eventsLrsLayerCombo, self.measureLrsLayerCombo]
-        self.lrsRouteLayerCM = LrsLayerComboManager(lrsLayerComboList,
-                                                          geometryType=QgsWkbTypes.LineGeometry,
-                                                          geometryHasM=True, settingsName='lrsLayerId')
+        self.lrsLayerCM = LrsLayerComboManager(lrsLayerComboList,
+                                               geometryType=QgsWkbTypes.LineGeometry,
+                                               geometryHasM=True, settingsName='lrsLayerId')
+        self.lrsLayerCM.layerChanged.connect(self.lrsLayerChanged)
+
         lrsRouteFieldComboList = [self.locateLrsRouteFieldCombo, self.eventsLrsRouteFieldCombo,
                                   self.measureLrsRouteFieldCombo]
-        self.lrsRouteFieldCM = LrsFieldComboManager(lrsRouteFieldComboList, self.lrsRouteLayerCM,
-                                                          settingsName='lrsRouteField')
+        self.lrsRouteFieldCM = LrsFieldComboManager(lrsRouteFieldComboList, self.lrsLayerCM,
+                                                    settingsName='lrsRouteField')
+        self.lrsRouteFieldCM.fieldNameChanged.connect(self.lrsRouteFieldNameChanged)
 
         # ----------------------- locateTab ---------------------------
         self.locateRouteCM = LrsComboManager(self.locateRouteCombo)
@@ -239,11 +245,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetExportOptions()
         self.resetExportButtons()
 
-        #### statistics tab
+        # ---------------------------- statistics tab ----------------------------
         # currently not used (did not correspond well to errors)
         # self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
 
-        #####
+        # ------------------------------------------------------------------------
         self.enableTabs()
 
         QgsProject.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
@@ -259,6 +265,18 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         # read project if plugin was reloaded
         self.projectRead()
+
+    def lrsLayerChanged(self, layer):
+        debug("lrsLayerChanged")
+        self.lrsLayer = LrsLayer(layer)
+        self.lrsLayer.setRouteFieldName(self.lrsRouteFieldCM.getFieldName())
+        self.resetLocateRoutes()
+
+    def lrsRouteFieldNameChanged(self, fieldName):
+        debug("lrsRouteFieldNameChanged fieldName = " + fieldName)
+        if self.lrsLayer:
+            self.lrsLayer.setRouteFieldName(fieldName)
+        self.resetLocateRoutes()
 
     def errorFilterChanged(self, text):
         if not self.sortErrorModel: return
@@ -277,7 +295,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.readMeasureOptions()
         self.readExportOptions()
 
-        ##### set error layers if stored in project
+        # --------------------- set error layers if stored in project -------------------
         errorLineLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId")[0]
         self.errorLineLayer = project.mapLayer(errorLineLayerId)
         if self.errorLineLayer:
@@ -683,8 +701,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         features = self.lrs.getQualityFeatures()
         self.qualityLayerManager.addFeatures(features, self.lrs.crs)
 
-    ############################# LOCATE ###############################################
-
+    # ------------------------------------ LOCATE ------------------------------------
     def resetLocateOptions(self):
         self.locateHighlightWM.reset()
         self.locateBufferWM.reset()
@@ -694,10 +711,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateBufferWM.readFromProject()
 
     def resetLocateRoutes(self):
-        if not self.lrs: return
-        options = [(id, "%s" % id) for id in self.lrs.getRouteIds()]
-        options.insert(0, (None, ''))
-        # debug ( "%s" % options )
+        options = [(None, '')]
+        if self.lrsLayer:
+            options.extend([(id, "%s" % id) for id in self.lrsLayer.getRouteIds()])
+        debug("resetLocateRoutes options: %s" % options)
         self.locateRouteCM.setOptions(options)
 
     def locateRouteChanged(self):
@@ -792,7 +809,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.iface.mapCanvas().setExtent(extent)
         self.iface.mapCanvas().refresh();
 
-    ############################# EVENTS ###############################################
+    # ---------------------------------- EVENTS ----------------------------------
 
     def resetEventsOptions(self):
         self.eventsLayerCM.reset()

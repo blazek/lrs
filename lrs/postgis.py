@@ -113,9 +113,9 @@ class ExportPostgis(QObject):
         settingsList = ['service', 'host', 'port', 'database', 'username', 'password']
         service, host, port, database, username, password = map(lambda x: settings.value(x, '', type=str), settingsList)
 
-        sslmode = settings.value("sslmode", QgsDataSourceURI.SSLprefer, type=int)
+        sslmode = settings.value("sslmode", QgsDataSourceUri.SslPrefer, type=int)
 
-        uri = QgsDataSourceURI()
+        uri = QgsDataSourceUri()
         if service:
             uri.setConnection(service, database, username, password, sslmode)
         else:
