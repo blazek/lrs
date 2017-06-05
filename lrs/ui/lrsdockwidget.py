@@ -213,6 +213,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetEventsButtons()
         self.eventsProgressBar.hide()
 
+        self.eventsLayerCM.reload()
+
         # ----------------------- measureTab ---------------------------
         self.measureLayerCM = LrsLayerComboManager(self.measureLayerCombo, geometryType=QgsWkbTypes.PointGeometry,
                                                    settingsName='measureLayerId')
@@ -240,6 +242,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetMeasureOptions()
         self.resetMeasureButtons()
         self.measureProgressBar.hide()
+
+        self.measureLayerCM.reload()
 
         # --------------------------------- export tab -----------------------------------------
         self.exportPostgisConnectionCM = LrsComboManager(self.exportPostgisConnectionCombo,
