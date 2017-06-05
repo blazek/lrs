@@ -19,14 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from abc import ABCMeta
 
-from PyQt5.QtCore import QObject
-from .utils import debug
-from .error import *
-from .line import LrsLine
-from .point import LrsPoint
-from .route import LrsRoute
+from .error.lrserror import *
 
 
 # Base class for Lrs and LrsLayer

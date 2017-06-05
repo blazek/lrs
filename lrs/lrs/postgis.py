@@ -22,6 +22,7 @@
 
 from .utils import *
 
+
 # Export lrs to Postgis - planned to be removed
 class ExportPostgis(QObject):
     def __init__(self, iface, lrs, progressBar):

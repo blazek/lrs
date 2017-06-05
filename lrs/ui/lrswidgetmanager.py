@@ -20,9 +20,8 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
+from ..lrs.utils import *
 from qgis.PyQt.QtWidgets import *
-
-from .utils import *
 
 
 class LrsWidgetManager(QObject):

@@ -37,9 +37,9 @@ PY_FILES = lrsplugin.py lrsdockwidget.py __init__.py
 #EXTRAS = icon.png metadata.txt
 EXTRAS = icon.svg metadata.txt
 
-PACKAGE_FILES = metadata.txt combo.py error.py __init__.py layer.py line.py lrsdockwidget.py lrsplugin.py lrs.py milestone.py part.py point.py resources_rc.py route.py ui_lrsdockwidget.py ui_selectiondialog.py selectiondialog.py utils.py widget.py icon.svg 
+PACKAGE_FILES = lrs ui metadata.txt __init__.py lrsplugin.py resources_rc.py icon.svg
 
-UI_FILES = ui_lrsdockwidget.py ui_selectiondialog.py
+UI_FILES = ui/ui_lrsdockwidget.py ui/ui_selectiondialog.py
 
 RESOURCE_FILES = resources_rc.py
 
@@ -61,14 +61,15 @@ compile: $(UI_FILES) $(RESOURCE_FILES)
 # The deploy  target only works on unix like operating system where
 # the Python plugin directory is located at:
 # $HOME/.qgis3/python/plugins
-deploy: compile doc transcompile
-	mkdir -p $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vf $(PY_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vf $(UI_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vf $(EXTRAS) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vfr i18n $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
-	cp -vfr $(HELP) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)/help
+# TODO: not upgraded
+#deploy: compile doc transcompile
+#	mkdir -p $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vf $(PY_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vf $(UI_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vf $(EXTRAS) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vfr i18n $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)
+#	cp -vfr $(HELP) $(HOME)/.qgis3/python/plugins/$(PLUGINNAME)/help
 
 # The dclean target removes compiled python files from plugin directory
 # also delets any .svn entry
@@ -103,7 +104,7 @@ package: compile
 	rm -f lrs*.zip
 	rm -rf lrs/
 	mkdir lrs
-	cp $(PACKAGE_FILES) lrs/
+	cp -r $(PACKAGE_FILES) lrs/
 	mkdir -p lrs/help/build/
 	cp -r help/build/html lrs/help/build/
 	cp -r help/build/html ../release/help.$(VERSION)

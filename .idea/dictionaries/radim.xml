@@ -2,13 +2,23 @@
   <dictionary name="radim">
     <words>
       <w>blažek</w>
+      <w>calib</w>
       <w>coor</w>
+      <w>curdir</w>
       <w>lrsdebug</w>
+      <w>lrsdockwidget</w>
+      <w>lrsplugin</w>
+      <w>mkdir</w>
       <w>multipolyline</w>
       <w>nlines</w>
+      <w>pluginname</w>
       <w>polylines</w>
       <w>polys</w>
+      <w>pyrcc</w>
+      <w>pyuic</w>
       <w>reprojection</w>
+      <w>selectiondialog</w>
+      <w>transcompile</w>
       <w>unregister</w>
     </words>
   </dictionary>

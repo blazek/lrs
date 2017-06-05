@@ -19,14 +19,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QObject
 
+from .error.lrserror import *
 from .lrsbase import LrsBase
-from .utils import debug
-from .error import *
-from .line import LrsLine
-from .point import LrsPoint
-from .route import LrsRoute, LrsLayerRoutePart, LrsLayerRoute
+from .lrslayerpart import LrsLayerPart
+from .lrslayerroute import LrsLayerRoute
 
 
 # The class representing existing layer with measures
@@ -43,6 +40,8 @@ class LrsLayer(LrsBase):
     # load from layer
     def load(self):
         debug("load %s %s" % (self.layer.name(), self.routeFieldName))
+        if not self.routeFieldName:
+            return
         for feature in self.layer.getFeatures():
             geo = feature.geometry()
             # if geo:
@@ -55,7 +54,7 @@ class LrsLayer(LrsBase):
             #self.lines[feature.id()] = line
             if geo:
                 for g in geo.asGeometryCollection():
-                    part = LrsLayerRoutePart(g)
+                    part = LrsLayerPart(g)
                     route.addPart(part)
 
         for route in self.routes.values():

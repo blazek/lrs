@@ -19,19 +19,29 @@
  *                                                                         *
  ***************************************************************************/
 """
+from qgis._gui import QgsHighlight
 
-from .output import LrsOutput
-from .postgis import ExportPostgis
-from .measures import LrsMeasures
-from .events import LrsEvents
-from .combo import *
-from .layer import *
-from .lrs import *
-from .lrslayer import LrsLayer
-from .selectiondialog import *
+from ..lrs.error.lrserrorlayermanager import LrsErrorLayerManager
+from ..lrs.error.lrserrorlinelayer import LrsErrorLineLayer
+from ..lrs.error.lrserrormodel import LrsErrorModel
+from ..lrs.error.lrserrorpointlayer import LrsErrorPointLayer
+from ..lrs.error.lrserrorvisualizer import LrsErrorVisualizer
+from ..lrs.error.lrsqualitylayer import LrsQualityLayer
+from ..lrs.error.lrsqualitylayermanager import LrsQualityLayerManager
+from ..lrs.events import LrsEvents
+from ..lrs.lrs import Lrs
+from ..lrs.lrslayer import LrsLayer
+from ..lrs.lrsoutput import LrsOutput
+from ..lrs.measures import LrsMeasures
+from ..lrs.postgis import ExportPostgis
+from .lrscombomanager import LrsComboManager
+from .lrscombomanagerbase import *
+from .lrsfieldcombomanager import LrsFieldComboManager
+from .lrslayercombomanager import LrsLayerComboManager
+from .lrsselectiondialog import *
+from .lrsunitcombomanager import LrsUnitComboManager
+from .lrswidgetmanager import *
 from .ui_lrsdockwidget import Ui_LrsDockWidget
-from .widget import *
-from .utils import debug
 
 try:
     import psycopg2
@@ -274,8 +284,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def lrsLayerChanged(self, layer):
         debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
         self.lrsLayer = LrsLayer(layer)
-        self.lrsLayer.setRouteFieldName(self.lrsRouteFieldCM.getFieldName())
-        self.lrsLayer.load()
+        if self.lrsRouteFieldCM.getFieldName():
+            self.lrsLayer.setRouteFieldName(self.lrsRouteFieldCM.getFieldName())
+            self.lrsLayer.load()
         self.resetLocateRoutes()
 
     def lrsRouteFieldNameChanged(self, fieldName):

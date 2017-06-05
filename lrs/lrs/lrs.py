@@ -21,11 +21,11 @@
 """
 # Import the PyQt and QGIS libraries
 # from PyQt4.QtGui import *
+from .error.lrserror import *
 from .lrsbase import LrsBase
-from .error import *
-from .line import LrsLine
-from .point import LrsPoint
-from .route import LrsRoute
+from .lrsline import LrsLine
+from .lrspoint import LrsPoint
+from .lrsroute import LrsRoute
 
 
 # Main class to keep all data and process them
