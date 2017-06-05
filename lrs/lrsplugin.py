@@ -46,7 +46,7 @@ class LrsPlugin:
                 QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
-        #debug("LrsPlugin.initGui")
+        debug("LrsPlugin.initGui")
 
         self.action = QAction(
             QIcon(os.path.join(os.path.dirname(__file__), "icon.svg")),
@@ -65,6 +65,8 @@ class LrsPlugin:
         # print "self.iface.mainWindow = %s" % self.iface.mainWindow()
         self.dockWidget = LrsDockWidget(self.iface.mainWindow(), self.iface)
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget)
+
+
 
     def unload(self):
         # debug( "LrsPlugin.unload" )

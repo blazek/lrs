@@ -600,3 +600,7 @@ class LrsCalib(LrsBase):
         html += '<p>Lengths in map units.'
         html += '</body></html>'
         return html
+
+    # get statistics
+    def getStat(self, name):
+        return self.stats[name]

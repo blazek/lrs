@@ -301,11 +301,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.sortErrorModel.setFilterWildcard(text)
 
     def projectRead(self):
-        # #debug("projectRead")
+        debug("projectRead")
         if not QgsProject: return
 
         project = QgsProject.instance()
-        if not project: return
+        if not project:
+            return
 
         self.readGenerateOptions()
         self.readLocateOptions()
@@ -1048,11 +1049,15 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     # ------------------- STATS -------------------
 
     def resetStats(self):
-        # #debug ( 'setStats' )
-        html = ''
+        #debug ( 'setStats' )
+        # html = ''
         if self.lrs:
-            if self.lrs.getEdited():
-                html = 'Statistics are not available if an input layer has been edited after calibration. Run calibration again to get fresh statistics.'
-            else:
-                html = self.lrs.getStatsHtml()
-        self.statsTextEdit.setHtml(html)
+        #     if self.lrs.getEdited():
+        #         html = 'Statistics are not available if an input layer has been edited after calibration. Run calibration again to get fresh statistics.'
+        #     else:
+        #         html = self.lrs.getStatsHtml()
+        # self.statsTextEdit.setHtml(html)
+
+            self.errorTotalLength.setText("%.3f" % self.lrs.getStat('length'))
+            self.errorIncludedLength.setText("%.3f" % self.lrs.getStat('lengthIncluded'))
+            self.errorSuccessLength.setText("%.3f" % self.lrs.getStat('lengthOk'))
