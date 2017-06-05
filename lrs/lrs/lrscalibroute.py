@@ -30,12 +30,12 @@ from .lrsorigin import LrsOrigin
 from .lrsroutebase import LrsRouteBase
 
 
-# Route loaded from LRS layer
+# Route used in calibration
 # LrsRoute keeps list of LrsLine
-class LrsRoute(LrsRouteBase):
+class LrsCalibRoute(LrsRouteBase):
     def __init__(self, layer, routeId, snap, threshold, crs, measureUnit, distanceArea, **kwargs):
         # debug ('init route %s' % routeId )
-        super(LrsRoute, self).__init__(routeId,**kwargs)
+        super(LrsCalibRoute, self).__init__(routeId, **kwargs)
         self.layer = layer
         self.snap = snap
         self.threshold = threshold

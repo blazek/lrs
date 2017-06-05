@@ -25,12 +25,12 @@ from .error.lrserror import *
 from .lrsbase import LrsBase
 from .lrsline import LrsLine
 from .lrspoint import LrsPoint
-from .lrsroute import LrsRoute
+from .lrscalibroute import LrsCalibRoute
 
 
 # Main class to keep all data and process them
 
-class Lrs(LrsBase):
+class LrsCalib(LrsBase):
     progressChanged = pyqtSignal(str, float, name='progressChanged')
     updateErrors = pyqtSignal(dict, name='updateErrors')
     edited = pyqtSignal(name='edited')
@@ -54,7 +54,7 @@ class Lrs(LrsBase):
     }
 
     def __init__(self, lineLayer, lineRouteField, pointLayer, pointRouteField, pointMeasureField, **kwargs):
-        super(Lrs, self).__init__(**kwargs)
+        super(LrsCalib, self).__init__(**kwargs)
 
         self.lineLayer = lineLayer
         self.lineRouteField = lineRouteField
@@ -177,8 +177,8 @@ class Lrs(LrsBase):
         normalId = normalizeRouteId(routeId)
         # debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
         if normalId not in self.routes:
-            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs,
-                                             self.measureUnit, self.distanceArea, parallelMode=self.parallelMode)
+            self.routes[normalId] = LrsCalibRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs,
+                                                  self.measureUnit, self.distanceArea, parallelMode=self.parallelMode)
         return self.routes[normalId]
 
 

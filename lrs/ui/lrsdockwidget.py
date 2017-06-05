@@ -29,7 +29,7 @@ from ..lrs.error.lrserrorvisualizer import LrsErrorVisualizer
 from ..lrs.error.lrsqualitylayer import LrsQualityLayer
 from ..lrs.error.lrsqualitylayermanager import LrsQualityLayerManager
 from ..lrs.lrsevents import LrsEvents
-from ..lrs.lrs import Lrs
+from ..lrs.lrscalib import LrsCalib
 from ..lrs.lrslayer import LrsLayer
 from ..lrs.lrsoutput import LrsOutput
 from ..lrs.lrsmeasures import LrsMeasures
@@ -547,11 +547,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # self.mapUnitsPerMeasureUnit = self.genMapUnitsPerMeasureUnitSpin.value()
         measureUnit = self.genMeasureUnitCM.unit()
 
-        self.lrs = Lrs(self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(),
-                       self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(),
-                       self.genPointMeasureFieldCM.getFieldName(), selectionMode=self.genSelectionModeCM.value(),
-                       selection=selection, crs=crs, snap=snap, threshold=threshold, parallelMode=parallelMode,
-                       extrapolate=extrapolate, measureUnit=measureUnit)
+        self.lrs = LrsCalib(self.genLineLayerCM.getLayer(), self.genLineRouteFieldCM.getFieldName(),
+                            self.genPointLayerCM.getLayer(), self.genPointRouteFieldCM.getFieldName(),
+                            self.genPointMeasureFieldCM.getFieldName(), selectionMode=self.genSelectionModeCM.value(),
+                            selection=selection, crs=crs, snap=snap, threshold=threshold, parallelMode=parallelMode,
+                            extrapolate=extrapolate, measureUnit=measureUnit)
 
         self.genProgressLabel.setText("Writing features")
         self.lrs.progressChanged.connect(self.showGenProgress)
