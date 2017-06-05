@@ -1,5 +1,5 @@
 import sys
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 from .error.lrserror import LrsError
 from .utils import LrsUnits, formatMeasure, doubleNear
@@ -13,6 +13,7 @@ class LrsRouteBase(metaclass=ABCMeta):
         # 'error', 'exclude' (do not include in parts), span (replace by straight line)
         self.parallelMode = kwargs.get('parallelMode', 'error')
         self.parts = []  # LrsRoutePart subclasses list
+        self.overlaps = []  # list of LrsRecords with milestoneFrom, milestoneTo overlaps
         self.errors = []  # LrsError list of route errors
 
     def addPart(self, part):
@@ -35,9 +36,14 @@ class LrsRouteBase(metaclass=ABCMeta):
                 recordParts[record] = part
         for record in records:
             for record2 in records:
-                if record2 is record: continue
+                if record2 is record:
+                    continue
                 if record.measureOverlaps(record2):
-                    overlaps.add(record)
+                    # remove the shorter part
+                    if record.milestonesDistance() < record2.milestonesDistance():
+                        overlaps.add(record)
+                    else:
+                        overlaps.add(record2)
 
         # debug("overlaps: %s" % overlaps )
         for record in overlaps:

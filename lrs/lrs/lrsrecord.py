@@ -30,13 +30,18 @@ class LrsRecord:
     def containsPartMeasure(self, measure):
         return self.partFrom <= measure <= self.partTo
 
-    # returns true if measure at least partialy overlaps with another record
+    # returns true if measure at least partially overlaps with another record
     def measureOverlaps(self, record):
-        if self.measureWithin(record.milestoneFrom): return True
-        if self.measureWithin(record.milestoneTo): return True
-        if record.measureWithin(self.milestoneFrom): return True
-        if record.measureWithin(self.milestoneTo): return True
-        if record.measureWithin((self.milestoneFrom + self.milestoneTo) / 2): return True
+        if self.measureWithin(record.milestoneFrom):
+            return True
+        if self.measureWithin(record.milestoneTo):
+            return True
+        if record.measureWithin(self.milestoneFrom):
+            return True
+        if record.measureWithin(self.milestoneTo):
+            return True
+        if record.measureWithin((self.milestoneFrom + self.milestoneTo) / 2):
+            return True
         return False
 
     # get measure for part measure
@@ -57,3 +62,6 @@ class LrsRecord:
     # and part measures
     def continues(self, nextRecord):
         return nextRecord.milestoneFrom == self.milestoneTo and nextRecord.partFrom == self.partTo
+
+    def milestonesDistance(self):
+        return abs(self.milestoneTo-self.milestoneFrom)

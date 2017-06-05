@@ -29,7 +29,6 @@ from .lrscalibroute import LrsCalibRoute
 
 
 # Main class to keep all data and process them
-
 class LrsCalib(LrsBase):
     progressChanged = pyqtSignal(str, float, name='progressChanged')
     updateErrors = pyqtSignal(dict, name='updateErrors')

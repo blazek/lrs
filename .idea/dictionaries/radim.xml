@@ -11,6 +11,8 @@
       <w>mkdir</w>
       <w>multipolyline</w>
       <w>nlines</w>
+      <w>npoints</w>
+      <w>nroutes</w>
       <w>pluginname</w>
       <w>polylines</w>
       <w>polys</w>
