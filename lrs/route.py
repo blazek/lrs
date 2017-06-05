@@ -28,27 +28,144 @@ from .milestone import *
 from .part import *
 
 
-# LrsRoute keeps list of LrsLine
+class LrsRouteBase(metaclass=ABCMeta):
+    def __init__(self,routeId,**kwargs):
+        self.routeId = routeId  # if None, keeps all lines and points without routeId
+        # parallelMode, http://en.wikipedia.org/wiki/Multiple_edges:
+        # 'error', 'exclude' (do not include in parts), span (replace by straight line)
+        self.parallelMode = kwargs.get('parallelMode', 'error')
+        self.parts = []  # LrsRoutePart subclasses list
+        self.errors = []  # LrsError list of route errors
 
-class LrsRoute:
+    def addPart(self, part):
+        self.parts.append(part)
+
+    def getMeasureRanges(self):
+        ranges = []
+        for part in self.parts:
+            ranges.extend(part.getMeasureRanges())
+        ranges.sort()
+        return ranges
+
+    def checkPartOverlaps(self):
+        records = []
+        overlaps = set()
+        recordParts = {}
+        for part in self.parts:
+            for record in part.getRecords():
+                records.append(record)
+                recordParts[record] = part
+        for record in records:
+            for record2 in records:
+                if record2 is record: continue
+                if record.measureOverlaps(record2):
+                    overlaps.add(record)
+
+        # debug("overlaps: %s" % overlaps )
+        for record in overlaps:
+            part = recordParts[record]
+            geo = part.getRecordGeometry(record)
+            measureFrom = formatMeasure(record.milestoneFrom, self.measureUnit)
+            measureTo = formatMeasure(record.milestoneTo, self.measureUnit)
+            self.errors.append(
+                LrsError(LrsError.DUPLICATE_REFERENCING, geo, routeId=self.routeId, measure=[measureFrom, measureTo]))
+            part.removeRecord(record)
+
+    # returns ( QgsPoint, error )
+    def eventPoint(self, start, tolerance=0):
+        for part in self.parts:
+            point = part.eventPoint(start)
+            if point: return point, None
+
+        # second try with tolerance
+        if tolerance > 0:
+            nearestPoint = None
+            nearestMeasure = sys.float_info.max
+            for part in self.parts:
+                for record in part.records:
+                    m = abs(record.milestoneFrom - start)
+                    if m <= tolerance and m < nearestMeasure:
+                        nearestPoint = part.eventPoint(record.milestoneFrom)
+                        nearestMeasure = m
+
+                    m = abs(record.milestoneTo - start)
+                    if m <= tolerance and m < nearestMeasure:
+                        nearestPoint = part.eventPoint(record.milestoneTo)
+                        nearestMeasure = m
+
+            if nearestPoint: return nearestPoint, None
+
+        return None, 'measure not available'
+
+    # returns ( QgsMultiPolyline, error )
+    def eventMultiPolyLine(self, start, end, tolerance=0):
+        multipolyline = []
+        measures = []
+        for part in self.parts:
+            segments = part.eventSegments(start, end)
+            for polyline, measure_from, measure_to in segments:
+                multipolyline.append(polyline)
+                measures.append([measure_from, measure_to])
+
+        error = None
+        if len(multipolyline) == 0:
+            multipolyline = None
+            error = 'segment not available'
+        else:
+            # make error message  for gaps
+            measures.sort()
+            # debug( '%s' % measures )
+            for i in range(len(measures) - 1, 0, -1):
+                if doubleNear(measures[i][0], measures[i - 1][1]):
+                    measures[i - 1][1] = measures[i][1]
+                    del measures[i]
+
+            if start < measures[0][0]:
+                measures.insert(0, [start, start])
+
+            if end > measures[-1][1]:
+                measures.append([end, end])
+
+            gaps = []
+
+            for i in range(len(measures) - 1):
+                measureFrom = measures[i][1]
+                measureTo = measures[i + 1][0]
+                if measureTo - measureFrom < tolerance: continue
+
+                # measures are not formated (rounded) to show to user real data and dont hidden the true error by rounding
+                gaps.append('%s-%s' % (measureFrom, measureTo))
+
+            if gaps:
+                error = 'segments %s not available' % ', '.join(gaps)
+                # debug( error )
+
+        # debug( '%s' % measures )
+        return multipolyline, error
+
+
+# Route loaded from LRS layer
+class LrsLayerRoute(LrsRouteBase):
+    def __init__(self, routeId,**kwargs):
+        super(LrsLayerRoute, self).__init__(routeId,**kwargs)
+
+
+# LrsRoute keeps list of LrsLine
+class LrsRoute(LrsRouteBase):
     def __init__(self, layer, routeId, snap, threshold, crs, measureUnit, distanceArea, **kwargs):
         # debug ('init route %s' % routeId )
+        super(LrsRoute, self).__init__(routeId,**kwargs)
         self.layer = layer
-        self.routeId = routeId  # if None, keeps all lines and points without routeId
         self.snap = snap
         self.threshold = threshold
         self.crs = crs
         self.measureUnit = measureUnit
         self.distanceArea = distanceArea
-        # parallelMode, http://en.wikipedia.org/wiki/Multiple_edges:
-        # 'error', 'exclude' (do not include in parts), span (replace by straight line)
-        self.parallelMode = kwargs.get('parallelMode', 'error')
+
         self.lines = []  # LrsLine list, may be empty
         self.points = []  # LrsPoint list, may be empty
 
-        self.parts = []  # LrsRoutePart list
         self.milestones = []  # LrsMilestone list
-        self.errors = []  # LrsError list of route errors
         # cached all errors, route itself and parts
         self.allErrors_ = []
 
@@ -57,13 +174,12 @@ class LrsRoute:
 
     # returns: { removedErrorChecksums:[], updatedErrors:[], addedErrors[] }
     def calibrate(self, extrapolate):
-
         self.parts = []
         self.milestones = []
         self.errors = []
         self.allErrors_ = []
 
-        if self.routeId == None:  # special case
+        if self.routeId is None:  # special case
             for line in self.lines:
                 if not line.geo: continue
                 origin = LrsOrigin(QgsWkbTypes.LineGeometry, line.fid)
@@ -241,7 +357,7 @@ class LrsRoute:
                     'nGeoParts': len(polys),
                 })
 
-        ##### snap ends
+        # ------------------- snap ends -------------------
         if self.snap > 0:
             for i in range(len(polylines)):
                 p1 = polylines[i]['polyline']
@@ -269,7 +385,7 @@ class LrsRoute:
                         p2 = polylines[nearest[ic][0]]['polyline']
                         p1[ic] = p2[nearest[ic][1]]
 
-        ##### check for duplicates
+        # ------------------- check for duplicates
         duplicates = set()
         for i in range(len(polylines) - 1):
             for j in range(i + 1, len(polylines)):
@@ -286,7 +402,7 @@ class LrsRoute:
             self.errors.append(LrsError(LrsError.DUPLICATE_LINE, geo, routeId=self.routeId, origins=[origin]))
             del polylines[d]
 
-        ###### find forks
+        # ------------------- find forks -------------------
         nodes = {}
         for poly in polylines:
             polyline = poly['polyline']
@@ -297,7 +413,7 @@ class LrsRoute:
                 else:
                     nodes[ph]['nlines'] += 1
 
-                    # moved to parallels block
+        # moved to parallels block
         # for node in nodes.values():
         #    #debug( "nlines = %s" % node['nlines'] )
         #    if node['nlines'] > 2:
@@ -305,7 +421,7 @@ class LrsRoute:
         #        # origins sould not be necessary
         #        self.errors.append( LrsError( LrsError.FORK, geo, routeId = self.routeId ) )    
 
-        ###### join polylines to parts
+        # ------------------- join polylines to parts -------------------
         # TODO: similar code as joinParts, use common function
         while len(polylines) > 0:
             # polyline = polylines.pop(0)
@@ -320,7 +436,7 @@ class LrsRoute:
                     poly2 = polylines[i]
                     polyline2 = poly2['polyline']
 
-                    # dont connect in forks (we don't know which is better)
+                    # don't connect in forks (we don't know which is better)
                     forks2 = [False, False]
                     for j in [0, -1]:
                         ph = pointHash(polyline2[j])
@@ -566,30 +682,6 @@ class LrsRoute:
         for part in self.parts:
             part.extrapolate()
 
-    def checkPartOverlaps(self):
-        records = []
-        overlaps = set()
-        recordParts = {}
-        for part in self.parts:
-            for record in part.getRecords():
-                records.append(record)
-                recordParts[record] = part
-        for record in records:
-            for record2 in records:
-                if record2 is record: continue
-                if record.measureOverlaps(record2):
-                    overlaps.add(record)
-
-        # debug("overlaps: %s" % overlaps )
-        for record in overlaps:
-            part = recordParts[record]
-            geo = part.getRecordGeometry(record)
-            measureFrom = formatMeasure(record.milestoneFrom, self.measureUnit)
-            measureTo = formatMeasure(record.milestoneTo, self.measureUnit)
-            self.errors.append(
-                LrsError(LrsError.DUPLICATE_REFERENCING, geo, routeId=self.routeId, measure=[measureFrom, measureTo]))
-            part.removeRecord(record)
-
     def getErrors(self):
         if not self.allErrors_:
             self.allErrors_ = list(self.errors)
@@ -602,13 +694,6 @@ class LrsRoute:
         for part in self.parts:
             segments.extend(part.getSegments())
         return segments
-
-    def getMeasureRanges(self):
-        ranges = []
-        for part in self.parts:
-            ranges.extend(part.getMeasureRanges())
-        ranges.sort()
-        return ranges
 
     def getQualityFeatures(self):
         features = []
@@ -649,75 +734,3 @@ class LrsRoute:
             length += part.getGoodLength()
         return length
 
-    # returns ( QgsPoint, error )
-    def eventPoint(self, start, tolerance=0):
-        for part in self.parts:
-            point = part.eventPoint(start)
-            if point: return point, None
-
-        # second try with tolerance
-        if tolerance > 0:
-            nearestPoint = None
-            nearestMeasure = sys.float_info.max
-            for part in self.parts:
-                for record in part.records:
-                    m = abs(record.milestoneFrom - start)
-                    if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPoint(record.milestoneFrom)
-                        nearestMeasure = m
-
-                    m = abs(record.milestoneTo - start)
-                    if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPoint(record.milestoneTo)
-                        nearestMeasure = m
-
-            if nearestPoint: return nearestPoint, None
-
-        return None, 'measure not available'
-
-    # returns ( QgsMultiPolyline, error )
-    def eventMultiPolyLine(self, start, end, tolerance=0):
-        multipolyline = []
-        measures = []
-        for part in self.parts:
-            segments = part.eventSegments(start, end)
-            for polyline, measure_from, measure_to in segments:
-                multipolyline.append(polyline)
-                measures.append([measure_from, measure_to])
-
-        error = None
-        if len(multipolyline) == 0:
-            multipolyline = None
-            error = 'segment not available'
-        else:
-            # make error message  for gaps
-            measures.sort()
-            # debug( '%s' % measures )
-            for i in range(len(measures) - 1, 0, -1):
-                if doubleNear(measures[i][0], measures[i - 1][1]):
-                    measures[i - 1][1] = measures[i][1]
-                    del measures[i]
-
-            if start < measures[0][0]:
-                measures.insert(0, [start, start])
-
-            if end > measures[-1][1]:
-                measures.append([end, end])
-
-            gaps = []
-
-            for i in range(len(measures) - 1):
-                measureFrom = measures[i][1]
-                measureTo = measures[i + 1][0]
-                if measureTo - measureFrom < tolerance: continue
-
-                # measures are not formated (rounded) to show to user real data and dont hidden the true error by rounding
-                gaps.append('%s-%s' % (measureFrom, measureTo))
-
-            if gaps:
-                error = 'segments %s not available' % ', '.join(gaps)
-                # debug( error )
-
-        # debug( '%s' % measures )
-
-        return multipolyline, error

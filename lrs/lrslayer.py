@@ -20,21 +20,58 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import QObject
+
+from .lrsbase import LrsBase
 from .utils import debug
+from .error import *
+from .line import LrsLine
+from .point import LrsPoint
+from .route import LrsRoute, LrsLayerRoutePart, LrsLayerRoute
 
 
 # The class representing existing layer with measures
-class LrsLayer(QObject):
-    def __init__(self, layer):
-        super(LrsLayer, self).__init__()
+class LrsLayer(LrsBase):
+    def __init__(self, layer, **kwargs):
+        super(LrsLayer, self).__init__(**kwargs)
         self.layer = layer
+        self.crs = layer.crs()
         self.routeFieldName = None  # field name
 
     def setRouteFieldName(self, routeField):
         self.routeFieldName = routeField
 
+    # load from layer
+    def load(self):
+        debug("load %s %s" % (self.layer.name(), self.routeFieldName))
+        for feature in self.layer.getFeatures():
+            geo = feature.geometry()
+            # if geo:
+            #     if self.lineTransform:
+            #         geo.transform(self.lineTransform)
+
+            routeId = feature[self.routeFieldName]
+            route = self.getRoute(routeId)
+            #line = LrsLine(feature.id(), routeId, geo)
+            #self.lines[feature.id()] = line
+            if geo:
+                for g in geo.asGeometryCollection():
+                    part = LrsLayerRoutePart(g)
+                    route.addPart(part)
+
+        for route in self.routes.values():
+            route.checkPartOverlaps()
+
+    # get route by id, create it if does not exist
+    # routeId does not have to be normalized
+    def getRoute(self, routeId):
+        normalId = normalizeRouteId(routeId)
+        # debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
+        if normalId not in self.routes:
+            self.routes[normalId] = LrsLayerRoute(routeId, parallelMode='error')
+        return self.routes[normalId]
+
     def getRouteIds(self):
-        debug("getRouteIds routeFieldName = %s" % self.routeFieldName)
+        #debug("getRouteIds routeFieldName = %s" % self.routeFieldName)
         if not self.layer or not self.routeFieldName:
             return []
         ids = set()

@@ -31,6 +31,7 @@ from .lrslayer import LrsLayer
 from .selectiondialog import *
 from .ui_lrsdockwidget import Ui_LrsDockWidget
 from .widget import *
+from .utils import debug
 
 try:
     import psycopg2
@@ -46,7 +47,7 @@ except:
 
 class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def __init__(self, parent, iface):
-        # debug( "LrsDockWidget.__init__")
+        # #debug( "LrsDockWidget.__init__")
         self.iface = iface
         self.lrs = None  # Lrs object
         self.lrsLayer = None  # Common input LrsLayer for locate/events/measure
@@ -166,6 +167,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateCenterButton.clicked.connect(self.locateCenter)
         self.locateHighlightCheckBox.stateChanged.connect(self.locateHighlightChanged)
         self.locateZoomButton.clicked.connect(self.locateZoom)
+        self.resetLocateRoutes()
 
         # ----------------------- eventsTab ---------------------------
         self.eventsLayerCM = LrsLayerComboManager(self.eventsLayerCombo, settingsName='eventsLayerId')
@@ -225,7 +227,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetMeasureButtons()
         self.measureProgressBar.hide()
 
-        #### export tab
+        # --------------------------------- export tab -----------------------------------------
         self.exportPostgisConnectionCM = LrsComboManager(self.exportPostgisConnectionCombo,
                                                          settingsName='exportPostgisConnection')
         self.exportPostgisSchemaCM = LrsComboManager(self.exportPostgisSchemaCombo, settingsName='exportPostgisSchema')
@@ -249,7 +251,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # currently not used (did not correspond well to errors)
         # self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
 
-        # ------------------------------------------------------------------------
+        # after all combos were created and connected
+        self.lrsLayerCM.reload()  # -> lrsRouteFieldCM -> ....
+
+        # -----------------------------------------------------
         self.enableTabs()
 
         QgsProject.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
@@ -267,15 +272,17 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.projectRead()
 
     def lrsLayerChanged(self, layer):
-        debug("lrsLayerChanged")
+        debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
         self.lrsLayer = LrsLayer(layer)
         self.lrsLayer.setRouteFieldName(self.lrsRouteFieldCM.getFieldName())
+        self.lrsLayer.load()
         self.resetLocateRoutes()
 
     def lrsRouteFieldNameChanged(self, fieldName):
-        debug("lrsRouteFieldNameChanged fieldName = " + fieldName)
+        #debug("lrsRouteFieldNameChanged fieldName = " + fieldName)
         if self.lrsLayer:
             self.lrsLayer.setRouteFieldName(fieldName)
+            self.lrsLayer.load()
         self.resetLocateRoutes()
 
     def errorFilterChanged(self, text):
@@ -283,7 +290,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.sortErrorModel.setFilterWildcard(text)
 
     def projectRead(self):
-        # debug("projectRead")
+        # #debug("projectRead")
         if not QgsProject: return
 
         project = QgsProject.instance()
@@ -313,7 +320,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         self.resetGenerateButtons()
 
-        # debug
+        # #debug
         # if self.genLineLayerCM.getLayer():
         #    self.generateLrs() # only when reloading!
 
@@ -330,7 +337,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.lrs = None
 
     def close(self):
-        # debug( "LrsDockWidget.close")
+        # #debug( "LrsDockWidget.close")
         self.deleteLrs()
         QgsProject.instance().layersWillBeRemoved.disconnect(self.layersWillBeRemoved)
         QgsProject.instance().readProject.disconnect(self.projectRead)
@@ -379,12 +386,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # self.statsTab.setEnabled(enable)
 
     def tabChanged(self, index):
-        # debug("tabChanged index = %s" % index )
+        # #debug("tabChanged index = %s" % index )
         if self.tabWidget.widget(index) == self.exportTab:
             self.exportTabBecameVisible()
 
     def mapSettingsCrsChanged(self):
-        # debug("mapSettingsCrsChanged")
+        # #debug("mapSettingsCrsChanged")
         self.updateLabelsUnits()
 
     @staticmethod
@@ -396,18 +403,18 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def getThresholdLabel(self, crs):
         label = "Max point distance" + self.getUnitsLabel(crs)
-        # debug ( 'label = %s' % label )
+        # #debug ( 'label = %s' % label )
         return label
 
     def showHelp(self, anchor=None):
         helpFile = "file:///" + self.pluginDir + "/help/build/html/index.html"
-        # debug ( helpFile )
+        # #debug ( helpFile )
         QDesktopServices.openUrl(QUrl(helpFile))
 
     def lrsEdited(self):
         self.resetStats()
 
-    ############################ GENERATE (CALIBRATE) ###############################
+    # ------------------- GENERATE (CALIBRATE) -------------------
 
     def resetGenerateButtons(self):
         enabled = self.genLineLayerCombo.currentIndex() != -1 and self.genLineRouteFieldCombo.currentIndex() != -1 and self.genPointLayerCombo.currentIndex() != -1 and self.genPointRouteFieldCombo.currentIndex() != -1 and self.genPointMeasureFieldCombo.currentIndex() != -1
@@ -472,7 +479,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genOutputNameWM.readFromProject()
 
     def getGenerateSelection(self):
-        return map(unicode.strip, self.genSelectionLineEdit.text().split(','))
+        return map(str.strip, self.genSelectionLineEdit.text().split(','))
 
     def openGenerateSelectionDialog(self):
         if not self.genSelectionDialog:
@@ -493,14 +500,14 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def getGenerateCrs(self):
         crs = None
-        # debug ( "genLineLayerCM = %s" % self.genLineLayerCM )
+        # #debug ( "genLineLayerCM = %s" % self.genLineLayerCM )
         lineLayer = self.genLineLayerCM.getLayer()
         if lineLayer:
             crs = lineLayer.crs()
 
-        # debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
+        # #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
         if isProjectCrsEnabled():
-            # debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapSettings().destinationCrs().authid() )
+            # #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapSettings().destinationCrs().authid() )
             crs = getProjectCrs()
         return crs
 
@@ -513,7 +520,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapLabel.setText(label)
 
     def generateLrs(self):
-        # debug ( 'generateLrs')
+        # #debug ( 'generateLrs')
         self.errorVisualizer.clearHighlight()
 
         self.writeGenerateOptions()
@@ -547,7 +554,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         self.resetStats()
 
-        #### errors ##### 
+        # ------------------- errors -------------------
         self.errorZoomButton.setEnabled(False)
         self.errorModel = LrsErrorModel()
         self.errorModel.addErrors(self.lrs.getErrors())
@@ -595,10 +602,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genProgressLabel.hide()
         self.genProgressBar.hide()
 
-    ############################### ERRORS ##########################################
-
+    # ------------------------------- ERRORS -------------------------------
     def updateErrors(self, errorUpdates):
-        # debug ( "updateErrors" )
+        # #debug ( "updateErrors" )
         # because SingleSelection does not allow to deselect row, we have to clear selection manually
         index = self.getSelectedErrorIndex()
         if index:
@@ -619,19 +625,22 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def getSelectedErrorIndex(self):
         sm = self.errorView.selectionModel()
-        if not sm.hasSelection(): return None
+        if not sm.hasSelection():
+            return None
         index = sm.selection().indexes()[0]
         index = self.sortErrorModel.mapToSource(index)
         return index
 
     def getSelectedError(self):
         index = self.getSelectedErrorIndex()
-        if not index: return None
+        if not index:
+            return None
         return self.errorModel.getError(index)
 
     def errorZoom(self):
         error = self.getSelectedError()
-        if not error: return
+        if not error:
+            return
         self.errorVisualizer.zoom(error, self.lrs.crs)
 
         # add new error layers to map
@@ -657,7 +666,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     # reset error layers content (features)
     def resetErrorLayers(self):
-        # debug ( "resetErrorLayers" )
+        # #debug ( "resetErrorLayers" )
         self.resetErrorPointLayer()
         self.resetErrorLineLayer()
 
@@ -672,7 +681,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.qualityLayerManager.update(errorUpdates)
 
     def resetErrorPointLayer(self):
-        # debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
+        # #debug ( "resetErrorPointLayer %s" % self.errorPointLayer )
         if not self.errorPointLayerManager: return
         self.errorPointLayerManager.clear()
         errors = self.lrs.getErrors()
@@ -695,7 +704,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             project.writeEntry(PROJECT_PLUGIN_NAME, "qualityLayerId", self.qualityLayer.id())
 
     def resetQualityLayer(self):
-        # debug ( "resetQualityLayer %s" % self.qualityLayer )
+        # #debug ( "resetQualityLayer %s" % self.qualityLayer )
         if not self.qualityLayerManager: return
         self.qualityLayerManager.clear()
         features = self.lrs.getQualityFeatures()
@@ -711,6 +720,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateBufferWM.readFromProject()
 
     def resetLocateRoutes(self):
+        debug("resetLocateRoutes lrsLayer: %s" % (self.lrsLayer if self.lrsLayer else None))
         options = [(None, '')]
         if self.lrsLayer:
             options.extend([(id, "%s" % id) for id in self.lrsLayer.getRouteIds()])
@@ -718,16 +728,16 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateRouteCM.setOptions(options)
 
     def locateRouteChanged(self):
-        # debug ('locateRouteChanged')
+        # #debug ('locateRouteChanged')
         rangesText = ''
         routeId = self.locateRouteCM.value()
-        if self.lrs and routeId is not None:
+        if self.lrsLayer and routeId is not None:
             ranges = []
-            for r in self.lrs.getRouteMeasureRanges(routeId):
-                rang = "%s-%s" % (formatMeasure(r[0], self.lrs.measureUnit), formatMeasure(r[1], self.lrs.measureUnit))
+            for r in self.lrsLayer.getRouteMeasureRanges(routeId):
+                rang = "%s-%s" % (formatMeasure(r[0], self.lrsLayer.measureUnit), formatMeasure(r[1], self.lrsLayer.measureUnit))
                 ranges.append(rang)
             rangesText = ", ".join(ranges)
-        # debug ('ranges: %s' % rangesText )
+        # #debug ('ranges: %s' % rangesText )
         self.locateRanges.setText(rangesText)
 
         self.resetLocateEvent()
@@ -742,12 +752,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         coordinates = ''
         point = None
         if routeId is not None:
-            point, error = self.lrs.eventPoint(routeId, measure)
+            point, error = self.lrsLayer.eventPoint(routeId, measure)
 
             if point:
                 mapSettings = self.iface.mapCanvas().mapSettings()
-                if isProjectCrsEnabled() and getProjectCrs() != self.lrs.crs:
-                    transform = QgsCoordinateTransform(self.lrs.crs, mapSettings.destinationCrs())
+                if isProjectCrsEnabled() and getProjectCrs() != self.lrsLayer.crs:
+                    transform = QgsCoordinateTransform(self.lrsLayer.crs, mapSettings.destinationCrs())
                     point = transform.transform(point)
 
                 coordinates = "%s,%s" % (point.x(), point.y())
@@ -763,13 +773,13 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateZoomButton.setEnabled(bool(point))
 
     def locateHighlightChanged(self):
-        # debug ('locateHighlightChanged')
+        # #debug ('locateHighlightChanged')
         self.clearLocateHighlight()
         self.locateHighlightWM.writeToProject()
         self.highlightLocatePoint()
 
     def highlightLocatePoint(self):
-        # debug ('highlightLocatePoint')
+        # #debug ('highlightLocatePoint')
         self.clearLocateHighlight()
         if not self.locatePoint: return
         if not self.locateHighlightCheckBox.isChecked(): return
@@ -777,7 +787,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         mapCanvas = self.iface.mapCanvas()
         mapSettings = mapCanvas.mapSettings()
         # QgsHighlight does reprojection from layer CRS
-        crs = getProjectCrs() if isProjectCrsEnabled() else self.lrs.crs
+        crs = getProjectCrs() if isProjectCrsEnabled() else self.lrsLayer.crs
         layer = QgsVectorLayer('Point?crs=' + crsString(crs), 'LRS locate highlight', 'memory')
         self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry.fromPoint(self.locatePoint), layer)
         # highlight point size is hardcoded in QgsHighlight
@@ -786,7 +796,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateHighlight.show()
 
     def clearLocateHighlight(self):
-        # debug ('clearLocateHighlight')
+        # #debug ('clearLocateHighlight')
         if self.locateHighlight:
             del self.locateHighlight
             self.locateHighlight = None
@@ -827,7 +837,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def resetEventsButtons(self):
         enabled = bool(
-            self.lrs) and self.eventsLayerCombo.currentIndex() != -1 and self.eventsRouteFieldCombo.currentIndex() != -1 and self.eventsMeasureStartFieldCombo.currentIndex() != -1 and bool(
+            self.lrsLayer) and self.eventsLayerCombo.currentIndex() != -1 and self.eventsRouteFieldCombo.currentIndex() != -1 and self.eventsMeasureStartFieldCombo.currentIndex() != -1 and bool(
             self.eventsOutputNameLineEdit.text())
 
         self.eventsButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
@@ -861,13 +871,13 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
 
-        events = LrsEvents(self.iface, self.lrs, self.eventsProgressBar)
+        events = LrsEvents(self.iface, self.lrsLayer, self.eventsProgressBar)
         events.create(layer, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
 
-    ############################# MEASURE ####################################
+    # ------------------- MEASURE -------------------
 
     def resetMeasureOptions(self):
-        # debug('resetMeasureOptions')
+        # #debug('resetMeasureOptions')
         self.measureLayerCM.reset()
         self.measureThresholdWM.reset()
         self.measureOutputNameWM.reset()
@@ -881,8 +891,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.writeMeasureOptions()
 
     def resetMeasureButtons(self):
-        # debug('resetMeasureButtons')
-        enabled = bool(self.lrs) and self.measureLayerCombo.currentIndex() != -1 and bool(
+        # #debug('resetMeasureButtons')
+        enabled = bool(self.lrsLayer) and self.measureLayerCombo.currentIndex() != -1 and bool(
             self.measureOutputNameLineEdit.text()) and bool(self.measureRouteFieldLineEdit.text()) and bool(
             self.measureMeasureFieldLineEdit.text())
 
@@ -905,12 +915,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     # set threshold units according to current crs
     def updateMeasureUnits(self):
-        crs = self.lrs.crs if self.lrs.crs else None
+        crs = self.lrsLayer.crs if self.lrsLayer.crs else None
         label = self.getThresholdLabel(crs)
         self.measureThresholdLabel.setText(label)
 
     def calculateMeasures(self):
-        # debug('calculateMeasures')
+        # #debug('calculateMeasures')
         self.writeMeasureOptions()
 
         self.measureProgressBar.show()
@@ -922,10 +932,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         routeFieldName = self.measureRouteFieldLineEdit.text()
         measureFieldName = self.measureMeasureFieldLineEdit.text()
 
-        measures = LrsMeasures(self.iface, self.lrs, self.measureProgressBar)
+        measures = LrsMeasures(self.iface, self.lrsLayer, self.measureProgressBar)
         measures.calculate(layer, routeFieldName, measureFieldName, threshold, outputName)
 
-    ############################ EXPORT ##################################
+    # ------------------- EXPORT -------------------
 
     def resetExportOptions(self):
         options = []
@@ -943,7 +953,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         return self.tabWidget.currentWidget() == self.exportTab
 
     def exportTabBecameVisible(self):
-        # debug("exportTabBecameVisible" )
+        # #debug("exportTabBecameVisible" )
         if self.resetExportSchemaOptionsOnVisible:
             self.resetExportSchemaOptions()
 
@@ -971,7 +981,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
             options = [(r[0], r[0]) for r in self.postgisSelect(conn,
                                                                 "select nspname from pg_catalog.pg_namespace where nspname <> 'information_schema' and nspname !~ '^pg_'")]
-            # debug('options: %s' % options)
+            # #debug('options: %s' % options)
 
 
             self.exportPostgisSchemaCM.setOptions(options)
@@ -1009,7 +1019,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.exportPostgisTableWM.readFromProject()
 
     def export(self):
-        # debug('export')
+        # #debug('export')
         self.writeExportOptions()
 
         # TODO: disable tab instead
@@ -1024,10 +1034,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         export = ExportPostgis(self.iface, self.lrs)
         export.export(connectionName, outputSchema, outputTable)
 
-    ################################## STATS ##########################################
+    # ------------------- STATS -------------------
 
     def resetStats(self):
-        # debug ( 'setStats' )
+        # #debug ( 'setStats' )
         html = ''
         if self.lrs:
             if self.lrs.getEdited():

@@ -21,7 +21,7 @@
 """
 # Import the PyQt and QGIS libraries
 # from PyQt4.QtGui import *
-
+from .lrsbase import LrsBase
 from .error import *
 from .line import LrsLine
 from .point import LrsPoint
@@ -30,7 +30,7 @@ from .route import LrsRoute
 
 # Main class to keep all data and process them
 
-class Lrs(QObject):
+class Lrs(LrsBase):
     progressChanged = pyqtSignal(str, float, name='progressChanged')
     updateErrors = pyqtSignal(dict, name='updateErrors')
     edited = pyqtSignal(name='edited')
@@ -54,7 +54,7 @@ class Lrs(QObject):
     }
 
     def __init__(self, lineLayer, lineRouteField, pointLayer, pointRouteField, pointMeasureField, **kwargs):
-        super(Lrs, self).__init__()
+        super(Lrs, self).__init__(**kwargs)
 
         self.lineLayer = lineLayer
         self.lineRouteField = lineRouteField
@@ -73,10 +73,7 @@ class Lrs(QObject):
         self.threshold = kwargs.get('threshold', 10.0)
         self.parallelMode = kwargs.get('parallelMode', 'error')
         self.crs = kwargs.get('crs')
-        # self.mapUnitsPerMeasureUnit = kwargs.get('mapUnitsPerMeasureUnit',1000.0)
-        self.measureUnit = kwargs.get('measureUnit', LrsUnits.UNKNOWN)
-        if self.measureUnit == LrsUnits.UNKNOWN:
-            raise Exception("measureUnit not set")
+
 
         self.distanceArea = QgsDistanceArea()
         # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
@@ -139,12 +136,6 @@ class Lrs(QObject):
         if self.crs and self.crs != pointLayer.crs():
             self.pointTransform = QgsCoordinateTransform(pointLayer.crs(), self.crs)
 
-        # dictionary of LrsRoute, key is normalized route id
-        self.routes = {}
-
-        self.partSpatialIndex = None
-        self.partSpatialIndexRoutePart = None
-
         self.wasEdited = False  # true if layers were edited since calibration
 
         QgsProject.instance().layersWillBeRemoved.connect(self.layersWillBeRemoved)
@@ -179,7 +170,17 @@ class Lrs(QObject):
                 self.lineLayerDisconnect()
                 self.lineLayer = None
 
-            ##################### COMMON ###############################################
+    # ------------------- COMMON -------------------
+    # get route by id, create it if does not exist
+    # routeId does not have to be normalized
+    def getRoute(self, routeId):
+        normalId = normalizeRouteId(routeId)
+        # debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
+        if normalId not in self.routes:
+            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs,
+                                             self.measureUnit, self.distanceArea, parallelMode=self.parallelMode)
+        return self.routes[normalId]
+
 
     # test if process route according to selectionMode and selection
     def routeIdSelected(self, routeId):
@@ -191,7 +192,7 @@ class Lrs(QObject):
         elif self.selectionMode == 'exclude':
             return routeId not in self.selection
 
-        ##################### GENERATE (CALIBRATE) #################################
+    # ------------------- GENERATE (CALIBRATE) -------------------
 
     def updateProgressTotal(self):
         cnts = self.progressCounts
@@ -223,7 +224,7 @@ class Lrs(QObject):
         self.routeField = QgsField(field.name(), field.type(), field.typeName(), field.length(), field.precision())
 
         self.progressCounts = {}
-        # we dont know progressTotal at the beginning, but we can estimate it
+        # we don't know progressTotal at the beginning, but we can estimate it
         self.progressCounts[self.NLINES] = self.lineLayer.featureCount()
         self.progressCounts[self.NPOINTS] = self.pointLayer.featureCount()
         # estimation (precise later when routes are built)
@@ -243,25 +244,7 @@ class Lrs(QObject):
 
             # self.stats['pointsError'] = self.stats['pointsIncluded'] - self.stats['pointsOk']
 
-    # get route by id, create it if does not exist
-    # routeId does not have to be normalized
-    def getRoute(self, routeId):
-        normalId = normalizeRouteId(routeId)
-        # debug ( 'normalId = %s orig type = %s' % (normalId, type(routeId) ) )
-        if not normalId in self.routes:
-            self.routes[normalId] = LrsRoute(self.lineLayer, routeId, self.snap, self.threshold, self.crs,
-                                             self.measureUnit, self.distanceArea, parallelMode=self.parallelMode)
-        return self.routes[normalId]
-
-    # get route by id if exists otherwise returns None
-    # routeId does not have to be normalized
-    def getRouteIfExists(self, routeId):
-        normalId = normalizeRouteId(routeId)
-        if not normalId in self.routes:
-            return None
-        return self.routes[normalId]
-
-    ####### register / unregister features
+    # -------------------------------- register / unregister features ----------------------
 
     def registerLineFeature(self, feature):
         routeId = feature[self.lineRouteField]
@@ -348,7 +331,7 @@ class Lrs(QObject):
         self.progressCounts[self.NROUTES] = len(self.routes)
         self.updateProgressTotal()
 
-    #############################################33
+    # -------------------33
 
     def getRouteIds(self):
         ids = []
@@ -377,28 +360,23 @@ class Lrs(QObject):
             segments.extend(route.getSegments())
         return segments
 
-    # get list of available measures ( (from, to),.. )
-    def getRouteMeasureRanges(self, routeId):
-        routeId = normalizeRouteId(routeId)
-        if not routeId in self.routes:
-            return []
-        return self.routes[routeId].getMeasureRanges()
-
     def getQualityFeatures(self):
         features = []
         for route in self.routes.values():
             features.extend(route.getQualityFeatures())
         return features
 
-    ################## Editing ##################
+    # ----------------------------- Editing ---------------------------------
     def pointLayerEditingStarted(self):
         self.pointEditBuffer = self.pointLayer.editBuffer()
         self.pointEditBuffer.featureAdded.connect(self.pointFeatureAdded)
         self.pointEditBuffer.featureDeleted.connect(self.pointFeatureDeleted)
         # some versions of PyQt fail (Win build) with new style connection if the signal has multiple params
         # self.pointEditBuffer.geometryChanged.connect( self.pointGeometryChanged )
-        QObject.connect(self.pointEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
-                        self.pointGeometryChanged)
+        # QObject.connect(self.pointEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
+        #                self.pointGeometryChanged)
+        # TODO: working?
+        self.pointEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.pointGeometryChanged)
         self.pointEditBuffer.attributeValueChanged.connect(self.pointAttributeValueChanged)
 
     def pointLayerEditingStopped(self):
@@ -416,8 +394,10 @@ class Lrs(QObject):
         self.lineEditBuffer.featureAdded.connect(self.lineFeatureAdded)
         self.lineEditBuffer.featureDeleted.connect(self.lineFeatureDeleted)
         # self.lineEditBuffer.geometryChanged.connect( self.lineGeometryChanged )
-        QObject.connect(self.lineEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
-                        self.lineGeometryChanged)
+        # QObject.connect(self.lineEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
+        #                self.lineGeometryChanged)
+        # TODO: working?
+        self.lineEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.lineGeometryChanged)
         self.lineEditBuffer.attributeValueChanged.connect(self.lineAttributeValueChanged)
 
     def lineLayerEditingStopped(self):
@@ -446,7 +426,7 @@ class Lrs(QObject):
     # temporary id and featureAdded with real new id,
     # if changes are rollbacked, only featureDeleted is called
 
-    #### point edit ####
+    # ------------------- point edit -------------------
     def pointFeatureAdded(self, fid):
         # added features have temporary negative id
         # debug ( "feature added fid %s" % fid )
@@ -516,7 +496,7 @@ class Lrs(QObject):
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors(errorUpdates)
 
-    #### line edit ####
+    # --------------------------- line edit ---------------------------
     def lineFeatureAdded(self, fid):
         # added features have temporary negative id
         # debug ( "feature added fid %s" % fid )
@@ -583,112 +563,9 @@ class Lrs(QObject):
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors(errorUpdates)
 
-            ##################### EVENTS ######################################
 
-    def eventValuesError(self, routeId, start, end=None, linear=False):
-        error = None
-        missing = []
-        if routeId is None: missing.append('route')
-        if start is None: missing.append('start measure')
-        if linear and end is None: missing.append('end measure')
 
-        if missing:
-            error = 'missing %s value' % ' and '.join(missing)
-
-        route = self.getRouteIfExists(routeId)
-        if not route:
-            error = error + ', ' if error else ''
-            error += 'route not available'
-
-        return error
-
-    # tolerance - maximum accepted measure from start to nearest existing lrs if exact start measure was not found
-    # returns ( QgsPoint, error )
-    def eventPoint(self, routeId, start, tolerance=0):
-        error = self.eventValuesError(routeId, start)
-        if error: return None, error
-
-        route = self.getRoute(routeId)
-        geo, error = route.eventPoint(start, tolerance)
-        return geo, error
-
-    # tolerance - minimum missing gap which will be reported as error
-    # returns ( QgsMultiPolyline, error )
-    def eventMultiPolyLine(self, routeId, start, end, tolerance=0):
-        error = self.eventValuesError(routeId, start, end, True)
-        if error: return None, error
-
-        route = self.getRoute(routeId)
-        geo, error = route.eventMultiPolyLine(start, end, tolerance)
-        return geo, error
-
-    ############################# MEASURE ####################################
-
-    def deletePartSpatialIndex(self):
-        if self.partSpatialIndex:
-            del self.partSpatialIndex
-        self.partSpatialIndex = None
-        self.partSpatialIndexRoutePart = None
-
-    def createPartSpatialIndex(self):
-        self.deletePartSpatialIndex()
-        self.partSpatialIndex = QgsSpatialIndex()
-        self.partSpatialIndexRoutePart = {}
-        fid = 1
-        for route in self.routes.values():
-            for i in range(len(route.parts)):
-                feature = QgsFeature(fid)
-                geo = QgsGeometry.fromPolyline(route.parts[i].polyline)
-                feature.setGeometry(geo)
-                self.partSpatialIndex.insertFeature(feature)
-                self.partSpatialIndexRoutePart[fid] = [route.routeId, i]
-                fid += 1
-
-    # returns nearest routeId, partIdx within threshold 
-    def nearestRoutePart(self, point, threshold):
-        if not self.partSpatialIndex:
-            self.createPartSpatialIndex()
-        rect = QgsRectangle(point.x() - threshold, point.y() - threshold, point.x() + threshold, point.y() + threshold)
-        ids = self.partSpatialIndex.intersects(rect)
-        # debug ( '%s' % ids )
-        nearestRouteId = None
-        nearestPartIdx = None
-        nearestDist = sys.float_info.max
-        for id in ids:
-            routeId, partIdx = self.partSpatialIndexRoutePart[id]
-            route = self.getRoute(routeId)
-            part = route.parts[partIdx]
-            geo = QgsGeometry.fromPolyline(part.polyline)
-            (sqDist, nearestPnt, afterVertex) = geo.closestSegmentWithContext(point)
-            dist = math.sqrt(sqDist)
-            if dist < nearestDist:
-                nearestDist = dist
-                nearestRouteId = routeId
-                nearestPartIdx = partIdx
-
-        if nearestDist <= threshold:
-            return nearestRouteId, nearestPartIdx
-
-        return None, None
-
-    # return routeId, measure
-    # Note: it may happen that nearest point (projected) has no record on part,
-    # in that case is returned None even if another record may be in threshold,
-    # this is currently feature
-    # TODO: search for nearest available referenced segments (records) instead 
-    # of part polylines?
-    def pointMeasure(self, point, threshold):
-        routeId, partIdx = self.nearestRoutePart(point, threshold)
-        if routeId is not None and partIdx is not None:
-            route = self.getRoute(routeId)
-            part = route.parts[partIdx]
-            measure = part.pointMeasure(point)
-            if measure is not None:
-                return routeId, measure
-
-        return routeId, None
-
-    ######################### STATS ####################################
+    # ------------------- STATS -------------------
 
     def getStatsHtmlRow(self, name, label):
         # return "%s : %s<br>" % ( label, self.stats[name] )

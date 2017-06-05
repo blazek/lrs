@@ -29,9 +29,9 @@ from .utils import *
 
 
 # combo is QComboBox or list of QComboBox
-class LrsComboManager(QObject):
+class LrsComboManagerBase(QObject):
     def __init__(self, comboOrList, **kwargs):
-        super(LrsComboManager, self).__init__()
+        super(LrsComboManagerBase, self).__init__()
 
         if isinstance(comboOrList, list):
             self.comboList = comboOrList
@@ -57,20 +57,26 @@ class LrsComboManager(QObject):
             else:
                 combo.setModel(self.model)
 
+        # options is dict with of [value,label] pairs
+        self.setOptions(kwargs.get('options', []))
+
+    def connectCurrentIndexChanged(self):
         # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
         for combo in self.comboList:
             combo.currentIndexChanged.connect(self.currentIndexChanged)
 
-        # options is dict with of [value,label] pairs
-        self.setOptions(kwargs.get('options', []))
-
     def currentIndexChanged(self, idx):
         # reset other combos
-        # debug("currentIndexChanged sender = %s" % self.sender())
+        debug("LrsComboManager currentIndexChanged settingsName = %s" % self.settingsName)
+        #debug("currentIndexChanged sender = %s" % self.sender())
         for combo in self.comboList:
             if combo == self.sender():
                 continue
             combo.setCurrentIndex(idx)
+
+    # To be implemented in subclasses, load layers from project, fields from layer, ...
+    def reload(self):
+        pass
 
     def clear(self):
         self.options = []
@@ -120,7 +126,7 @@ class LrsComboManager(QObject):
 
     def findItemByData(self, data):
         # QStandardItemModel.match() is not suitable, with Qt.MatchExactly it seems to comare objects
-        # (must be treference to the same object?) and with Qt.MatchFixedString it works like with Qt.MatchContains
+        # (must be reference to the same object?) and with Qt.MatchFixedString it works like with Qt.MatchContains
         # so we do our loop
         for i in range(self.model.rowCount() - 1, -1, -1):
             itemData = self.model.item(i).data(Qt.UserRole)
@@ -129,7 +135,13 @@ class LrsComboManager(QObject):
         return None
 
 
-class LrsLayerComboManager(LrsComboManager):
+class LrsComboManager(LrsComboManagerBase):
+    def __init__(self, comboOrList, **kwargs):
+        super(LrsComboManager, self).__init__(comboOrList, **kwargs)
+        self.connectCurrentIndexChanged()
+
+
+class LrsLayerComboManager(LrsComboManagerBase):
     layerChanged = pyqtSignal(QgsMapLayer)
 
     def __init__(self, comboOrList, **kwargs):
@@ -137,12 +149,15 @@ class LrsLayerComboManager(LrsComboManager):
         self.geometryType = kwargs.get('geometryType', None)  # QgsWkbTypes.GeometryType
         self.geometryHasM = kwargs.get('geometryHasM', False)  # has measure
 
-        # https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
-        self.canvasLayersChanged()
+        self.connectCurrentIndexChanged()  # connect to this class method
 
         QgsProject.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)
         # nameChanged is emitted by layer, see canvasLayersChanged
+
+    def reload(self):
+        # https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
+        self.canvasLayersChanged()
 
     def __del__(self):
         if not QgsProject:
@@ -150,9 +165,8 @@ class LrsLayerComboManager(LrsComboManager):
         QgsProject.instance().layersAdded.disconnect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
-
     def currentIndexChanged(self, idx):
-        debug("currentIndexChanged idx = %s" % idx)
+        debug("LrsLayerComboManager currentIndexChanged idx = %s" % idx)
         super(LrsLayerComboManager, self).currentIndexChanged(idx)
         self.layerChanged.emit(self.getLayer())
 
@@ -169,7 +183,7 @@ class LrsLayerComboManager(LrsComboManager):
         return QgsProject.instance().mapLayer(lId)
 
     def canvasLayersChanged(self):
-        debug("canvasLayersChanged")
+        #debug("canvasLayersChanged")
         if not QgsProject:
             return
         # layers = []
@@ -187,7 +201,7 @@ class LrsLayerComboManager(LrsComboManager):
         for i in range(self.model.rowCount() - 1, -1, -1):
             lid = self.model.item(i).data(Qt.UserRole)
             if lid not in QgsProject.instance().mapLayers().keys():
-                #debug("canvasLayersChanged remove lid = %s" % lid)
+                # debug("canvasLayersChanged remove lid = %s" % lid)
                 self.model.removeRows(i, 1)
 
         # add new layers
@@ -215,7 +229,7 @@ class LrsLayerComboManager(LrsComboManager):
         self.proxy.sort(0)
 
 
-class LrsFieldComboManager(LrsComboManager):
+class LrsFieldComboManager(LrsComboManagerBase):
     fieldNameChanged = pyqtSignal(str)
 
     def __init__(self, comboOrList, layerComboManager, **kwargs):
@@ -226,9 +240,11 @@ class LrsFieldComboManager(LrsComboManager):
         # it may be deleted in C++ and disconnect fails
         self.layerId = None  # current layer id
 
-        self.layerChanged(self.layerComboManager.getLayer())
-
+        self.connectCurrentIndexChanged()
         self.layerComboManager.layerChanged.connect(self.layerChanged)
+
+    def reload(self):
+        self.layerChanged(self.layerComboManager.getLayer())
 
     def __del__(self):
         self.disconnectFromLayer()
@@ -246,7 +262,7 @@ class LrsFieldComboManager(LrsComboManager):
             layer.attributeDeleted.disconnect(self.resetFields)
 
     def layerChanged(self, layer):
-        debug("layerChanged settingsName = %s" % self.settingsName)
+        #debug("layerChanged settingsName = %s" % self.settingsName)
         if not QgsProject:
             return
 
@@ -263,13 +279,16 @@ class LrsFieldComboManager(LrsComboManager):
             layer.attributeDeleted.connect(self.resetFields)
 
     def resetFields(self):
+        #debug("resetFields settingsName = %s" % self.settingsName)
         layer = QgsProject.instance().mapLayer(self.layerId)
         if not layer:
             for combo in self.comboList:
                 combo.clear()
                 return
 
-                # Add none item
+        #debug("resetFields layer = %s" % layer.name())
+
+        # Add none item
         if self.allowNone:
             item = self.findItemByData(None)
             if not item:
@@ -291,7 +310,7 @@ class LrsFieldComboManager(LrsComboManager):
 
         # add new fields
         for idx, field in enumerate(layer.pendingFields()):
-            # debug ("%s %s %s" % ( field.name(), field.type(), self.types) )
+            #debug("resetFields %s %s %s" % (field.name(), field.type(), self.types))
             if self.types and not field.type() in self.types: continue
             fieldName = field.name()
             fieldLabel = layer.attributeDisplayName(idx)
@@ -307,11 +326,12 @@ class LrsFieldComboManager(LrsComboManager):
         self.proxy.sort(0)
 
     def currentIndexChanged(self, idx):
+        #debug("LrsFieldComboManager currentIndexChanged idx = %s settingsName = %s" % (idx, self.settingsName))
         super(LrsFieldComboManager, self).currentIndexChanged(idx)
         self.fieldNameChanged.emit(self.getFieldName())
 
 
-class LrsUnitComboManager(LrsComboManager):
+class LrsUnitComboManager(LrsComboManagerBase):
     def __init__(self, comboOrList, **kwargs):
         kwargs['sort'] = False
         super(LrsUnitComboManager, self).__init__(comboOrList, **kwargs)
