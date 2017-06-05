@@ -28,11 +28,11 @@ from ..lrs.error.lrserrorpointlayer import LrsErrorPointLayer
 from ..lrs.error.lrserrorvisualizer import LrsErrorVisualizer
 from ..lrs.error.lrsqualitylayer import LrsQualityLayer
 from ..lrs.error.lrsqualitylayermanager import LrsQualityLayerManager
-from ..lrs.events import LrsEvents
+from ..lrs.lrsevents import LrsEvents
 from ..lrs.lrs import Lrs
 from ..lrs.lrslayer import LrsLayer
 from ..lrs.lrsoutput import LrsOutput
-from ..lrs.measures import LrsMeasures
+from ..lrs.lrsmeasures import LrsMeasures
 from ..lrs.postgis import ExportPostgis
 from .lrscombomanager import LrsComboManager
 from .lrscombomanagerbase import *

@@ -53,9 +53,10 @@ class LrsRouteBase(metaclass=ABCMeta):
     def eventPoint(self, start, tolerance=0):
         for part in self.parts:
             point = part.eventPoint(start)
-            if point: return point, None
+            if point:
+                return point, None
 
-        # second try with tolerance
+        # try with tolerance
         if tolerance > 0:
             nearestPoint = None
             nearestMeasure = sys.float_info.max
@@ -109,7 +110,8 @@ class LrsRouteBase(metaclass=ABCMeta):
             for i in range(len(measures) - 1):
                 measureFrom = measures[i][1]
                 measureTo = measures[i + 1][0]
-                if measureTo - measureFrom < tolerance: continue
+                if measureTo - measureFrom < tolerance:
+                    continue
 
                 # measures are not formated (rounded) to show to user real data and dont hidden the true error by rounding
                 gaps.append('%s-%s' % (measureFrom, measureTo))

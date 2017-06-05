@@ -68,7 +68,13 @@ class LrsEvents(QObject):
         # decimal number inaccuracy. Thus we set tolerance used to try to find nearest point event within that
         # tolerance and skip smaller linear event errors (gaps)
         # 0.1m is too much and less than 0.01 m does not make sense in standard GIS
-        eventTolerance = convertDistanceUnits(0.01, LrsUnits.METER, self.lrs.measureUnit)
+        #eventTolerance = convertDistanceUnits(0.01, LrsUnits.METER, self.lrs.measureUnit)
+
+        # For LrsLayer with existing measure we don't know measure units, but it is little probable that it is
+        # more than km or miles (if we stay on Earth) 0.0001 km = 10 cm tolerance should not be too much for
+        # meters and it should sufficient for km
+        # TODO: add tolerance widget?
+        eventTolerance = 0.0001
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
