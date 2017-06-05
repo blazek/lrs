@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>632</width>
-    <height>503</height>
+    <width>739</width>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -538,465 +538,545 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <layout class="QGridLayout" name="genGridLayout">
-          <item row="19" column="0">
-           <widget class="QLabel" name="genOutputNameLabel">
-            <property name="text">
-             <string>Output layer name</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0" colspan="2">
-           <widget class="Line" name="line_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="1">
-           <widget class="QDoubleSpinBox" name="genThresholdSpin">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="genSnapLabel">
-            <property name="toolTip">
-             <string>Maximum gap between lies to be snapped.</string>
-            </property>
-            <property name="text">
-             <string>Max lines snap</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="genLineRouteFieldLabel">
-            <property name="text">
-             <string>Lines route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QComboBox" name="genMeasureUnitCombo"/>
-          </item>
-          <item row="17" column="0">
-           <widget class="QLabel" name="genExtrapolateLabel">
-            <property name="toolTip">
-             <string>Extrapolate before and after calibration points.</string>
-            </property>
-            <property name="text">
-             <string>Extrapolate</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QComboBox" name="genPointRouteFieldCombo"/>
-          </item>
-          <item row="15" column="0">
-           <widget class="QLabel" name="genThresholdLabel">
-            <property name="toolTip">
-             <string>Maximum distance of point from line.</string>
-            </property>
-            <property name="text">
-             <string>Max point distance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="genPointRouteFieldLabel">
-            <property name="text">
-             <string>Points route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="genPointLayerCombo"/>
-          </item>
-          <item row="14" column="1">
-           <widget class="QDoubleSpinBox" name="genSnapSpin">
-            <property name="toolTip">
-             <string>Maximum gap between lies to be snapped.</string>
-            </property>
-            <property name="decimals">
-             <number>6</number>
-            </property>
-            <property name="maximum">
-             <double>1000000.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
-          </item>
-          <item row="13" column="0">
-           <widget class="QComboBox" name="genSelectionModeCombo">
-            <property name="toolTip">
-             <string>Routes selection mode.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="genLineLayerLabel">
-            <property name="text">
-             <string>Lines layer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="genLineLayerCombo">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="genPointMeasureFieldLabel">
-            <property name="text">
-             <string>Measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="16" column="0">
-           <widget class="QLabel" name="genParallelModeLabel">
-            <property name="text">
-             <string>Parallels</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout">
+         <widget class="QTabWidget" name="calibTabWidget">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="calibTab">
+           <attribute name="title">
+            <string>Input</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
             <item>
-             <widget class="QLineEdit" name="genSelectionLineEdit">
-              <property name="toolTip">
-               <string>Comma separated list of routes to include/exclude.</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="genSelectionButton">
-              <property name="text">
-               <string>Select</string>
-              </property>
+             <widget class="QWidget" name="calibWidget" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <property name="spacing">
+                <number>5</number>
+               </property>
+               <property name="leftMargin">
+                <number>8</number>
+               </property>
+               <property name="topMargin">
+                <number>8</number>
+               </property>
+               <property name="rightMargin">
+                <number>8</number>
+               </property>
+               <property name="bottomMargin">
+                <number>8</number>
+               </property>
+               <item>
+                <layout class="QGridLayout" name="genGridLayout">
+                 <item row="19" column="0">
+                  <widget class="QLabel" name="genOutputNameLabel">
+                   <property name="text">
+                    <string>Output layer name</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="9" column="0" colspan="2">
+                  <widget class="Line" name="line_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="15" column="1">
+                  <widget class="QDoubleSpinBox" name="genThresholdSpin">
+                   <property name="toolTip">
+                    <string>Maximum distance of point from line.</string>
+                   </property>
+                   <property name="decimals">
+                    <number>6</number>
+                   </property>
+                   <property name="maximum">
+                    <double>1000000.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="14" column="0">
+                  <widget class="QLabel" name="genSnapLabel">
+                   <property name="toolTip">
+                    <string>Maximum gap between lies to be snapped.</string>
+                   </property>
+                   <property name="text">
+                    <string>Max lines snap</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="genLineRouteFieldLabel">
+                   <property name="text">
+                    <string>Lines route field</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="1">
+                  <widget class="QComboBox" name="genMeasureUnitCombo"/>
+                 </item>
+                 <item row="17" column="0">
+                  <widget class="QLabel" name="genExtrapolateLabel">
+                   <property name="toolTip">
+                    <string>Extrapolate before and after calibration points.</string>
+                   </property>
+                   <property name="text">
+                    <string>Extrapolate</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="genPointRouteFieldCombo"/>
+                 </item>
+                 <item row="15" column="0">
+                  <widget class="QLabel" name="genThresholdLabel">
+                   <property name="toolTip">
+                    <string>Maximum distance of point from line.</string>
+                   </property>
+                   <property name="text">
+                    <string>Max point distance</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="genPointRouteFieldLabel">
+                   <property name="text">
+                    <string>Points route field</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QComboBox" name="genPointLayerCombo"/>
+                 </item>
+                 <item row="14" column="1">
+                  <widget class="QDoubleSpinBox" name="genSnapSpin">
+                   <property name="toolTip">
+                    <string>Maximum gap between lies to be snapped.</string>
+                   </property>
+                   <property name="decimals">
+                    <number>6</number>
+                   </property>
+                   <property name="maximum">
+                    <double>1000000.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
+                 </item>
+                 <item row="13" column="0">
+                  <widget class="QComboBox" name="genSelectionModeCombo">
+                   <property name="toolTip">
+                    <string>Routes selection mode.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="genLineLayerLabel">
+                   <property name="text">
+                    <string>Lines layer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QComboBox" name="genLineLayerCombo">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="genPointMeasureFieldLabel">
+                   <property name="text">
+                    <string>Measure field</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="16" column="0">
+                  <widget class="QLabel" name="genParallelModeLabel">
+                   <property name="text">
+                    <string>Parallels</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="13" column="1">
+                  <layout class="QHBoxLayout" name="horizontalLayout">
+                   <item>
+                    <widget class="QLineEdit" name="genSelectionLineEdit">
+                     <property name="toolTip">
+                      <string>Comma separated list of routes to include/exclude.</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="genSelectionButton">
+                     <property name="text">
+                      <string>Select</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="genLineRouteFieldCombo"/>
+                 </item>
+                 <item row="19" column="1">
+                  <widget class="QLineEdit" name="genOutputNameLineEdit">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="Line" name="line">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="16" column="1">
+                  <widget class="QComboBox" name="genParallelModeCombo"/>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="genPointLayerLabel">
+                   <property name="text">
+                    <string>Points layer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="17" column="1">
+                  <widget class="QCheckBox" name="genExtrapolateCheckBox">
+                   <property name="toolTip">
+                    <string>Extrapolate before and after calibration points.</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="0">
+                  <widget class="QLabel" name="genMeasureUnitLabel">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map units per measure unit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>Measure unit</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="18" column="0" colspan="2">
+                  <widget class="Line" name="line_10">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QDialogButtonBox" name="genButtonBox">
+                 <property name="standardButtons">
+                  <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="genProgressFrame">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Plain</enum>
+                 </property>
+                 <property name="lineWidth">
+                  <number>0</number>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <item>
+                   <widget class="QLabel" name="genProgressLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Progress label</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QProgressBar" name="genProgressBar">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="value">
+                     <number>24</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
              </widget>
             </item>
            </layout>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="genLineRouteFieldCombo"/>
-          </item>
-          <item row="19" column="1">
-           <widget class="QLineEdit" name="genOutputNameLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="16" column="1">
-           <widget class="QComboBox" name="genParallelModeCombo"/>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="genPointLayerLabel">
-            <property name="text">
-             <string>Points layer</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="1">
-           <widget class="QCheckBox" name="genExtrapolateCheckBox">
-            <property name="toolTip">
-             <string>Extrapolate before and after calibration points.</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="genMeasureUnitLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map units per measure unit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Measure unit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="18" column="0" colspan="2">
-           <widget class="Line" name="line_10">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QDialogButtonBox" name="genButtonBox">
-          <property name="standardButtons">
-           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QFrame" name="genProgressFrame">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="lineWidth">
-           <number>0</number>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QLabel" name="genProgressLabel">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Progress label</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QProgressBar" name="genProgressBar">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="value">
-              <number>24</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="errorTab">
-       <attribute name="title">
-        <string>Errors</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QWidget" name="errorWidget" native="true">
-          <layout class="QVBoxLayout" name="verticalLayout_9">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
-             <item>
-              <widget class="QLabel" name="errorFilterLabel">
-               <property name="text">
-                <string>Filter</string>
+          </widget>
+          <widget class="QWidget" name="errorTab">
+           <attribute name="title">
+            <string>Errors</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QWidget" name="errorWidget" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <property name="spacing">
+                <number>0</number>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="errorFilterLineEdit"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTableView" name="errorView">
-             <property name="selectionMode">
-              <enum>QAbstractItemView::SingleSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>true</bool>
-             </property>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="verticalHeaderDefaultSectionSize">
-              <number>20</number>
-             </attribute>
-            </widget>
-           </item>
-           <item>
-            <layout class="QGridLayout" name="gridLayout_4">
-             <item row="0" column="2">
-              <widget class="QLabel" name="errorTotalLength">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+               <property name="leftMargin">
+                <number>0</number>
                </property>
-               <property name="text">
-                <string>0.0</string>
+               <property name="topMargin">
+                <number>0</number>
                </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="errorIncludedLengthLabel">
-               <property name="text">
-                <string>Length of included lines</string>
+               <property name="rightMargin">
+                <number>0</number>
                </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="errorSuccessLengthLabel">
-               <property name="text">
-                <string>Length of successfully created LRS</string>
+               <property name="bottomMargin">
+                <number>0</number>
                </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLabel" name="errorSuccessLength">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>0.0</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="errorTotalLengthLabel">
-               <property name="text">
-                <string>Total length of all lines</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="errorIncludedLength">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>0.0</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label">
-               <property name="text">
-                <string>:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="label_3">
-               <property name="text">
-                <string>:</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <item>
-              <widget class="QDialogButtonBox" name="errorButtonBox">
-               <property name="standardButtons">
-                <set>QDialogButtonBox::Help</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QToolButton" name="errorZoomButton">
-               <property name="text">
-                <string>Zoom</string>
-               </property>
-               <property name="toolButtonStyle">
-                <enum>Qt::ToolButtonTextBesideIcon</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="addErrorLayersButton">
-               <property name="toolTip">
-                <string>Add layers of errors to map view</string>
-               </property>
-               <property name="text">
-                <string>Error layers</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="addQualityLayerButton">
-               <property name="text">
-                <string>Quality layer</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_4">
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="errorFilterLabel">
+                   <property name="text">
+                    <string>Filter</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="errorFilterLineEdit"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QTableView" name="errorView">
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::SingleSelection</enum>
+                 </property>
+                 <property name="selectionBehavior">
+                  <enum>QAbstractItemView::SelectRows</enum>
+                 </property>
+                 <property name="sortingEnabled">
+                  <bool>true</bool>
+                 </property>
+                 <attribute name="verticalHeaderVisible">
+                  <bool>false</bool>
+                 </attribute>
+                 <attribute name="verticalHeaderDefaultSectionSize">
+                  <number>20</number>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="gridLayout_4">
+                 <property name="leftMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="verticalSpacing">
+                  <number>8</number>
+                 </property>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="errorTotalLength">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>0.0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="errorIncludedLengthLabel">
+                   <property name="text">
+                    <string>Length of included lines</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="errorSuccessLengthLabel">
+                   <property name="text">
+                    <string>Length of successfully created LRS</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QLabel" name="errorSuccessLength">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>0.0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="errorTotalLengthLabel">
+                   <property name="text">
+                    <string>Total length of all lines</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="errorIncludedLength">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>0.0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="label_2">
+                   <property name="text">
+                    <string>:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>:</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                 <item>
+                  <widget class="QDialogButtonBox" name="errorButtonBox">
+                   <property name="standardButtons">
+                    <set>QDialogButtonBox::Help</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="errorZoomButton">
+                   <property name="text">
+                    <string>Zoom</string>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonTextBesideIcon</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="addErrorLayersButton">
+                   <property name="toolTip">
+                    <string>Add layers of errors to map view</string>
+                   </property>
+                   <property name="text">
+                    <string>Error layers</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="addQualityLayerButton">
+                   <property name="text">
+                    <string>Quality layer</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>

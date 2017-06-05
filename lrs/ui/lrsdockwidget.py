@@ -262,7 +262,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetExportButtons()
 
         # Hide export tab - it should be removed completely once memory layer export is working
-        self.tabWidget.removeTab(5)
+        self.tabWidget.removeTab(4)
 
         # ---------------------------- statistics tab ----------------------------
         # currently not used (did not correspond well to errors)
