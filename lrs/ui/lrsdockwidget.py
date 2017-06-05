@@ -136,6 +136,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
         self.genButtonBox.button(QDialogButtonBox.Help).clicked.connect(self.showHelp)
 
+        # load layers after other combos were connected
+        self.genLineLayerCM.reload()
+        self.genPointLayerCM.reload()
+
         self.enableGenerateSelection()
 
         # ------------- errorTab -----------------------
@@ -302,7 +306,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def projectRead(self):
         debug("projectRead")
-        if not QgsProject: return
+        if not QgsProject:
+            return
 
         project = QgsProject.instance()
         if not project:
