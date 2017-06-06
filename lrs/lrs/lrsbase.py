@@ -56,7 +56,7 @@ class LrsBase(QObject):
         return self.routes[routeId].getMeasureRanges()
 
     # tolerance - maximum accepted measure from start to nearest existing lrs if exact start measure was not found
-    # returns ( QgsPoint, error )
+    # returns ( QgsPointXY, error )
     def eventPoint(self, routeId, start, tolerance=0):
         error = self.eventValuesError(routeId, start)
         if error: return None, error

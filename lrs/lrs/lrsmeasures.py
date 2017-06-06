@@ -19,8 +19,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-
 from .utils import *
+
+# Note that there is QgsGeometryAnalyzer.eventLayer() working with low level WKB (z coordinates)
 
 
 # Calculate measures

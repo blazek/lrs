@@ -55,7 +55,7 @@ class LrsRouteBase(metaclass=ABCMeta):
                 LrsError(LrsError.DUPLICATE_REFERENCING, geo, routeId=self.routeId, measure=[measureFrom, measureTo]))
             part.removeRecord(record)
 
-    # returns ( QgsPoint, error )
+    # returns ( QgsPointXY, error )
     def eventPoint(self, start, tolerance=0):
         for part in self.parts:
             point = part.eventPoint(start)

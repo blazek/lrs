@@ -62,7 +62,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.lrs = None  # Lrs object
         self.lrsLayer = None  # Common input LrsLayer for locate/events/measure
         self.genSelectionDialog = None
-        self.locatePoint = None  # QgsPoint
+        self.locatePoint = None  # QgsPointXY
         self.locateHighlight = None  # QgsHighlight
         self.errorPointLayer = None
         self.errorPointLayerManager = None
@@ -788,7 +788,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             else:
                 coordinates = error
 
-        self.locatePoint = point  # QgsPoint
+        self.locatePoint = point  # QgsPointXY
         self.highlightLocatePoint()
 
         self.locateCoordinates.setText(coordinates)

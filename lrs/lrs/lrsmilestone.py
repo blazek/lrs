@@ -32,7 +32,7 @@ class LrsMilestone(object):
         self.geoPart = geoPart
         # number of geometry parts in original feature, used for error checksum
         self.nGeoParts = nGeoParts
-        self.pnt = pnt  # QgsPoint
+        self.pnt = pnt  # QgsPointXY
         self.measure = measure  # field measure
         self.part = None  # part index
         # distance from beginning of part to the point on part nearest to pnt

@@ -108,7 +108,7 @@ def polylinesIdentical(polyline1, polyline2):
     return polyline1 == tmp
 
 
-# return hash of QgsPoint (may be used as key in dictionary)
+# return hash of QgsPointXY (may be used as key in dictionary)
 def pointHash(point):
     return "%s-%s" % (point.x().__hash__(), point.y().__hash__())
 
@@ -171,17 +171,19 @@ def measureAlongPolyline(polyline, segment, pnt):
 
 # place point on line in distance from point 1
 def pointOnLine(point1, point2, distance):
+    #debug("pointOnLine distance = %s" % distance)
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
     # this gives exception if point1 and point2 have the same coordinate, but duplicate coordinates 
     # clean up was added in LrsRoute.buildParts so that it should no more happen
     k = distance / math.sqrt(dx * dx + dy * dy)
+    #debug("pointOnLine k = %s" % k)
     x = point1.x() + k * dx
     y = point1.y() + k * dy
-    return QgsPoint(x, y)
+    return QgsPointXY(x, y)
 
 
-# returns new QgsPoint on polyline in distance along original polyline
+# returns new QgsPointXY on polyline in distance along polyline
 def polylinePoint(polyline, distance):
     # debug( "polylinePoint distance = %s" % distance )
     # geo = QgsGeometry.fromPolyline( polyline )
@@ -193,7 +195,7 @@ def polylinePoint(polyline, distance):
         p2 = polyline[i + 1]
         l = pointsDistance(p1, p2)
 
-        if distance >= length and distance <= length + l:
+        if length <= distance <= length + l:
             d = distance - length
             return pointOnLine(p1, p2, d)
         length += l
@@ -230,7 +232,6 @@ def polylineSegment(polyline, frm, to):
         length += l
 
     return poly
-
 
 def getLayerFeature(layer, fid):
     if not layer: return None

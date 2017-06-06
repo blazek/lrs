@@ -291,9 +291,11 @@ class LrsCalib(LrsBase):
     # returns LrsPoint
     def registerPointFeature(self, feature):
         routeId = feature[self.pointRouteField]
-        if routeId == '' or routeId == NULL: routeId = None
+        if routeId == '' or routeId == NULL:
+            routeId = None
 
-        if not self.routeIdSelected(routeId): return None
+        if not self.routeIdSelected(routeId):
+            return None
 
         measure = feature[self.pointMeasureField]
         if measure == NULL: measure = None

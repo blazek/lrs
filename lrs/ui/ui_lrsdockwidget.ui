@@ -1059,14 +1059,17 @@
                     <string>Add layers of errors to map view</string>
                    </property>
                    <property name="text">
-                    <string>Error layers</string>
+                    <string>Create error layers</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="addQualityLayerButton">
+                   <property name="toolTip">
+                    <string>Add quality layer to map view</string>
+                   </property>
                    <property name="text">
-                    <string>Quality layer</string>
+                    <string>Create quality layer</string>
                    </property>
                   </widget>
                  </item>
