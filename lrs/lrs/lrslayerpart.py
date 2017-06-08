@@ -56,6 +56,7 @@ class LrsLayerPart(LrsPartBase):
 
     # overridden
     def eventSegments(self, start, end):
+        debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         segments = []
         if start is None or end is None:
             return segments
@@ -63,7 +64,8 @@ class LrsLayerPart(LrsPartBase):
         end = float(end)
 
         if self.records:  # we may have 1 or none (if removed duplicate)
-            if self.records[0].containsMeasure(start) or self.records[0].containsMeasure(end):
+            rec = LrsRecord(start, end, None, None)
+            if self.records[0].measureOverlaps(rec):
                 segment = self.linestringSegment(start, end)
                 if segment:
                     segments.append(segment)

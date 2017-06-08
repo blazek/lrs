@@ -16,6 +16,9 @@ class LrsRecord:
         self.partTo = partTo
         # debug( "LrsRecord.init() milestoneFrom = %s milestoneTo = %s partFrom = %s partTo = %s" % ( milestoneFrom, milestoneTo, partFrom, partTo) )
 
+    def __str__(self):
+        return "record %s-%s / %s-%s" % (self.milestoneFrom, self.milestoneTo, self.partFrom, self.partTo)
+
     # returns true if measure is within open interval (milestoneFrom,milestoneTo)
     # i.e. milestoneFrom < measure < milestoneTo
     def measureWithin(self, measure):

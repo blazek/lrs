@@ -27,7 +27,7 @@ class LrsLayerComboManager(LrsComboManagerBase):
         QgsProject.instance().layersRemoved.disconnect(self.canvasLayersChanged)
 
     def currentIndexChanged(self, idx):
-        debug("LrsLayerComboManager currentIndexChanged idx = %s" % idx)
+        #debug("LrsLayerComboManager currentIndexChanged idx = %s" % idx)
         super(LrsLayerComboManager, self).currentIndexChanged(idx)
         self.layerChanged.emit(self.getLayer())
 
@@ -44,12 +44,12 @@ class LrsLayerComboManager(LrsComboManagerBase):
         return QgsProject.instance().mapLayer(lId)
 
     def canvasLayersChanged(self):
-        self.debug("LrsLayerComboManager currentIndexChanged")
+        #self.debug("LrsLayerComboManager currentIndexChanged")
         self.reload()
 
     def reload(self):
         # https://qgis.org/api/classQgsMapLayerComboBox.html#af4d245f67261e82719290ca028224b3c
-        self.debug("LrsLayerComboManager reload")
+        #self.debug("LrsLayerComboManager reload")
 
         if not QgsProject:
             return

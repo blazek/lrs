@@ -68,8 +68,10 @@ class LrsBase(QObject):
     # tolerance - minimum missing gap which will be reported as error
     # returns ( QgsMultiPolyline, error )
     def eventMultiPolyLine(self, routeId, start, end, tolerance=0):
+        debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         error = self.eventValuesError(routeId, start, end, True)
-        if error: return None, error
+        if error:
+            return None, error
 
         route = self.getRoute(routeId)
         geo, error = route.eventMultiPolyLine(start, end, tolerance)
@@ -80,14 +82,18 @@ class LrsBase(QObject):
     def eventValuesError(self, routeId, start, end=None, linear=False):
         error = None
         missing = []
-        if routeId is None: missing.append('route')
-        if start is None: missing.append('start measure')
-        if linear and end is None: missing.append('end measure')
+        if routeId is None:
+            missing.append('route')
+        if start is None:
+            missing.append('start measure')
+        if linear and end is None:
+            missing.append('end measure')
 
         if missing:
             error = 'missing %s value' % ' and '.join(missing)
 
         route = self.getRouteIfExists(routeId)
+        #debug("eventValuesError start = %s end = %s" % (start, end))
         if not route:
             error = error + ', ' if error else ''
             error += 'route not available'

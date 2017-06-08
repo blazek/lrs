@@ -41,6 +41,9 @@ class LrsPartBase(metaclass=ABCMeta):
         geo = QgsGeometry.fromPolyline(polyline)
         return geo
 
+    def __str__(self):
+        return "part %s" % ",".join( list("%s" %r for r in self.records) )
+
     # returns QgsPointXY or None
     @abstractmethod
     def eventPoint(self, start):

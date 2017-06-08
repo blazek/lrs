@@ -69,7 +69,7 @@ class LrsComboManagerBase(QObject):
 
     def currentIndexChanged(self, idx):
         # reset other combos
-        self.debug("LrsComboManager currentIndexChanged")
+        #self.debug("LrsComboManager currentIndexChanged")
         #debug("currentIndexChanged sender = %s" % self.sender())
         for combo in self.comboList:
             if combo == self.sender():
