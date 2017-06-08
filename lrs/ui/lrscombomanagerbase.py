@@ -62,10 +62,11 @@ class LrsComboManagerBase(QObject):
     def debug(self, message):
         debug("CM(%s): %s" % (self.settingsName, message))
 
-    def connectCurrentIndexChanged(self):
+    def connectCombos(self):
         # https://qgis.org/api/classQgsMapLayerComboBox.html#a7b6a9f46e655c0c48392e33089bbc992
         for combo in self.comboList:
             combo.currentIndexChanged.connect(self.currentIndexChanged)
+            combo.activated.connect(self.activated)
 
     def currentIndexChanged(self, idx):
         # reset other combos
@@ -75,6 +76,9 @@ class LrsComboManagerBase(QObject):
             if combo == self.sender():
                 continue
             combo.setCurrentIndex(idx)
+
+    def activated(self):
+        pass
 
     # To be implemented in subclasses, load layers from project, fields from layer, ...
     def reload(self):
@@ -109,6 +113,8 @@ class LrsComboManagerBase(QObject):
         val = QgsProject.instance().readEntry(PROJECT_PLUGIN_NAME, self.settingsName)[0]
         if val == '':
             val = None  # to set correctly none
+
+        #self.debug("readFromProject val = %s" % val)
 
         for combo in self.comboList:
             idx = combo.findData(val, Qt.UserRole)

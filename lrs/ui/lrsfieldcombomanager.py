@@ -7,6 +7,7 @@ from .lrscombomanagerbase import LrsComboManagerBase
 
 class LrsFieldComboManager(LrsComboManagerBase):
     fieldNameChanged = pyqtSignal(str)
+    fieldNameActivated = pyqtSignal(str)
 
     def __init__(self, comboOrList, layerComboManager, **kwargs):
         super(LrsFieldComboManager, self).__init__(comboOrList, **kwargs)
@@ -16,7 +17,7 @@ class LrsFieldComboManager(LrsComboManagerBase):
         # it may be deleted in C++ and disconnect fails
         self.layerId = None  # current layer id
 
-        self.connectCurrentIndexChanged()
+        self.connectCombos()
         self.layerComboManager.layerChanged.connect(self.layerChanged)
 
     def reload(self):
@@ -105,3 +106,7 @@ class LrsFieldComboManager(LrsComboManagerBase):
         #debug("LrsFieldComboManager currentIndexChanged idx = %s settingsName = %s" % (idx, self.settingsName))
         super(LrsFieldComboManager, self).currentIndexChanged(idx)
         self.fieldNameChanged.emit(self.getFieldName())
+
+    def activated(self, idx):
+        self.debug("LrsFieldComboManager activated idx = %s value = %s" % (idx, self.getFieldName()))
+        self.fieldNameActivated.emit(self.getFieldName())

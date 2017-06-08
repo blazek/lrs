@@ -84,13 +84,13 @@ class LrsRouteBase(metaclass=ABCMeta):
 
     # returns ( QgsMultiPolyline, error )
     def eventMultiPolyLine(self, start, end, tolerance=0):
-        debug("eventMultiPolyLine start = %s end = %s" % (start, end))
+        #debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         multipolyline = []
         measures = []
         for part in self.parts:
-            debug("eventMultiPolyLine part = %s" % part)
+            #debug("eventMultiPolyLine part = %s" % part)
             segments = part.eventSegments(start, end)
-            debug("eventMultiPolyLine segments = %s" % segments)
+            #debug("eventMultiPolyLine segments = %s" % segments)
             for polyline, measure_from, measure_to in segments:
                 multipolyline.append(polyline)
                 measures.append([measure_from, measure_to])

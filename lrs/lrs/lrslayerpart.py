@@ -22,7 +22,7 @@ class LrsLayerPart(LrsPartBase):
 
     # overridden
     def eventPoint(self, start):
-        debug("eventPoint start = %s" % start)
+        #debug("eventPoint start = %s" % start)
         if start is None:
             return None
         start = float(start)
@@ -56,7 +56,7 @@ class LrsLayerPart(LrsPartBase):
 
     # overridden
     def eventSegments(self, start, end):
-        debug("eventMultiPolyLine start = %s end = %s" % (start, end))
+        #debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         segments = []
         if start is None or end is None:
             return segments

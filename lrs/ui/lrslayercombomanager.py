@@ -14,7 +14,7 @@ class LrsLayerComboManager(LrsComboManagerBase):
         self.geometryType = kwargs.get('geometryType', None)  # QgsWkbTypes.GeometryType
         self.geometryHasM = kwargs.get('geometryHasM', False)  # has measure
 
-        self.connectCurrentIndexChanged()  # connect to this class method
+        self.connectCombos()  # connect to this class method
 
         QgsProject.instance().layersAdded.connect(self.canvasLayersChanged)
         QgsProject.instance().layersRemoved.connect(self.canvasLayersChanged)

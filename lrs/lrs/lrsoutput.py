@@ -53,7 +53,7 @@ class LrsOutput(QObject):
             QgsField("m_to", QVariant.Double, 'double'),
         ])
         uri = provider.dataSourceUri()
-        debug('uri: %s' % uri)
+        #debug('uri: %s' % uri)
 
         outputLayer = QgsVectorLayer(uri, outputName, 'memory')
         outputFeatures = []

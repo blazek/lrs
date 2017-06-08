@@ -40,6 +40,11 @@ class LrsBase(QObject):
         self.partSpatialIndex = None
         self.partSpatialIndexRoutePart = None
 
+    def reset(self):
+        self.routes = {}
+        self.partSpatialIndex = None
+        self.partSpatialIndexRoutePart = None
+
     # get route by id if exists otherwise returns None
     # routeId does not have to be normalized
     def getRouteIfExists(self, routeId):
@@ -68,7 +73,7 @@ class LrsBase(QObject):
     # tolerance - minimum missing gap which will be reported as error
     # returns ( QgsMultiPolyline, error )
     def eventMultiPolyLine(self, routeId, start, end, tolerance=0):
-        debug("eventMultiPolyLine start = %s end = %s" % (start, end))
+        #debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         error = self.eventValuesError(routeId, start, end, True)
         if error:
             return None, error

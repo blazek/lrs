@@ -158,16 +158,21 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         # ------------- locate, events, measure have synchronized lrs layer and route field --------
         lrsLayerComboList = [self.locateLrsLayerCombo, self.eventsLrsLayerCombo, self.measureLrsLayerCombo]
+
         self.lrsLayerCM = LrsLayerComboManager(lrsLayerComboList,
                                                geometryType=QgsWkbTypes.LineGeometry,
                                                geometryHasM=True, settingsName='lrsLayerId')
+
         self.lrsLayerCM.layerChanged.connect(self.lrsLayerChanged)
 
         lrsRouteFieldComboList = [self.locateLrsRouteFieldCombo, self.eventsLrsRouteFieldCombo,
                                   self.measureLrsRouteFieldCombo]
         self.lrsRouteFieldCM = LrsFieldComboManager(lrsRouteFieldComboList, self.lrsLayerCM,
-                                                    settingsName='lrsRouteField')
-        self.lrsRouteFieldCM.fieldNameChanged.connect(self.lrsRouteFieldNameChanged)
+                                                    settingsName='lrsRouteField', allowNone=True)
+
+        # using activated() which is called on user interaction to avoid be called 3 times from each combo
+        #self.lrsRouteFieldCM.fieldNameChanged.connect(self.lrsRouteFieldNameChanged)
+        self.lrsRouteFieldCM.fieldNameActivated.connect(self.lrsRouteFieldNameActivated)
 
         # ----------------------- locateTab ---------------------------
         self.locateRouteCM = LrsComboManager(self.locateRouteCombo)
@@ -182,6 +187,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateHighlightCheckBox.stateChanged.connect(self.locateHighlightChanged)
         self.locateZoomButton.clicked.connect(self.locateZoom)
         self.resetLocateRoutes()
+        self.locateProgressBar.hide()
 
         # ----------------------- eventsTab ---------------------------
         self.eventsLayerCM = LrsLayerComboManager(self.eventsLayerCombo, settingsName='eventsLayerId')
@@ -297,18 +303,27 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.projectRead()
 
     def lrsLayerChanged(self, layer):
-        debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
+        #debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
         self.lrsLayer = LrsLayer(layer)
-        if self.lrsRouteFieldCM.getFieldName():
-            self.lrsLayer.setRouteFieldName(self.lrsRouteFieldCM.getFieldName())
-            self.lrsLayer.load()
+        self.lrsRouteFieldCM.reset()
         self.resetLocateRoutes()
+        self.lrsLayerCM.writeToProject()
 
-    def lrsRouteFieldNameChanged(self, fieldName):
-        #debug("lrsRouteFieldNameChanged fieldName = " + fieldName)
+    def lrsRouteFieldNameActivated(self, fieldName):
+        debug("lrsRouteFieldNameActivated fieldName = " + fieldName)
+        self.loadLrsLayer()
+        self.lrsRouteFieldCM.writeToProject()
+
+    def loadLrsLayer(self):
+        fieldName = self.lrsRouteFieldCM.value()
         if self.lrsLayer:
             self.lrsLayer.setRouteFieldName(fieldName)
-            self.lrsLayer.load()
+            if fieldName:
+                self.showLrsLayerProgressBar()
+                self.lrsLayer.load(self.loadLrsLayerProgress)
+                self.hideLrsLayerProgressBar()
+            else:
+                self.lrsLayer.reset()
         self.resetLocateRoutes()
 
     def errorFilterChanged(self, text):
@@ -316,7 +331,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.sortErrorModel.setFilterWildcard(text)
 
     def projectRead(self):
-        debug("projectRead")
+        #debug("projectRead")
         if not QgsProject:
             return
 
@@ -324,6 +339,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not project:
             return
 
+        self.lrsLayerCM.readFromProject()
+        self.lrsRouteFieldCM.readFromProject()
+        self.loadLrsLayer()  # load if layer + route field were selected
         self.readGenerateOptions()
         self.readLocateOptions()
         self.readEventsOptions()
@@ -739,6 +757,22 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         features = self.lrs.getQualityFeatures()
         self.qualityLayerManager.addFeatures(features, self.lrs.crs)
 
+    # ------------------------ common layer for LOCATE, EVENTS, MEASURES -------------
+    def showLrsLayerProgressBar(self):
+        self.locateProgressBar.show()
+        self.eventsProgressBar.show()
+        self.measureProgressBar.show()
+
+    def hideLrsLayerProgressBar(self):
+        self.locateProgressBar.hide()
+        self.eventsProgressBar.hide()
+        self.measureProgressBar.hide()
+
+    def loadLrsLayerProgress(self, percent):
+        self.locateProgressBar.setValue(percent)
+        self.eventsProgressBar.setValue(percent)
+        self.measureProgressBar.setValue(percent)
+
     # ------------------------------------ LOCATE ------------------------------------
     def resetLocateOptions(self):
         self.locateHighlightWM.reset()
@@ -749,11 +783,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateBufferWM.readFromProject()
 
     def resetLocateRoutes(self):
-        debug("resetLocateRoutes lrsLayer: %s" % (self.lrsLayer if self.lrsLayer else None))
+        #debug("resetLocateRoutes lrsLayer: %s" % (self.lrsLayer if self.lrsLayer else None))
         options = [(None, '')]
         if self.lrsLayer:
             options.extend([(id, "%s" % id) for id in self.lrsLayer.getRouteIds()])
-        debug("resetLocateRoutes options: %s" % options)
+        #debug("resetLocateRoutes options: %s" % options)
         self.locateRouteCM.setOptions(options)
 
     def locateRouteChanged(self):

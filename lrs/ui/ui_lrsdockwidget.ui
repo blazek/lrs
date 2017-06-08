@@ -208,6 +208,13 @@
          </layout>
         </item>
         <item>
+         <widget class="QProgressBar" name="locateProgressBar">
+          <property name="value">
+           <number>24</number>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_5">
           <property name="orientation">
            <enum>Qt::Vertical</enum>

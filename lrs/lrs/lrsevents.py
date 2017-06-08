@@ -78,12 +78,16 @@ class LrsEvents(QObject):
 
         outputFeatures = []
         fields = outputLayer.pendingFields()
-        total = layer.featureCount()
+        #debug("create featuresSelect = %s" % featuresSelect)
+        if featuresSelect == SELECTED_FEATURES:
+            featuresIterator = layer.getSelectedFeatures()
+            total = layer.selectedFeatureCount()
+        else:
+            featuresIterator = layer.getFeatures()
+            total = layer.featureCount()
         count = 0
-        debug("create featuresSelect = %s" % featuresSelect)
-        featuresIterator = layer.getSelectedFeatures() if featuresSelect == SELECTED_FEATURES else layer.getFeatures()
         for feature in featuresIterator:
-            debug("create feature.id = %s" % feature.id())
+            #debug("create feature.id = %s" % feature.id())
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None

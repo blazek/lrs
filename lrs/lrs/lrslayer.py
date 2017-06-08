@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from time import sleep
 
 from .error.lrserror import *
 from .lrsbase import LrsBase
@@ -38,11 +39,15 @@ class LrsLayer(LrsBase):
         self.routeFieldName = routeField
 
     # load from layer
-    def load(self):
+    def load(self, progressFunction):
         debug("load %s %s" % (self.layer.name(), self.routeFieldName))
+        self.reset()
         if not self.routeFieldName:
             return
+        total = self.layer.featureCount()
+        count = 0
         for feature in self.layer.getFeatures():
+            # sleep(1)  # progress debug
             geo = feature.geometry()
             # if geo:
             #     if self.lineTransform:
@@ -56,6 +61,10 @@ class LrsLayer(LrsBase):
                 for g in geo.asGeometryCollection():
                     part = LrsLayerPart(g)
                     route.addPart(part)
+
+            count += 1
+            percent = 100 * count / total;
+            progressFunction(percent)
 
         for route in self.routes.values():
             route.checkPartOverlaps()
