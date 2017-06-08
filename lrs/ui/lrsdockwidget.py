@@ -276,11 +276,15 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetExportButtons()
 
         # Hide export tab - it should be removed completely once memory layer export is working
-        self.tabWidget.removeTab(4)
+        self.tabWidget.removeTab(self.tabWidget.indexOf(self.exportTab))
 
         # ---------------------------- statistics tab ----------------------------
         # currently not used (did not correspond well to errors)
         # self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
+
+        # --------------------------------- help tab -----------------------------------------
+        self.helpTextBrowser.setSource(QUrl(self.getHelpUrl()))
+
 
         # after all combos were created and connected
         self.lrsLayerCM.reload()  # -> lrsRouteFieldCM -> ....
@@ -302,7 +306,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # read project if plugin was reloaded
         self.projectRead()
 
-    def lrsLayerChanged(self, layif er):
+    def lrsLayerChanged(self, layer):
         #debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
         self.lrsLayer = LrsLayer(layer)
         self.lrsRouteFieldCM.reset()
@@ -453,8 +457,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # #debug ( 'label = %s' % label )
         return label
 
+    def getHelpUrl(self):
+        return "file:///" + self.pluginDir + "/help/build/html/index.html"
+
     def showHelp(self, anchor=None):
-        helpFile = "file:///" + self.pluginDir + "/help/build/html/index.html"
+        helpFile = self.getHelpUrl()
         # #debug ( helpFile )
         QDesktopServices.openUrl(QUrl(helpFile))
 

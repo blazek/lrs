@@ -72,9 +72,9 @@ Last but not least, the plugin has to be upgraded to the comming QGIS 3, which i
             * Max point distance (float)
             * Parallels mode (combo)
             * Extrapolate (checkbox)        
-    2. Generate from lines with start / (end) attributes
-        * Input widgets
-            * Event start measure field (combo box)
-            * Event end measure field (combo box)              
-    3. Generate from simple lines assuming that start is 0 and geometry length corresponds to real length
+    2. ~~Generate from lines with start / (end) attributes~~
+        * ~~Input widgets~~
+            * ~~Event start measure field (combo box)~~
+            * ~~Event end measure field (combo box)~~           
+    3. ~~Generate from simple lines assuming that start is 0 and geometry length corresponds to real length~~
             

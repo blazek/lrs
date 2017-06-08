@@ -19,12 +19,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-# Import the PyQt and QGIS libraries
 import os.path
 
-from .lrs.utils import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
+from .lrs.utils import *
 from .ui.lrsdockwidget import LrsDockWidget
 
 
