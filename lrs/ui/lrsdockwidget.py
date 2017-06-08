@@ -302,7 +302,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # read project if plugin was reloaded
         self.projectRead()
 
-    def lrsLayerChanged(self, layer):
+    def lrsLayerChanged(self, layif er):
         #debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
         self.lrsLayer = LrsLayer(layer)
         self.lrsRouteFieldCM.reset()
