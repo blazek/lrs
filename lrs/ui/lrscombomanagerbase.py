@@ -102,6 +102,7 @@ class LrsComboManagerBase(QObject):
     def writeToProject(self):
         idx = self.comboList[0].currentIndex()
         val = self.comboList[0].itemData(idx, Qt.UserRole)
+        #self.debug("writeToProject val = %s" % val)
         QgsProject.instance().writeEntry(PROJECT_PLUGIN_NAME, self.settingsName, val)
 
     def readFromProject(self):

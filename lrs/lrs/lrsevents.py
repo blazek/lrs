@@ -31,7 +31,7 @@ class LrsEvents(QObject):
         self.lrs = lrs  # Lrs object
         self.progressBar = progressBar
 
-    def create(self, layer, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName):
+    def create(self, layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName):
         # create new layer
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
@@ -80,7 +80,10 @@ class LrsEvents(QObject):
         fields = outputLayer.pendingFields()
         total = layer.featureCount()
         count = 0
-        for feature in layer.getFeatures():
+        debug("create featuresSelect = %s" % featuresSelect)
+        featuresIterator = layer.getSelectedFeatures() if featuresSelect == SELECTED_FEATURES else layer.getFeatures()
+        for feature in featuresIterator:
+            debug("create feature.id = %s" % feature.id())
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None

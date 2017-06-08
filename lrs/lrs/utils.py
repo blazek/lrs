@@ -33,6 +33,9 @@ from qgis.core import QgsWkbTypes
 # name of plugin in project file
 PROJECT_PLUGIN_NAME = "lrs"
 
+# input layers selection
+ALL_FEATURES = "all"
+SELECTED_FEATURES = "selected"
 
 class LrsUnits():
     METER = 0

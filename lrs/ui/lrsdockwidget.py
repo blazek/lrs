@@ -194,6 +194,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
                                                             types=[QVariant.Int, QVariant.Double], allowNone=True,
                                                             settingsName='eventsMeasureEndField')
 
+        self.eventsFeaturesSelectCM = LrsComboManager(self.eventsFeaturesSelectCombo, options=(
+            (ALL_FEATURES, self.tr('All features')), (SELECTED_FEATURES, self.tr('Selected features'))),
+                                                      defaultValue=ALL_FEATURES, settingsName='eventsFeaturesSelect')
+
         self.eventsOutputNameWM = LrsWidgetManager(self.eventsOutputNameLineEdit, settingsName='eventsOutputName',
                                                    defaultValue='LRS events')
         self.eventsErrorFieldWM = LrsWidgetManager(self.eventsErrorFieldLineEdit, settingsName='eventsErrorField',
@@ -379,6 +383,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         del self.eventsRouteFieldCM
         del self.eventsMeasureStartFieldCM
         del self.eventsMeasureEndFieldCM
+        del self.eventsFeaturesSelectCM
 
         self.clearLocateHighlight()
 
@@ -850,6 +855,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.reset()
         self.eventsMeasureStartFieldCM.reset()
         self.eventsMeasureEndFieldCM.reset()
+        self.eventsFeaturesSelectCM.reset()
         self.eventsOutputNameWM.reset()
         self.eventsErrorFieldWM.reset()
 
@@ -872,6 +878,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.writeToProject()
         self.eventsMeasureStartFieldCM.writeToProject()
         self.eventsMeasureEndFieldCM.writeToProject()
+        self.eventsFeaturesSelectCM.writeToProject()
         self.eventsOutputNameWM.writeToProject()
         self.eventsErrorFieldWM.writeToProject()
 
@@ -880,6 +887,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.readFromProject()
         self.eventsMeasureStartFieldCM.readFromProject()
         self.eventsMeasureEndFieldCM.readFromProject()
+        self.eventsFeaturesSelectCM.readFromProject()
         self.eventsOutputNameWM.readFromProject()
         self.eventsErrorFieldWM.readFromProject()
 
@@ -891,12 +899,13 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         routeFieldName = self.eventsRouteFieldCM.getFieldName()
         startFieldName = self.eventsMeasureStartFieldCM.getFieldName()
         endFieldName = self.eventsMeasureEndFieldCM.getFieldName()
+        featuresSelect = self.eventsFeaturesSelectCM.value()
         outputName = self.eventsOutputNameLineEdit.text()
         if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
 
-        events = LrsEvents(self.iface, self.lrsLayer, self.eventsProgressBar)
-        events.create(layer, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
+        events = LrsEvents(self.iface, self.lrsLayer,  self.eventsProgressBar)
+        events.create(layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
 
     # ------------------- MEASURE -------------------
 
