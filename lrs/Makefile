@@ -43,7 +43,7 @@ UI_FILES = ui/ui_lrsdockwidget.py ui/ui_selectiondialog.py
 
 RESOURCE_FILES = resources_rc.py
 
-HELP = help/build/html
+#HELP = help/build/html
 
 default: compile
 
@@ -102,14 +102,15 @@ zip: deploy dclean
 #   make package VERSION=0.1.0
 package: compile
 	rm -f lrs*.zip
-	rm -rf lrs/
-	mkdir lrs
-	cp -r $(PACKAGE_FILES) lrs/
-	mkdir -p lrs/help/build/
-	cp -r help/build/html lrs/help/build/
-	cp -r help/build/html ../release/help.$(VERSION)
+	rm -rf build
+	mkdir -p build/lrs/help
+	cp -r $(PACKAGE_FILES) build/lrs
+	#cp -r help/build/html build/lrs/help/build
+	#cp -r help/build/html ../release/help.$(VERSION)
+	cp -r help build/lrs
+	cp -r help ../release/help.$(VERSION)
 	zip -9r ../release/lrs.$(VERSION).zip lrs/
-	rm -rf lrs/
+	rm -rf build
 	echo "Created package: ../release/lrs.$(VERSION).zip"
 	echo "Created help: ../release/help.$(VERSION)"
 
@@ -133,6 +134,14 @@ transclean:
 clean:
 	rm $(UI_FILES) $(RESOURCE_FILES)
 
-# build documentation with sphinx
-doc: 
-	cd help; make html
+# build documentation
+#doc: 
+	#cd help; make html
+
+	#rm -rf help/build
+	#mkdir -p help/build/html
+	#convert -geometry 32 icon.svg help/build/icon.ico
+	#convert -geometry 64 icon.svg help/build/icon.png
+	#cp help/source/index.html help/build/html
+	#cp -r help/source/images help/build/html
+    

@@ -1,12 +1,10 @@
 Release steps:
 
-* verify that designer was saved with Calibration stab selected
+* verify that designer was saved with first stab selected and calibration input tab selected
 * make resources in lrs/: make
-* verify there are no debug() calls uncommented
+* verify that debug() output is disabled
 * set new version in lrs/metadata.txt
 * add changelog in lrs/metadata.txt
-* set new version and release in lrs/help/source/conf.py
-* generate documentation in lrs/: make doc
 * create package in lrs/: make package VERSION=x.x.x
 * set link to latest help in index.html
 * update release/plugins.xml to new version

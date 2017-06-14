@@ -64,11 +64,11 @@ class LrsPlugin:
         # print "self.iface.mainWindow = %s" % self.iface.mainWindow()
         self.dockWidget = LrsDockWidget(self.iface.mainWindow(), self.iface)
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockWidget)
-
-
+        self.dockWidget.restoreWidgetGeometry()  # does not work here on plugin reload by reloader
 
     def unload(self):
-        # debug( "LrsPlugin.unload" )
+        debug( "LrsPlugin.unload" )
+        self.dockWidget.saveWidgetGeometry()
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
         # Remove the plugin menu item and icon
@@ -77,6 +77,7 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        #debug("LrsPlugin.run")
+        debug("LrsPlugin.run")
         # show the dialog
+        self.dockWidget.restoreWidgetGeometry()
         self.dockWidget.show()

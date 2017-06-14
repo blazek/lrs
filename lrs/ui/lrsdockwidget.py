@@ -282,10 +282,21 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # currently not used (did not correspond well to errors)
         # self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
 
-        # --------------------------------- help tab -----------------------------------------
+        # ------------------ help tab -------------------------
+        # Importing QWebEngineView gives (Qt 5.8.0, PyQt5 5.8.2):
+        # ImportError: QtWebEngineWidgets must be imported before a QCoreApplication instance is created
+        # from PyQt5.QtWebEngineWidgets import QWebEngineView
+        #self.helpWebEngineView = QWebEngineView(self.helpTab)
+
+        # QTextBrowser does not render perfectly all html created by Sphinx -> see help/source/conf.py
+        # http://doc.qt.io/qt-5/richtext-html-subset.html
+        # QTextBrowser would not render external web sites -> open in browser
+        self.helpTextBrowser.setOpenExternalLinks(True)
         self.helpTextBrowser.setSource(QUrl(self.getHelpUrl()))
+        #self.helpTextBrowser.setSource(QUrl("http://www.mpasolutions.it/"))
+        #self.helpTextBrowser.setSource(QUrl("http://www.google.com/"))
 
-
+        # -----------------------------------------------------
         # after all combos were created and connected
         self.lrsLayerCM.reload()  # -> lrsRouteFieldCM -> ....
 
@@ -458,7 +469,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         return label
 
     def getHelpUrl(self):
-        return "file:///" + self.pluginDir + "/help/build/html/index.html"
+        return "file:///" + self.pluginDir + "/help/index.html"
 
     def showHelp(self, anchor=None):
         helpFile = self.getHelpUrl()
@@ -1123,3 +1134,15 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.errorTotalLength.setText("%.3f" % self.lrs.getStat('length'))
             self.errorIncludedLength.setText("%.3f" % self.lrs.getStat('lengthIncluded'))
             self.errorSuccessLength.setText("%.3f" % self.lrs.getStat('lengthOk'))
+
+    # -------------------- widget ----------------------
+    def saveWidgetGeometry(self):
+        debug("LrsDockWidget.saveWidgetGeometry")
+        settings = QgsSettings()
+        settings.setValue("/Windows/lrs/geometry", self.saveGeometry())
+
+    def restoreWidgetGeometry(self):
+        debug("LrsDockWidget.restoreWidgetGeometry")
+        settings = QgsSettings()
+        self.restoreGeometry(settings.value("/Windows/lrs/geometry", QByteArray()))
+

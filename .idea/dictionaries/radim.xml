@@ -1,15 +1,24 @@
 <component name="ProjectDictionaryState">
   <dictionary name="radim">
     <words>
+      <w>autonoma</w>
       <w>blažek</w>
       <w>calib</w>
+      <w>controllo</w>
       <w>coor</w>
       <w>curdir</w>
+      <w>dipartimento</w>
+      <w>dockable</w>
+      <w>filenames</w>
+      <w>gestione</w>
+      <w>iframe</w>
+      <w>infrastrutture</w>
       <w>linestringm</w>
       <w>lrsdebug</w>
       <w>lrsdockwidget</w>
       <w>lrsplugin</w>
       <w>mkdir</w>
+      <w>mobilità</w>
       <w>multipolyline</w>
       <w>nlines</w>
       <w>npoints</w>
@@ -17,12 +26,22 @@
       <w>pluginname</w>
       <w>polylines</w>
       <w>polys</w>
+      <w>provincia</w>
       <w>pyrcc</w>
       <w>pyuic</w>
+      <w>quickstart</w>
       <w>reprojection</w>
       <w>selectiondialog</w>
+      <w>servizio</w>
+      <w>stradali</w>
+      <w>strade</w>
+      <w>tecnologie</w>
+      <w>toctree</w>
       <w>transcompile</w>
+      <w>trento</w>
+      <w>ufficio</w>
       <w>unregister</w>
+      <w>wikipedia</w>
     </words>
   </dictionary>
 </component>
