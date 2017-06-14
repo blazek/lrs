@@ -841,7 +841,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
                     transform = QgsCoordinateTransform(self.lrsLayer.crs, mapSettings.destinationCrs())
                     point = transform.transform(point)
 
-                coordinates = "%s,%s" % (point.x(), point.y())
+
+                coordinates = "%.3f,%.3f" % (point.x(), point.y())
             else:
                 coordinates = error
 
