@@ -591,13 +591,6 @@
                </property>
                <item>
                 <layout class="QGridLayout" name="genGridLayout">
-                 <item row="19" column="0">
-                  <widget class="QLabel" name="genOutputNameLabel">
-                   <property name="text">
-                    <string>Output layer name</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="9" column="0" colspan="2">
                   <widget class="Line" name="line_2">
                    <property name="orientation">
@@ -654,6 +647,9 @@
                  <item row="4" column="1">
                   <widget class="QComboBox" name="genPointRouteFieldCombo"/>
                  </item>
+                 <item row="3" column="1">
+                  <widget class="QComboBox" name="genPointLayerCombo"/>
+                 </item>
                  <item row="15" column="0">
                   <widget class="QLabel" name="genThresholdLabel">
                    <property name="toolTip">
@@ -671,8 +667,12 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QComboBox" name="genPointLayerCombo"/>
+                 <item row="13" column="0">
+                  <widget class="QComboBox" name="genSelectionModeCombo">
+                   <property name="toolTip">
+                    <string>Routes selection mode.</string>
+                   </property>
+                  </widget>
                  </item>
                  <item row="14" column="1">
                   <widget class="QDoubleSpinBox" name="genSnapSpin">
@@ -690,10 +690,13 @@
                  <item row="5" column="1">
                   <widget class="QComboBox" name="genPointMeasureFieldCombo"/>
                  </item>
-                 <item row="13" column="0">
-                  <widget class="QComboBox" name="genSelectionModeCombo">
-                   <property name="toolTip">
-                    <string>Routes selection mode.</string>
+                 <item row="0" column="1">
+                  <widget class="QComboBox" name="genLineLayerCombo">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                   </widget>
                  </item>
@@ -704,15 +707,8 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
-                  <widget class="QComboBox" name="genLineLayerCombo">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="genLineRouteFieldCombo"/>
                  </item>
                  <item row="5" column="0">
                   <widget class="QLabel" name="genPointMeasureFieldLabel">
@@ -745,16 +741,6 @@
                     </widget>
                    </item>
                   </layout>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QComboBox" name="genLineRouteFieldCombo"/>
-                 </item>
-                 <item row="19" column="1">
-                  <widget class="QLineEdit" name="genOutputNameLineEdit">
-                   <property name="text">
-                    <string/>
-                   </property>
-                  </widget>
                  </item>
                  <item row="2" column="0" colspan="2">
                   <widget class="Line" name="line">
@@ -793,13 +779,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="18" column="0" colspan="2">
-                  <widget class="Line" name="line_10">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </item>
                <item>
@@ -808,6 +787,31 @@
                   <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <item>
+                  <widget class="QLabel" name="genOutputNameLabel">
+                   <property name="text">
+                    <string>Output layer name</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="genOutputNameLineEdit">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="genCreateOutputButton">
+                   <property name="text">
+                    <string>Create</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
                <item>
                 <widget class="QFrame" name="genProgressFrame">

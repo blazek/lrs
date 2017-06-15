@@ -243,6 +243,9 @@ class LrsCalib(LrsBase):
 
             # self.stats['pointsError'] = self.stats['pointsIncluded'] - self.stats['pointsOk']
 
+    def isCalibrated(self):
+        return len(self.routes) > 0
+
     # -------------------------------- register / unregister features ----------------------
 
     def registerLineFeature(self, feature):

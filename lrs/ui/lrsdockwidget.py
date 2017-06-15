@@ -233,6 +233,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetGenerateOptionsAndWrite)
         self.genButtonBox.button(QDialogButtonBox.Help).clicked.connect(lambda: self.showHelp('calibration'))
 
+        self.genOutputNameLineEdit.textChanged.connect(self.resetGenButtons)
+        self.genCreateOutputButton.setEnabled(False)
+        self.genCreateOutputButton.clicked.connect(self.createLrsOutput)
+
         # load layers after other combos were connected
         self.genLineLayerCM.reload()
         self.genPointLayerCM.reload()
@@ -620,12 +624,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.lrs.progressChanged.connect(self.showGenProgress)
         self.lrs.calibrate()
 
-        if self.genOutputNameLineEdit.text():
-            output = LrsOutput(self.iface, self.lrs, self.genProgressBar)
-            output.output(self.genOutputNameLineEdit.text())
-
         self.hideGenProgress()
-
         self.resetStats()
 
         # ------------------- errors -------------------
@@ -659,23 +658,35 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         self.lrs.edited.connect(self.lrsEdited)
 
+        self.resetGenButtons()
         self.resetLocateRoutes()
-
         self.resetEventsButtons()
         self.resetMeasureButtons()
         self.resetExportButtons()
-        self.updateMeasureUnits()
+        self.updateMeasureUnits   ()
         self.enableTabs()
+
+    def isCalibrated(self):
+        return self.lrs is not None and self.lrs.isCalibrated()
+
+    def resetGenButtons(self):
+        self.genCreateOutputButton.setEnabled(self.isCalibrated() and len(self.genOutputNameLineEdit.text().strip()) > 0)
+
+    def createLrsOutput(self):
+        output = LrsOutput(self.iface, self.lrs, self.genProgressBar)
+        output.output(self.genOutputNameLineEdit.text().strip())
 
     def showGenProgress(self, label, percent):
         self.genProgressLabel.show()
-        self.genProgressBar.show()
+        #self.genProgressBar.show()
+        #self.genProgressFrame.show()
         self.genProgressLabel.setText(label)
         self.genProgressBar.setValue(percent)
 
     def hideGenProgress(self):
-        self.genProgressLabel.hide()
-        self.genProgressBar.hide()
+        #self.genProgressLabel.hide()
+        #self.genProgressBar.hide()
+        self.genProgressFrame.hide()
 
     # ------------------------------- ERRORS -------------------------------
     def updateErrors(self, errorUpdates):
