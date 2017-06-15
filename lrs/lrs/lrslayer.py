@@ -40,7 +40,7 @@ class LrsLayer(LrsBase):
 
     # load from layer
     def load(self, progressFunction):
-        debug("load %s %s" % (self.layer.name(), self.routeFieldName))
+        #debug("load %s %s" % (self.layer.name(), self.routeFieldName))
         self.reset()
         if not self.routeFieldName:
             return

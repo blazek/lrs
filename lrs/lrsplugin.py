@@ -45,7 +45,7 @@ class LrsPlugin:
                 QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
-        debug("LrsPlugin.initGui")
+        #debug("LrsPlugin.initGui")
 
         self.action = QAction(
             QIcon(os.path.join(os.path.dirname(__file__), "icon.svg")),
@@ -67,7 +67,7 @@ class LrsPlugin:
         self.dockWidget.restoreWidgetGeometry()  # does not work here on plugin reload by reloader
 
     def unload(self):
-        debug( "LrsPlugin.unload" )
+        #debug( "LrsPlugin.unload" )
         self.dockWidget.saveWidgetGeometry()
         self.dockWidget.close()
         self.iface.removeDockWidget(self.dockWidget)
@@ -77,7 +77,7 @@ class LrsPlugin:
 
     # run method that performs all the real work
     def run(self):
-        debug("LrsPlugin.run")
+        #debug("LrsPlugin.run")
         # show the dialog
         self.dockWidget.restoreWidgetGeometry()
         self.dockWidget.show()

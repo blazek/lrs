@@ -323,7 +323,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.lrsLayerCM.writeToProject()
 
     def lrsRouteFieldNameActivated(self, fieldName):
-        debug("lrsRouteFieldNameActivated fieldName = " + fieldName)
+        #debug("lrsRouteFieldNameActivated fieldName = " + fieldName)
         self.loadLrsLayer()
         self.lrsRouteFieldCM.writeToProject()
 
@@ -364,17 +364,18 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # --------------------- set error layers if stored in project -------------------
         errorLineLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId")[0]
         self.errorLineLayer = project.mapLayer(errorLineLayerId)
-        if self.errorLineLayer:
+        # layers must be tested 'is not None' (because layers have __len__(), some strange len)
+        if self.errorLineLayer is not None:
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
 
         errorPointLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorPointLayerId")[0]
         self.errorPointLayer = project.mapLayer(errorPointLayerId)
-        if self.errorPointLayer:
+        if self.errorPointLayer is not None:
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
 
         qualityLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "qualityLayerId")[0]
         self.qualityLayer = project.mapLayer(qualityLayerId)
-        if self.qualityLayer:
+        if self.qualityLayer is not None:
             self.qualityLayerManager = LrsQualityLayerManager(self.qualityLayer)
 
         self.resetGenerateButtons()
@@ -421,17 +422,20 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         super(LrsDockWidget, self).close()
 
     def layersWillBeRemoved(self, layerIdList):
+        #debug("layersWillBeRemoved layerIdList = %s" % layerIdList)
         project = QgsProject.instance()
+        # layers must be tested 'is not None' (because layers have __len__(), some strange len)
         for id in layerIdList:
-            if self.errorPointLayer and self.errorPointLayer.id() == id:
+            if self.errorPointLayer is not None and self.errorPointLayer.id() == id:
+                #debug("layersWillBeRemoved errorPointLayer.id = %s -> unset" % self.errorPointLayer.id())
                 self.errorPointLayerManager = None
                 self.errorPointLayer = None
                 project.removeEntry(PROJECT_PLUGIN_NAME, "errorPointLayerId")
-            if self.errorLineLayer and self.errorLineLayer.id() == id:
+            if self.errorLineLayer is not None and self.errorLineLayer.id() == id:
                 self.errorLineLayerManager = None
                 self.errorLineLayer = None
                 project.removeEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId")
-            if self.qualityLayer and self.qualityLayer.id() == id:
+            if self.qualityLayer is not None and self.qualityLayer.id() == id:
                 self.qualityLayerManager = None
                 self.qualityLayer = None
                 project.removeEntry(PROJECT_PLUGIN_NAME, "qualityLayerId")
@@ -470,11 +474,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         return "file:///" + self.pluginDir + "/help/index.html"
 
     def showHelp(self, anchor=None):
-        debug("showHelp anchor = %s" % anchor)
+        #debug("showHelp anchor = %s" % anchor)
         url = self.getHelpUrl()
         if anchor:
             url += "#" + anchor
-            debug("showHelp url = %s" % url)
+            #debug("showHelp url = %s" % url)
             self.helpTextBrowser.setSource(QUrl(url))
         # QDesktopServices.openUrl(QUrl(url)) # open in default browser
         self.tabWidget.setCurrentIndex(self.tabWidget.indexOf(self.helpTab))
@@ -647,7 +651,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetErrorLayers()
         self.resetQualityLayer()
 
-        if self.errorPointLayer or self.errorLineLayer or self.qualityLayer:
+        # layers must be tested 'is not None' (because layers have __len__(), some strange len)
+        if self.errorPointLayer is not None or self.errorLineLayer is not None or self.qualityLayer is not None:
             self.iface.mapCanvas().refresh()
 
         self.lrs.edited.connect(self.lrsEdited)
@@ -719,7 +724,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not self.errorLineLayer:
             self.errorLineLayer = LrsErrorLineLayer(self.lrs.crs)
             self.errorLineLayerManager = LrsErrorLayerManager(self.errorLineLayer)
-            self.errorLineLayer.rendererV2().symbol().setColor(QColor(Qt.red))
+            self.errorLineLayer.renderer().symbol().setColor(QColor(Qt.red))
             self.resetErrorLineLayer()
             QgsProject.instance().addMapLayers([self.errorLineLayer, ])
             project.writeEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId", self.errorLineLayer.id())
@@ -727,7 +732,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not self.errorPointLayer:
             self.errorPointLayer = LrsErrorPointLayer(self.lrs.crs)
             self.errorPointLayerManager = LrsErrorLayerManager(self.errorPointLayer)
-            self.errorPointLayer.rendererV2().symbol().setColor(QColor(Qt.red))
+            self.errorPointLayer.renderer().symbol().setColor(QColor(Qt.red))
             self.resetErrorPointLayer()
             QgsProject.instance().addMapLayers([self.errorPointLayer, ])
             project.writeEntry(PROJECT_PLUGIN_NAME, "errorPointLayerId", self.errorPointLayer.id())
@@ -1140,11 +1145,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     # -------------------- widget ----------------------
     def saveWidgetGeometry(self):
-        debug("LrsDockWidget.saveWidgetGeometry")
+        #debug("LrsDockWidget.saveWidgetGeometry")
         settings = QgsSettings()
         settings.setValue("/Windows/lrs/geometry", self.saveGeometry())
 
     def restoreWidgetGeometry(self):
-        debug("LrsDockWidget.restoreWidgetGeometry")
+        #debug("LrsDockWidget.restoreWidgetGeometry")
         settings = QgsSettings()
         self.restoreGeometry(settings.value("/Windows/lrs/geometry", QByteArray()))
