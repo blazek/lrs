@@ -129,7 +129,7 @@
                     <p>It is possible either to <strong>Center</strong> the map canvas to current event or to <strong>Zoom</strong>
                         to the event using specified buffer.</p>
                 </div>
-                <div class="section" id="create-events">
+                <div class="section" id="events">
                     <h2>Create events</h2>
                     <p>Punctual or linear events can be generated from <em>Events</em> tab.</p>
                     <p>
@@ -159,8 +159,9 @@
                         measure field</em> is selected. The output layer contains all attributes from input layer plus,
                         if specified, error field.</p>
                     <p>The output is created as memory layer which can be later stored in a persistent data source using
-                        standard QGIS options like <em>“Save as”</em> or DB Manager <em>“Import layer”</em>.</p>
-                    <p>It may happen that event measures are slightely outside available LRS (at the beginning or end of
+                        standard QGIS options like <em>“Save as”</em> or using
+                            drag and drop to an existing PostGIS schema in the browser.</p>
+                    <p>It may happen that event measures are slightly outside available LRS (at the beginning or end of
                         a route) because of decimal number inaccuracy of input data. To avoid unwanted errors, a measure
                         tolerance is applied:</p>
                     <ul class="simple">
@@ -171,9 +172,9 @@
                             they are longer than the event tolerance.
                         </li>
                     </ul>
-                    <p>The event tolerance is currently set to 0.0001 (in measure units which are unknown for existing input vector).</p>
+                    <p>The event tolerance is currently set to 0.0001 (in measure units).</p>
                 </div>
-                <div class="section" id="calculate-measures">
+                <div class="section" id="measures">
                     <h2>Calculate measures</h2>
                     <p>Route id and measures may be acquired for existing points from <em>Measures</em> tab.</p>
                     <p>
@@ -197,7 +198,7 @@
                         measure field is left blank. If no route was found within the threshold both route id and
                         measure fields are left blank.</p>
                     <p>The output is created as memory layer which can be later stored in a persistent data source using
-                        standard QGIS options like <em>“Save as”</em> or DB Manager <em>“Import layer”</em>.</p>
+                        standard QGIS options like <em>“Save as”</em> or using drag and drop to an existing PostGIS schema in the browser.</p>
                 </div>
                 <div class="section" id="calibration">
                     <h2>Calibration</h2>
@@ -265,7 +266,7 @@
                         </li>
                         <li><strong>Output layer name:</strong> Output vector memory layer to which output features with
                             geometry with measures is written if a name is given. The output memory vector can be then
-                            exported with standard QGIS tools like "Save as ..." layer context menu item or using
+                            exported with standard QGIS tools like <em>“Save as”</em> or using
                             drag and drop to an existing PostGIS schema in the browser. The output layer may be used
                             as input to Locate, Events and Measure tools.
                         </li>
@@ -287,7 +288,7 @@
                         interpolate_between=BETWEEN. If <strong>Extrapolate</strong> is checked it means plus parameters
                         extrapolate_before=BEFORE and extrapolate_after=AFTER.</p>
 
-                    <h3>Calibration errors</h3>
+                    <h3 id="errors">Calibration errors</h3>
                     <p>When calibration phase is finished it is possible to browse data inconsistencies in
                         <em>Calibration &gt; Errors</em> tab.</p>
                     <p>
