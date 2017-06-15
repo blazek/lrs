@@ -192,6 +192,13 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
+           <widget class="QPushButton" name="locateHelpButton">
+            <property name="text">
+             <string>Help</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="locateCenterButton">
             <property name="text">
              <string>Center</string>

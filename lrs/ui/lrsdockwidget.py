@@ -116,6 +116,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.locateCenterButton.clicked.connect(self.locateCenter)
         self.locateHighlightCheckBox.stateChanged.connect(self.locateHighlightChanged)
         self.locateZoomButton.clicked.connect(self.locateZoom)
+        self.locateHelpButton.clicked.connect(lambda: self.showHelp('locate'))
         self.resetLocateRoutes()
         self.locateProgressBar.hide()
 
