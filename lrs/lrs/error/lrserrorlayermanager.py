@@ -21,6 +21,7 @@
 """
 from qgis._core import QgsWkbTypes
 
+from ..utils import debug
 from .lrslayermanager import LrsLayerManager
 from .lrserrorfeature import LrsErrorFeature
 
@@ -39,9 +40,9 @@ class LrsErrorLayerManager(LrsLayerManager):
 
     # get errors of layer type (point or line)
     def addErrors(self, errors, crs):
-        if not self.layer:
+        if self.layer is None:
             return
-        #debug("addErrors geometryType = %s" % self.layer.geometryType())
+        #debug("addErrors geometryType = %s errors count = %s" % (self.layer.geometryType(), len(errors)))
 
         features = []
         for error in errors:
@@ -56,7 +57,7 @@ class LrsErrorLayerManager(LrsLayerManager):
 
     def updateErrors(self, errorUpdates):
         # debug ( "%s" % errorUpdates )
-        if not self.layer:
+        if self.layer is None:
             return
 
         # delete

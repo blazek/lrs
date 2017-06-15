@@ -564,10 +564,7 @@ class LrsCalib(LrsBase):
                 errorUpdates = route.calibrateAndGetUpdates(self.extrapolate)
                 self.emitUpdateErrors(errorUpdates)
 
-
-
     # ------------------- STATS -------------------
-
     def getStatsHtmlRow(self, name, label):
         # return "%s : %s<br>" % ( label, self.stats[name] )
         value = self.stats[name]
