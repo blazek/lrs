@@ -324,11 +324,14 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.lrsLayer = LrsLayer(layer)
         self.lrsRouteFieldCM.reset()
         self.resetLocateRoutes()
-        self.lrsLayerCM.writeToProject()
+        # don't write here, the layer is changing also when loading plugin ->
+        # written when route is selected
+        #self.lrsLayerCM.writeToProject()
 
     def lrsRouteFieldNameActivated(self, fieldName):
         # debug("lrsRouteFieldNameActivated fieldName = " + fieldName)
         self.loadLrsLayer()
+        self.lrsLayerCM.writeToProject()
         self.lrsRouteFieldCM.writeToProject()
 
     def loadLrsLayer(self):
@@ -348,7 +351,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.sortErrorModel.setFilterWildcard(text)
 
     def projectRead(self):
-        # debug("projectRead")
+        #debug("projectRead")
         if not QgsProject:
             return
 

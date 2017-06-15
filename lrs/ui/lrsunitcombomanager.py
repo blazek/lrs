@@ -23,7 +23,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItem
 from qgis._core import QgsProject
 
-from ..lrs.utils import LrsUnits, PROJECT_PLUGIN_NAME
+from ..lrs.utils import LrsUnits, PROJECT_PLUGIN_NAME, debug
 from .lrscombomanagerbase import LrsComboManagerBase
 
 
@@ -54,7 +54,7 @@ class LrsUnitComboManager(LrsComboManagerBase):
 
         unit = LrsUnits.unitFromName(name)
         idx = self.comboList[0].findData(unit, Qt.UserRole)
-        # debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
+        #debug( "readFromProject settingsName = %s name = %s idx = %s" % ( self.settingsName, name, idx) )
         if idx != -1:
             for combo in self.comboList:
                 combo.setCurrentIndex(idx)
