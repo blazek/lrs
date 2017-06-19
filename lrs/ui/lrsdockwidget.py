@@ -402,7 +402,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.enableTabs()
 
     def deleteLrs(self):
-        if self.lrs: del self.lrs
+        if self.lrs is not None:
+            self.lrs.disconnect()
+            del self.lrs
         self.lrs = None
 
     def close(self):
@@ -601,7 +603,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapLabel.setText(label)
 
     def generateLrs(self):
-        # #debug ( 'generateLrs')
+        #debug ( 'generateLrs')
+        self.deleteLrs()
+
         self.errorVisualizer.clearHighlight()
 
         self.writeGenerateOptions()

@@ -379,8 +379,10 @@ class LrsCalib(LrsBase):
         # self.pointEditBuffer.geometryChanged.connect( self.pointGeometryChanged )
         # QObject.connect(self.pointEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
         #                self.pointGeometryChanged)
-        # TODO: working?
-        self.pointEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.pointGeometryChanged)
+        # Not working:
+        #self.pointEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.pointGeometryChanged)
+        # Trying simple connect hoping that it works also on Windows
+        self.pointEditBuffer.geometryChanged.connect(self.pointGeometryChanged)
         self.pointEditBuffer.attributeValueChanged.connect(self.pointAttributeValueChanged)
 
     def pointLayerEditingStopped(self):
@@ -397,11 +399,14 @@ class LrsCalib(LrsBase):
         self.lineEditBuffer = self.lineLayer.editBuffer()
         self.lineEditBuffer.featureAdded.connect(self.lineFeatureAdded)
         self.lineEditBuffer.featureDeleted.connect(self.lineFeatureDeleted)
+        # some versions of PyQt fail (Win build) with new style connection if the signal has multiple params
         # self.lineEditBuffer.geometryChanged.connect( self.lineGeometryChanged )
         # QObject.connect(self.lineEditBuffer, SIGNAL("geometryChanged(QgsFeatureId, QgsGeometry &)"),
         #                self.lineGeometryChanged)
-        # TODO: working?
-        self.lineEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.lineGeometryChanged)
+        # Not working:
+        #self.lineEditBuffer.geometryChanged["QgsFeatureId, QgsGeometry"].connect(self.lineGeometryChanged)
+        # Trying simple connect hoping that it works also on Windows
+        self.lineEditBuffer.geometryChanged.connect(self.lineGeometryChanged)
         self.lineEditBuffer.attributeValueChanged.connect(self.lineAttributeValueChanged)
 
     def lineLayerEditingStopped(self):
