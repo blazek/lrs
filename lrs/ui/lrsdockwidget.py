@@ -326,9 +326,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.lrsLayer = LrsLayer(layer)
         self.lrsRouteFieldCM.reset()
         self.resetLocateRoutes()
+        self.updateMeasureUnits()
         # don't write here, the layer is changing also when loading plugin ->
         # written when route is selected
-        #self.lrsLayerCM.writeToProject()
+        # self.lrsLayerCM.writeToProject()
 
     def lrsRouteFieldNameActivated(self, fieldName):
         # debug("lrsRouteFieldNameActivated fieldName = " + fieldName)
@@ -353,7 +354,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.sortErrorModel.setFilterWildcard(text)
 
     def projectRead(self):
-        #debug("projectRead")
+        # debug("projectRead")
         if not QgsProject:
             return
 
@@ -482,7 +483,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         label = "Max point distance"
         if crs is not None:
             label += self.getUnitsLabel(crs)
-        # #debug ( 'label = %s' % label )
         return label
 
     def getHelpUrl(self):
@@ -607,7 +607,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genSnapLabel.setText(label)
 
     def generateLrs(self):
-        #debug ( 'generateLrs')
+        # debug ( 'generateLrs')
         self.deleteLrs()
 
         self.errorVisualizer.clearHighlight()
@@ -681,7 +681,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         return self.lrs is not None and self.lrs.isCalibrated()
 
     def resetGenButtons(self):
-        self.genCreateOutputButton.setEnabled(self.isCalibrated() and len(self.genOutputNameLineEdit.text().strip()) > 0)
+        self.genCreateOutputButton.setEnabled(
+            self.isCalibrated() and len(self.genOutputNameLineEdit.text().strip()) > 0)
 
     def createLrsOutput(self):
         output = LrsOutput(self.iface, self.lrs, self.showGenProgress)
@@ -775,7 +776,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             self.qualityLayerManager.update(errorUpdates)
 
     def resetErrorPointLayer(self):
-        #debug("resetErrorPointLayer %s" % self.errorPointLayer)
+        # debug("resetErrorPointLayer %s" % self.errorPointLayer)
         if self.errorPointLayerManager is None:
             return
         self.errorPointLayerManager.clear()
@@ -1033,6 +1034,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def updateMeasureUnits(self):
         crs = self.lrsLayer.crs if self.lrsLayer else None
         label = self.getThresholdLabel(crs)
+        # debug('updateMeasureUnits label = %s' % label)
         self.measureThresholdLabel.setText(label)
 
     def calculateMeasures(self):
