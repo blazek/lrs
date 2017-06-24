@@ -5,7 +5,7 @@ Release steps:
 * verify that debug() output is disabled
 * set new version in lrs/metadata.txt
 * add changelog in lrs/metadata.txt
-* create package in lrs/: make package VERSION=x.x.x
+* create package in lrs/: make package VERSION=x.x.x (using correct PYTHONPATH variable for Python3 and Qt5)
 * set link to latest help in index.html
 * update release/plugins.xml to new version
 * git commit

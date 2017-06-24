@@ -1,0 +1,445 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>LRS Plugin for QGIS &#8212; LRS Plugin 0.3.7 documentation</title>
+
+    <!--link rel="stylesheet" href="static/alabaster.css" type="text/css"/>
+    <link rel="stylesheet" href="static/pygments.css" type="text/css"/-->
+
+
+    <link rel="shortcut icon" href="static/icon.ico"/>
+    <!--link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="stylesheet" href="static/custom.css" type="text/css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9"/-->
+</head>
+<body>
+
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="body" role="main">
+            <div class="section" id="lrs-plugin-for-qgis">
+                <h1>LRS Plugin for QGIS</h1>
+                <div class="toctree-wrapper compound">
+                </div>
+                <p>“Linear referencing (also called linear reference system or linear referencing system or LRS), is a method of spatial referencing, in which the locations of features are described in terms of measurements along a linear element, from a defined starting point, for example a milestone along a road.” (<a class="reference external" href="http://en.wikipedia.org/wiki/Linear_Reference_System">Linear
+                        referencing</a>, Wikipedia, 2017).</p>
+                <div class="section" id="introduction">
+                    <h2>Introduction</h2>
+                    <!-- table used for milestone.jpeg layout, QTextBrowser does not support img align -->
+                    <table border="0">
+                        <tr>
+                            <td>
+                            <p>The plugin was developed by <a class="reference external" href="http://www.mpasolutions.it/">MPA
+                                Solutions</a> in collaboration with <a class="reference external"
+                                                                       href="http://www.provincia.tn.it/">Provincia Autonoma di
+                                Trento</a> - Dipartimento infrastrutture e mobilità - Servizio Gestione Strade - Ufficio
+                                Controllo e Tecnologie Stradali.</p>
+                            <p>
+                            <img alt="images/logo_mpa.png" src="images/logo_mpa.png"/>
+                            <img alt="images/logo_pat.png" src="images/logo_pat.png"/>
+                            <img alt="images/logo_gsc.png" src="images/logo_gsc.png"/>
+                            </p>
+                            <div class="section" id="motivation">
+                                <h3>Motivation</h3>
+                                <p>The biggest problem of LRS is consistency and quality of data. This is caused by the fact
+                                    that line and point data are maintained separately, sometimes even by different entities.
+                                    Identification and correction of errors in LRS is tedious and inefficient without
+                                    specialized tools. The true value of this plugin is in its support for errors
+                                    identification, navigation and correction.</p>
+                            </div>
+                            </td>
+                            <td>
+                                <img alt="images/milestone.jpeg" class="align-right" src="images/milestone.jpeg"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="section" id="features">
+                        <h3>Features</h3>
+                        <ul class="simple">
+                            <li>Standard LRS tasks: calibration (creation of LRS), creation of punctual and linear
+                                events and calculation of measures for points.
+                            </li>
+                            <li>Support for all vector formats supported by QGIS.</li>
+                            <li>Supported are lines, multi-lines, points, multi-points. The lines don’t need to be
+                                oriented. Single route may be represented by multiple features.
+                            </li>
+                            <li><strong>Dynamic</strong> list and layer of errors and layer of quality which are
+                                <strong>updated immediately</strong> when source layer features is edited.
+                            </li>
+                            <li>The generated LRS is stored in memory only.</li>
+                            <li>Interpolation between points by default, optional extrapolation.</li>
+                        </ul>
+                    </div>
+                    <div class="section" id="terminology">
+                        <h3>Terminology</h3>
+                        <ul class="simple">
+                            <li><strong>route</strong> is linear feature represented by one or more line features with
+                                the same identifier, e.g. road with the same road number or river with the same name.
+                            </li>
+                            <li><strong>route id</strong> is unique route identifier</li>
+                            <li><strong>measure</strong> is real world measure along linear feature, e.g. kilometers
+                                measured along road from its beginning which may be represented in real world by
+                                milestones.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="section" id="common-input">
+                    <h2>Common input options</h2>
+                    <p>The three tools <em>Locate</em>, <em>Events</em> and <em>Measures</em> which are using as input
+                    an existing vector layer with measures have two common options which are synchronized between tool tabs</p>
+                    <p>Common options:</p>
+                    <ul class="simple">
+                        <li><strong>Layer with measures:</strong> Input vector layer with measures.</li>
+                        <li><strong>Route field:</strong> Field with route id.</li>
+                    </ul>
+                    When route field is selected, the plugin starts to load data from the vector so that the data can be
+                    quickly accessed. The process of loading vector can take some time for large vectors and it is indicated
+                    by progress bar.
+                </div>
+                <div class="section" id="locate">
+                    <h2>Locate event</h2>
+                    <p>Single event may be interactively localized from <em>Locate</em> tab.</p>
+                    <p>
+                    <img alt="images/locate.png" class="align-center" src="images/locate.png"/>
+                    </p>
+                    <p>Localize tab options:</p>
+                    <ul class="simple">
+                        <li><strong>Layer with measures:</strong> Input vector layer with measures.</li>
+                        <li><strong>Route field:</strong> Field with route id.</li>
+                        <li><strong>Route:</strong> Route id.</li>
+                        <li><strong>Available measures:</strong> Comma separated list of measure ranges available for
+                            selected route.
+                        </li>
+                        <li><strong>Measure:</strong> Event measure.</li>
+                        <li><strong>Coordinates:</strong> Event coordinates in current map canvas CRS or error message
+                            if the event cannot be referenced.
+                        </li>
+                        <li><strong>Highlight:</strong> Highlight the event in map canvas.</li>
+                        <li><strong>Zoom buffer:</strong> Buffer (minimum radius) aroud the event in map units used for
+                            zoom.
+                        </li>
+                    </ul>
+                    <p>It is possible either to <strong>Center</strong> the map canvas to current event or to <strong>Zoom</strong>
+                        to the event using specified buffer.</p>
+                </div>
+                <div class="section" id="events">
+                    <h2>Create events</h2>
+                    <p>Punctual or linear events can be generated from <em>Events</em> tab.</p>
+                    <p>
+                    <img alt="images/events.png" class="align-center" src="images/events.png"/>
+                    </p>
+                    <p>Events tab options:</p>
+                    <ul class="simple">
+                        <li><strong>Layer with measures:</strong> Input vector layer with measures.</li>
+                        <li><strong>Route field:</strong> Field with route id.</li>
+                        <li><strong>Events layer:</strong> Layer with informations about events. i.e. route id and
+                            measure(s). The layer is usually a table without geometry.
+                        </li>
+                        <li><strong>Route field:</strong> Field with route id.</li>
+                        <li><strong>Start measure field:</strong> Measure of a point event or start measure of a linear
+                            event.
+                        </li>
+                        <li><strong>End measure field:</strong> End measure of a linear event. To be left empty for
+                            point events.
+                        </li>
+                        <li><strong>Output layer name:</strong> Name of output layer used in legend.</li>
+                        <li><strong>Output error field:</strong> Optional name of error field. This field contains
+                            description reasonsons why an event could not be (fully) created. If this option is left
+                            blank, the field is not created.
+                        </li>
+                    </ul>
+                    <p>The output layer type is point if <em>End measure field</em> is left blank or line if <em>End
+                        measure field</em> is selected. The output layer contains all attributes from input layer plus,
+                        if specified, error field.</p>
+                    <p>The output is created as memory layer which can be later stored in a persistent data source using
+                        standard QGIS options like <em>“Save as”</em> or using
+                            drag and drop to an existing PostGIS schema in the browser.</p>
+                    <p>It may happen that event measures are slightly outside available LRS (at the beginning or end of
+                        a route) because of decimal number inaccuracy of input data. To avoid unwanted errors, a measure
+                        tolerance is applied:</p>
+                    <ul class="simple">
+                        <li><strong>punctual events :</strong> If an exact event measure was not found the plugin will
+                            search for nearest available event within the measure tolerance.
+                        </li>
+                        <li><strong>linear events :</strong> Missing event parts (gaps) are reported as errors only if
+                            they are longer than the event tolerance.
+                        </li>
+                    </ul>
+                    <p>The event tolerance is currently set to 0.0001 (in measure units).</p>
+                </div>
+                <div class="section" id="measures">
+                    <h2>Calculate measures</h2>
+                    <p>Route id and measures may be acquired for existing points from <em>Measures</em> tab.</p>
+                    <p>
+                    <img alt="images/measure.png" class="align-center" src="images/measure.png"/>
+                    </p>
+                    <p>Measures tab options:</p>
+                    <ul class="simple">
+                        <li><strong>Layer with measures:</strong> Input vector layer with measures.</li>
+                        <li><strong>Route field:</strong> Field with route id.</li>
+                        <li><strong>Layer:</strong> Existing layer of points for which measures have to be found.</li>
+                        <li><strong>Max point distance:</strong> Maximum distance of point from nearest line.</li>
+                        <li><strong>Output layer name:</strong> Name of output layer used in legend.</li>
+                        <li><strong>Output route field:</strong> Name of output field in which route id will be stored.
+                        </li>
+                        <li><strong>Output measure field:</strong> Name of output field in which measure will be store.
+                        </li>
+                    </ul>
+                    <p>The output layer contains all attributes from input layer plus route id and measure field. To
+                        acqure measure, the points are projected to neares point on nearest route within the threshold.
+                        If nearest route within threshold was found but there is no LRS for that part of the route, the
+                        measure field is left blank. If no route was found within the threshold both route id and
+                        measure fields are left blank.</p>
+                    <p>The output is created as memory layer which can be later stored in a persistent data source using
+                        standard QGIS options like <em>“Save as”</em> or using drag and drop to an existing PostGIS schema in the browser.</p>
+                </div>
+                <div class="section" id="calibration">
+                    <h2>Calibration</h2>
+                    <p>The calibration is a process in which:</p>
+                    <ul class="simple">
+                        <li>route elements are joined into route parts</li>
+                        <li>points are attached to routes by route id</li>
+                        <li>routes orientation is guessed from point measures</li>
+                        <li>table of calibration records is created for each route parts</li>
+                        <li>it is generated the list of errors</li>
+                    </ul>
+                    <p>The calibration is launched from the tab <em>Calibration &gt; Input </em></p>
+                    <h3>Calibration Input</h3>
+                    <p>
+                    <img alt="images/calibration.png" class="align-center" src="images/calibration.png"/>
+                    </p>
+                    <p>Options:</p>
+                    <ul class="simple">
+                        <li><strong>Lines layer:</strong> Layer with lines representing routes. It may contain lines and
+                            multi-lines. A single route may be represented by multiple features. Lines do not have to be
+                            oriented.
+                        </li>
+                        <li><strong>Lines route field:</strong> Route id field in lines layer. All field types are
+                            supported (including floats) but reasonable types, i.e. string or integer are recommended.
+                        </li>
+                        <li><strong>Points layer:</strong> Layer with points. It may contain points and multi-points
+                            (multi-points make no sense in LRS however).
+                        </li>
+                        <li><strong>Points route field:</strong> Route id field in points layer. The field type may be
+                            string or integer.
+                        </li>
+                        <li><strong>Measure field:</strong> Measure field in points layer. All field types are supported
+                            (including floats) but reasonable types, i.e. string or integer are recommended. The type of
+                            field does not need to match route id field type in line layer, see general notes.
+                        </li>
+                        <li><strong>Measure unit:</strong> Measure field values units.</li>
+                        <li><strong>All/include/exclude routes:</strong> Calibration may be done on all routes, selected
+                            routes or some routes may be excluded. Included/excluded routes can be either entered in
+                            following field as comma separated list or selected from list in dialog opened by
+                            <em>Select</em> button. The list in the dialog is filled by route id values from lines
+                            layer.
+                        </li>
+                        <li><strong>Max lines snap:</strong> Maximum gap between route lines to be snapped.</li>
+                        <li><strong>Max point distance:</strong> Maximum distance of point from route to be used.</li>
+                        <li><strong>Parallels:</strong> Because <a class="reference external"
+                                                                   href="http://en.wikipedia.org/wiki/Multiple_edges">parallels</a>
+                            (multiple edges, parallel edges), typicaly <a class="reference external"
+                                                                          href="http://en.wikipedia.org/wiki/Roundabout">roundabouts</a>
+                            would become ambiguous in LRS they must be treated in special way. There are three options:
+                            <ul>
+                                <li><strong>Mark as errors:</strong> Parallels will be added to the list of errors and
+                                    excluded from calibration.
+                                </li>
+                                <li><strong>Span by straight line:</strong> Parallel lines will be replaced by straight
+                                    line going from parallels start coordinate to end coordinate.
+                                </li>
+                                <li><strong>Exclude:</strong> Parallels will be excluded from callibration without being
+                                    marked as errors.
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Extrapolate:</strong> If checked, measures are extrapolated before first and after
+                            last point on route part. Otherwise segments before/after first/last point are not
+                            calibrated.
+                        </li>
+                        <li><strong>Output layer name:</strong> Output vector memory layer to which output features with
+                            geometry with measures is written if a name is given. The output memory vector can be then
+                            exported with standard QGIS tools like <em>“Save as”</em> or using
+                            drag and drop to an existing PostGIS schema in the browser. The output layer may be used
+                            as input to Locate, Events and Measure tools.
+                        </li>
+                    </ul>
+                    <p>When all options are set correctly, calibration may be launched by <em>OK</em> button. The
+                        process may take a while, progress bar with status label is indicating current state. When
+                        calibration is finished all tabs are enabled and LRS may be used or edited.</p>
+                    <p>Measures are always interpolated between two points. This may be made optional in future but
+                        currently we don’t see any use case where non interpolating could give better results. If you
+                        know any, please create a <a class="reference external"
+                                                     href="https://github.com/blazek/lrs/issues/new">new issue</a>.</p>
+                    <p>The generated LRS is not stored in a new output layer but it is kept in memory and it can be used
+                        immediately to generate events or acquire measures. This may change in future but currently QGIS
+                        vector core API does not support measure value in vector geometry. We hope that rebuilding the
+                        LRS when needed should not be disturbing because all options are stored in project for the case
+                        when a task has to be repeated and calibration is <em>relatively</em> fast.</p>
+                    <p>The LRS plugin in QGIS works similarly as ArcGIS CalibrateRoutes_lr() with parameters
+                        calibrate_method=DISTANCE, search_radius=&lt;<strong>Max distance</strong>&gt; and
+                        interpolate_between=BETWEEN. If <strong>Extrapolate</strong> is checked it means plus parameters
+                        extrapolate_before=BEFORE and extrapolate_after=AFTER.</p>
+
+                    <h3 id="errors">Calibration errors</h3>
+                    <p>When calibration phase is finished it is possible to browse data inconsistencies in
+                        <em>Calibration &gt; Errors</em> tab.</p>
+                    <p>
+                    <img alt="images/errors.png" class="align-center" src="images/errors.png"/>
+                    </p>
+                    <p>Tha tab contains list of all errors which can be filtered over all columns by entering a string
+                        in <strong>Filter</strong> entry. The plugin is able to identify following data errors:</p>
+                    <ul class="simple">
+                        <li><strong>Duplicate line:</strong> Two or more lines with the same route id and geometry.</li>
+                        <li><strong>Duplicate point:</strong> Two or more points with the same route id and geometry.
+                        </li>
+                        <li><strong>Fork:</strong> Three or more lines with the same route id connected in one node.
+                        </li>
+                        <li><strong>Fork line:</strong> Shortest route part(s) connected to fork.</li>
+                        <li><strong>Orphan point:</strong> No line with the same route id.</li>
+                        <li><strong>Out of threshold:</strong> The point is distant more than <em>Max point
+                            distance</em> from nearest line of the same route id.
+                        </li>
+                        <li><strong>Not enough points:</strong> A part of a route has not enough points (two points is
+                            minimum) to be calibrated.
+                        </li>
+                        <li><strong>Missing route id:</strong> Point or line has no route id attribute (NULL).</li>
+                        <li><strong>Missing measure:</strong> Point does not have measure attribute (NULL).</li>
+                        <li><strong>Cannot guess direction:</strong> Measures of points along a route part are not in
+                            ascendant order and number of segments in both directions is equal.
+                        </li>
+                        <li><strong>Wrong measure:</strong> A point measure is not in order with respect to other
+                            correct points and guessed route direction.
+                        </li>
+                        <li><strong>Duplicate referencing:</strong> Multiple route parts with the same measures.</li>
+                        <li><strong>Parallel line:</strong> Parallel lines (multiple edges), see <em>Parallels</em>
+                            option.
+                        </li>
+                    </ul>
+                    <p>When an error is selected in the list, it is highlighted in map and it is possible to <strong>Zoom</strong>
+                        to the feature by the button under the list.</p>
+                    <p>It is also possible to add a new memory error (points and lines) layers by <strong>Error
+                        layers</strong> button.</p>
+                    <p>It is also possible to add a new layer quality layer by <strong>Quality layer</strong> button.
+                        The quality layer by default symbolizes features based on relative error, which is calculated as
+                        difference between a distance calculated from measures defined as point attributes and a length
+                        of the line between those points measured along the line (calculated from line geometry). The
+                        quality layer attributes are:</p>
+                    <ul class="simple">
+                        <li><strong>route:</strong> Route id.</li>
+                        <li><strong>m_from:</strong> Measure of point at the beginning of a segment.</li>
+                        <li><strong>m_to:</strong> Measure of point at the end of a segment.</li>
+                        <li><strong>m_len:</strong> Length calculated from point measures as <strong>(m_to-m_from)
+                            *map_units_per_measure_unit</strong>.
+                        </li>
+                        <li><strong>len:</strong> Distance along line between two points in measure units.</li>
+                        <li><strong>err_abs:</strong> Absolute difference between m_len and len:
+                            <strong>m_len-len</strong>.
+                        </li>
+                        <li><strong>err_rel:</strong> Relative error calculated as: <strong>err_abs/len</strong>.</li>
+                        <li><strong>err_perc:</strong> Absolute value of relative error in percents: <strong>abs(err_rel)*100</strong>.
+                        </li>
+                    </ul>
+                    <p>The properties of the errors and quality layers are stored in project like for any other layer
+                        and the plugin remember those layers so it is possible to change symbology and store it in
+                        project for the next time.</p>
+                    <p>The <strong>power of the plugin</strong> is in <strong>dynamic update</strong> of the LRS, errors
+                        list, error layers and quality layer when source lines or points layers are edited. User can
+                        start editing of points or lines, zoom to an error, fix the error in data and error/quality
+                        layers are immediately (and quickly because only single route is recalibrated) updated so that
+                        the user see promptly if the fix was successful.</p>
+                </div>
+                <!--div class="section" id="export">
+                    <h2>Export</h2>
+                    <p>The calibrated LRS may be exported to PostGIS database using <em>LINESTRINGM</em> (not the
+                        <em>M</em> at the end) geometry type from <em>Export</em> tab.</p>
+                    <img alt="images/export.png" class="align-center" src="images/export.png"/>
+                    <p>Export tab options:</p>
+                    <ul class="simple">
+                        <li><strong>PostGIS connection:</strong> Standard QGIS PostGIS database connection which may be
+                            created in <em>Add PostGIS layers</em> dialog.
+                        </li>
+                        <li><strong>Output schema:</strong> Output schema selection filled with schemas for selected
+                            connection.
+                        </li>
+                        <li><strong>Output table:</strong> Name of output table. If a table of the same name already
+                            exists, user will be asked if the table should be overwritten or export aborted.
+                        </li>
+                    </ul>
+                    <p>Exported table has four fields:</p>
+                    <ul class="simple">
+                        <li><strong>&lt;route id&gt;:</strong> Route id. Name and type are taken from line layer.</li>
+                        <li><strong>m_from:</strong> Measure of the first coordinate in linestring.</li>
+                        <li><strong>m_to:</strong> Measure of the last coordinate in linestring.</li>
+                        <li><strong>geom:</strong> Geometry of type LINESTRINGM.</li>
+                    </ul>
+                    <p>Exported table may be used by other applications supporting geometry with measure, by custom
+                        applications or even from SQL console, for example, to create event (point) on ‘road1’ at km
+                        6.3:</p>
+                    <div class="highlight-default">
+                        <div class="highlight"><pre><span class="n">select</span> <span
+                                class="n">locate_along_measure</span><span class="p">(</span><span class="n">geom</span><span
+                                class="p">,</span><span class="mf">6.3</span><span class="p">)</span> <span class="kn">from</span> <span
+                                class="nn">lrs</span> <span class="n">where</span> <span class="n">route</span> <span
+                                class="o">=</span> <span class="s">&#39;road1&#39;</span> <span
+                                class="ow">and</span> <span class="n">m_from</span> <span class="o">&lt;=</span> <span
+                                class="mf">6.3</span> <span class="ow">and</span> <span class="mf">6.3</span> <span
+                                class="o">&lt;=</span> <span class="n">m_to</span><span class="p">;</span>
+</pre>
+                        </div>
+                    </div>
+                </div-->
+                <div class="section" id="general-notes">
+                    <h2>General notes</h2>
+                    <ul class="simple">
+                        <li><strong>CRS.</strong> Calibration of LRS is done in single CRS to which lines and points are
+                            reprojected (if layers have different CRS). The CRS is either map canvas CRS if OTF is
+                            enabled otherwise line layer CRS. Note that max point distance and lines snap are in units
+                            used to build LRS (units are appended to fields labels).
+                        </li>
+                        <li><strong>Route id</strong> All field types are accepted. Line and point layer route id field
+                            types do not need to be the same. For example, values 1 (integer), 1.0 (float) and “1”
+                            (string) are treated as equal. Route id matching (e.g. finding points for line or route for
+                            event) is case insensitive in case of strings.
+                        </li>
+                        <li><strong>Options</strong> in all tabs are stored in project. The options of each tab are
+                            written to project when <em>OK</em> button is pressed (i.e. options are confirmed). Reset
+                            buttons in tabs will reset all options to <strong>default</strong> values.
+                        </li>
+                        <li><strong>Dockable window.</strong> The plugin window is dockable, it means that it can be
+                            eithers used as dialog window or it can be docked in QGIS main window.
+                        </li>
+                    </ul>
+                </div>
+                <!--div class="section" id="known-issues">
+                    <h2>Known issues</h2>
+                    <ul class="simple">
+                        <li>Because of <a class="reference external" href="http://hub.qgis.org/issues/9309">issue
+                            9309</a> saving of event layer with features without geometry (if an event could not be
+                            referenced) was giving warning and those features were not saved (features with geometry
+                            were saved correctly however) in QGIS 2.0 and early development version 2.1. The issue was
+                            fixed in 2.1 which will become official 2.2 release.
+                        </li>
+                    </ul>
+                </div-->
+            </div>
+
+
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="footer">
+    &copy;2017, Radim Blazek.
+</div>
+
+
+</body>
+</html>
