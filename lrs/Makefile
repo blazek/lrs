@@ -108,7 +108,7 @@ package: compile
 	cp -r help build/lrs
 	cp -r help ../release/help.$(VERSION)
 	cd build; zip -9r ../../release/lrs.$(VERSION).zip lrs/; cd -
-	#rm -rf build
+	rm -rf build
 	echo "Created package: ../release/lrs.$(VERSION).zip"
 	echo "Created help: ../release/help.$(VERSION)"
 

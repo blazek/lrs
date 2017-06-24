@@ -479,7 +479,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             return ""
 
     def getThresholdLabel(self, crs):
-        label = "Max point distance" + self.getUnitsLabel(crs)
+        label = "Max point distance"
+        if crs is not None:
+            label += self.getUnitsLabel(crs)
         # #debug ( 'label = %s' % label )
         return label
 
@@ -672,7 +674,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetEventsButtons()
         self.resetMeasureButtons()
         self.resetExportButtons()
-        self.updateMeasureUnits   ()
+        self.updateMeasureUnits()
         self.enableTabs()
 
     def isCalibrated(self):
@@ -686,9 +688,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         output.output(self.genOutputNameLineEdit.text().strip())
 
     def showGenProgress(self, label, percent):
-        self.genProgressLabel.show()
+        #self.genProgressLabel.show()
         #self.genProgressBar.show()
-        #self.genProgressFrame.show()
+        self.genProgressFrame.show()
         self.genProgressLabel.setText(label)
         self.genProgressBar.setValue(percent)
 
@@ -1032,7 +1034,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     # set threshold units according to current crs
     def updateMeasureUnits(self):
-        crs = self.lrsLayer.crs if self.lrsLayer.crs else None
+        crs = self.lrsLayer.crs if self.lrsLayer else None
         label = self.getThresholdLabel(crs)
         self.measureThresholdLabel.setText(label)
 
