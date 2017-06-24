@@ -25,11 +25,11 @@ from .utils import *
 
 # Write Lrs to memory output layer
 class LrsOutput(QObject):
-    def __init__(self, iface, lrs, progressBar):
+    def __init__(self, iface, lrs, showProgressFunction):
         # debug( "LrsOutput.__init__")
         self.iface = iface
         self.lrs = lrs  # Lrs object
-        self.progressBar = progressBar
+        self.showProgressFunction = showProgressFunction
 
     def output(self, outputName):
         #geometryType = "MultiLineStringM"
@@ -61,6 +61,9 @@ class LrsOutput(QObject):
         total = len(self.lrs.getParts())
         count = 0
         for part in self.lrs.getParts():
+            percent = 100 * count / total
+            self.showProgressFunction("Exporting features", percent)
+            count += 1
             if not part.records:
                 continue
             geo = part.getGeometryWithMeasures()
@@ -79,10 +82,6 @@ class LrsOutput(QObject):
             outputFeature["m_to"] = part.milestoneMeasureTo()
 
             outputFeatures.append(outputFeature)
-
-            count += 1
-            percent = 100 * count / total
-            self.progressBar.setValue(percent)
 
         outputLayer.dataProvider().addFeatures(outputFeatures)
 

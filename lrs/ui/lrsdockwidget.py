@@ -684,19 +684,16 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genCreateOutputButton.setEnabled(self.isCalibrated() and len(self.genOutputNameLineEdit.text().strip()) > 0)
 
     def createLrsOutput(self):
-        output = LrsOutput(self.iface, self.lrs, self.genProgressBar)
+        output = LrsOutput(self.iface, self.lrs, self.showGenProgress)
         output.output(self.genOutputNameLineEdit.text().strip())
+        self.hideGenProgress()
 
     def showGenProgress(self, label, percent):
-        #self.genProgressLabel.show()
-        #self.genProgressBar.show()
         self.genProgressFrame.show()
         self.genProgressLabel.setText(label)
         self.genProgressBar.setValue(percent)
 
     def hideGenProgress(self):
-        #self.genProgressLabel.hide()
-        #self.genProgressBar.hide()
         self.genProgressFrame.hide()
 
     # ------------------------------- ERRORS -------------------------------
