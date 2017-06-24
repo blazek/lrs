@@ -103,14 +103,12 @@ zip: deploy dclean
 package: compile
 	rm -f lrs*.zip
 	rm -rf build
-	mkdir -p build/lrs/help
-	cp -r $(PACKAGE_FILES) build/lrs
-	#cp -r help/build/html build/lrs/help/build
-	#cp -r help/build/html ../release/help.$(VERSION)
+	mkdir -p build/lrs
+	rsync -r --exclude __pycache__ $(PACKAGE_FILES) build/lrs
 	cp -r help build/lrs
 	cp -r help ../release/help.$(VERSION)
-	zip -9r ../release/lrs.$(VERSION).zip lrs/
-	rm -rf build
+	cd build; zip -9r ../../release/lrs.$(VERSION).zip lrs/; cd -
+	#rm -rf build
 	echo "Created package: ../release/lrs.$(VERSION).zip"
 	echo "Created help: ../release/help.$(VERSION)"
 

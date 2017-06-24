@@ -129,5 +129,5 @@ class LrsFieldComboManager(LrsComboManagerBase):
         self.fieldNameChanged.emit(self.getFieldName())
 
     def activated(self, idx):
-        self.debug("LrsFieldComboManager activated idx = %s value = %s" % (idx, self.getFieldName()))
+        #self.debug("LrsFieldComboManager activated idx = %s value = %s" % (idx, self.getFieldName()))
         self.fieldNameActivated.emit(self.getFieldName())

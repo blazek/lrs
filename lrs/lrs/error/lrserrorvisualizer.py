@@ -25,6 +25,7 @@ from qgis._gui import QgsHighlight
 
 from ..utils import crsString, isProjectCrsEnabled, getProjectCrs
 
+
 # Highlight, zoom errors
 class LrsErrorVisualizer(object):
     def __init__(self, mapCanvas):

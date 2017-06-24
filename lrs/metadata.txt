@@ -14,7 +14,7 @@ qgisMinimumVersion=2.99
 qgisMaximumVersion=3.99
 description=Linear reference system builder and editor 
 about=The plugin supports calibration, creation of punctual and linear events and calculation of measures for points
-version=0.3.7
+version=1.0.0
 author=Radim Blazek
 email=radim.blazek@gmail.com
 
@@ -22,8 +22,13 @@ email=radim.blazek@gmail.com
 
 # Optional items:
 
-# Uncomment the following line and add your changelog entries:
-changelog= 0.3.7
+# Changelog entries:
+changelog= 
+  1.0.0
+    - Upgrade to QGIS 3
+    - Support for existing layers with measures
+    - Refactored UI
+  0.3.7
     - Fixed issues #9 and #10
   0.3.6
     - Fixed issue #6 (PostGIS data types not supported by memory provider)

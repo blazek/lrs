@@ -61,7 +61,7 @@ class LrsUnits():
 # print debug message
 def debug(msg):
     print("LRSDEBUG: %s" % msg)
-    sys.stdout.flush()
+    # sys.stdout.flush()  # gives error on Windows if Python console is not open
     QgsMessageLog.logMessage(msg, 'LRS Plugin', QgsMessageLog.INFO)
 
 

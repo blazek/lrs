@@ -321,7 +321,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def lrsLayerChanged(self, layer):
         # debug("lrsLayerChanged layer: %s" % (layer.name() if layer else None))
-        self.lrsLayer = LrsLayer(layer)
+        self.lrsLayer = None
+        if layer is not None:
+            self.lrsLayer = LrsLayer(layer)
         self.lrsRouteFieldCM.reset()
         self.resetLocateRoutes()
         # don't write here, the layer is changing also when loading plugin ->
