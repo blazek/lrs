@@ -22,6 +22,7 @@
 import math
 import sys
 
+from PyQt5.QtCore import QVariant
 from PyQt5.QtWidgets import QMessageBox
 
 from qgis.PyQt.QtCore import *
@@ -36,6 +37,8 @@ PROJECT_PLUGIN_NAME = "lrs"
 # input layers selection
 ALL_FEATURES = "all"
 SELECTED_FEATURES = "selected"
+
+QVARIANT_NUMBER_TYPE_LIST = [QVariant.Int, QVariant.UInt, QVariant.LongLong, QVariant.ULongLong, QVariant.Double]
 
 class LrsUnits():
     METER = 0

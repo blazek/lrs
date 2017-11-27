@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from PyQt5.QtCore import QVariant
 from qgis._gui import QgsHighlight
 
 from ..lrs.error.lrserrorlayermanager import LrsErrorLayerManager
@@ -125,10 +126,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM = LrsFieldComboManager(self.eventsRouteFieldCombo, self.eventsLayerCM,
                                                        settingsName='eventsRouteField')
         self.eventsMeasureStartFieldCM = LrsFieldComboManager(self.eventsMeasureStartFieldCombo, self.eventsLayerCM,
-                                                              types=[QVariant.Int, QVariant.Double],
+                                                              types=QVARIANT_NUMBER_TYPE_LIST,
                                                               settingsName='eventsMeasureStartField')
         self.eventsMeasureEndFieldCM = LrsFieldComboManager(self.eventsMeasureEndFieldCombo, self.eventsLayerCM,
-                                                            types=[QVariant.Int, QVariant.Double], allowNone=True,
+                                                            types=QVARIANT_NUMBER_TYPE_LIST, allowNone=True,
                                                             settingsName='eventsMeasureEndField')
 
         self.eventsFeaturesSelectCM = LrsComboManager(self.eventsFeaturesSelectCombo, options=(
@@ -196,7 +197,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.genPointRouteFieldCM = LrsFieldComboManager(self.genPointRouteFieldCombo, self.genPointLayerCM,
                                                          settingsName='pointRouteField')
         self.genPointMeasureFieldCM = LrsFieldComboManager(self.genPointMeasureFieldCombo, self.genPointLayerCM,
-                                                           types=[QVariant.Int, QVariant.Double],
+                                                           types=QVARIANT_NUMBER_TYPE_LIST,
                                                            settingsName='pointMeasureField')
 
         self.genMeasureUnitCM = LrsUnitComboManager(self.genMeasureUnitCombo, settingsName='measureUnit',
