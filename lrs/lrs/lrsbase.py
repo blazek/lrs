@@ -142,7 +142,7 @@ class LrsBase(QObject):
             route = self.getRoute(routeId)
             part = route.parts[partIdx]
             geo = QgsGeometry.fromPolylineXY(part.polyline)
-            (sqDist, nearestPnt, afterVertex) = geo.closestSegmentWithContext(point)
+            (sqDist, nearestPnt, afterVertex, leftOf) = geo.closestSegmentWithContext(point, 0)
             dist = math.sqrt(sqDist)
             if dist < nearestDist:
                 nearestDist = dist

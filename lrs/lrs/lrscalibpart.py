@@ -301,7 +301,7 @@ class LrsCalibPart(LrsPartBase):
     # overridden
     def pointMeasure(self, point):
         geo = QgsGeometry.fromPolylineXY(self.polyline)
-        (sqDist, nearestPoint, afterVertex) = geo.closestSegmentWithContext(point)
+        (sqDist, nearestPoint, afterVertex, leftOf) = geo.closestSegmentWithContext(point, 0)
         segment = afterVertex - 1
         partMeasure = measureAlongPolyline(self.polyline, segment, nearestPoint)
         return self.getMilestoneMeasure(partMeasure)

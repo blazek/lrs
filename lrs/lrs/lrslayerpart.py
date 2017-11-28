@@ -117,7 +117,7 @@ class LrsLayerPart(LrsPartBase):
 
     # overridden
     def pointMeasure(self, point):
-        (sqDist, nearestPoint, afterVertex) = self.polylineGeo.closestSegmentWithContext(point)
+        (sqDist, nearestPoint, afterVertex, leftOf) = self.polylineGeo.closestSegmentWithContext(point, 0)
         if afterVertex == 0:
             return self.linestring.mAt(0)
         else:
