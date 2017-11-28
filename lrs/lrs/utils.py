@@ -176,7 +176,7 @@ def measureAlongPolyline(polyline, segment, pnt):
 # layer.dataProvider().deleteFeatures( ids )
 
 # place point on line in distance from point 1
-def pointOnLine(point1, point2, distance):
+def pointXYOnLine(point1, point2, distance):
     #debug("pointOnLine distance = %s" % distance)
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
@@ -190,7 +190,7 @@ def pointOnLine(point1, point2, distance):
 
 
 # returns new QgsPointXY on polyline in distance along polyline
-def polylinePoint(polyline, distance):
+def polylineXYPointXY(polyline, distance):
     # debug( "polylinePoint distance = %s" % distance )
     # geo = QgsGeometry.fromPolyline( polyline )
     # length = geo.length()
@@ -203,33 +203,33 @@ def polylinePoint(polyline, distance):
 
         if length <= distance <= length + l:
             d = distance - length
-            return pointOnLine(p1, p2, d)
+            return pointXYOnLine(p1, p2, d)
         length += l
     # debug ( 'point in distance %s not found on line length = %s' % ( distance, length ) )
     return None
 
 
 # returns new polyline 'from - to' measured along original polyline
-def polylineSegment(polyline, frm, to):
-    geo = QgsGeometry.fromPolylineXY(polyline)
+def polylineXYSegmentXY(polylineXY, frm, to):
+    geo = QgsGeometry.fromPolylineXY(polylineXY)
     length = geo.length()
 
     poly = []  # section
     length = 0
-    for i in range(len(polyline) - 1):
-        p1 = polyline[i]
-        p2 = polyline[i + 1]
+    for i in range(len(polylineXY) - 1):
+        p1 = polylineXY[i]
+        p2 = polylineXY[i + 1]
         l = pointsDistance(p1, p2)
 
         if len(poly) == 0 and frm <= length + l:
             d = frm - length
-            p = pointOnLine(p1, p2, d)
+            p = pointXYOnLine(p1, p2, d)
             poly.append(p)
 
         if len(poly) > 0:
             if to < length + l:
                 d = to - length
-                p = pointOnLine(p1, p2, d)
+                p = pointXYOnLine(p1, p2, d)
                 poly.append(p)
                 break
             else:

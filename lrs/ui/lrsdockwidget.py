@@ -867,7 +867,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         coordinates = ''
         point = None
         if routeId is not None:
-            point, error = self.lrsLayer.eventPoint(routeId, measure)
+            point, error = self.lrsLayer.eventPointXY(routeId, measure)
 
             if point:
                 mapSettings = self.iface.mapCanvas().mapSettings()

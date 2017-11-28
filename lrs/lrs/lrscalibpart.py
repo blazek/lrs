@@ -156,8 +156,8 @@ class LrsCalibPart(LrsPartBase):
     # calculate segment measure in measure units, used for extrapolate
     def segmentLengthInMeasureUnits(self, partFrom, partTo):
         if self.distanceArea.willUseEllipsoid():
-            polyline = polylineSegment(self.polyline, partFrom, partTo)
-            geo = QgsGeometry.fromPolylineXY(polyline)
+            polylineXY = polylineXYSegmentXY(self.polyline, partFrom, partTo)
+            geo = QgsGeometry.fromPolylineXY(polylineXY)
             length = self.distanceArea.measureLength(geo)
             qgisUnit = QgsUnitTypes.DistanceMeters
         else:
@@ -229,7 +229,7 @@ class LrsCalibPart(LrsPartBase):
         return 	QgsGeometry(linestring)
 
     # overridden
-    def eventPoint(self, start):
+    def eventPointXY(self, start):
         # debug( "part.eventPoint() start = %s" % start )
         if start is None:
             return None
@@ -237,8 +237,8 @@ class LrsCalibPart(LrsPartBase):
         for record in self.records:
             if record.containsMeasure(start):
                 m = record.partMeasure(start)
-                point = polylinePoint(self.polyline, m)
-                return point
+                pointXY = polylineXYPointXY(self.polyline, m)
+                return pointXY
         return None
 
     # overridden
@@ -288,8 +288,8 @@ class LrsCalibPart(LrsPartBase):
                     seg.partTo = record.partTo
 
             if seg.milestoneTo is not None:
-                polyline = polylineSegment(self.polyline, seg.partFrom, seg.partTo)
-                segments.append([polyline, seg.milestoneFrom, seg.milestoneTo])
+                polylineXY = polylineXYSegmentXY(self.polyline, seg.partFrom, seg.partTo)
+                segments.append([polylineXY, seg.milestoneFrom, seg.milestoneTo])
 
                 start = seg.milestoneTo
                 seg = LrsRecord(None, None, None, None)
@@ -341,21 +341,21 @@ class LrsCalibPart(LrsPartBase):
             measure = self.getMilestoneMeasure(partMeasure)
             # debug('measure = %s' % measure )
             if measure is not None:
-                point = self.polyline[i]
-                coor = [point.x(), point.y(), measure]
+                pointXY = self.polyline[i]
+                coor = [pointXY.x(), pointXY.y(), measure]
                 coors.append(coor)
 
         # debug('coors: %s' % coors )
         # add coordinates for milestones
         for record in self.records:
-            point = polylinePoint(self.polyline, record.partFrom)
-            if point:
-                coor = [point.x(), point.y(), record.milestoneFrom]
+            pointXY = polylineXYPointXY(self.polyline, record.partFrom)
+            if pointXY:
+                coor = [pointXY.x(), pointXY.y(), record.milestoneFrom]
                 coors.append(coor)
 
-        point = polylinePoint(self.polyline, self.records[-1].partTo)
-        if point:
-            coor = [point.x(), point.y(), self.records[-1].milestoneTo]
+        pointXY = polylineXYPointXY(self.polyline, self.records[-1].partTo)
+        if pointXY:
+            coor = [pointXY.x(), pointXY.y(), self.records[-1].milestoneTo]
             coors.append(coor)
 
         # debug('coors: %s' % coors )

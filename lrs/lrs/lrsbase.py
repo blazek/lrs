@@ -62,12 +62,12 @@ class LrsBase(QObject):
 
     # tolerance - maximum accepted measure from start to nearest existing lrs if exact start measure was not found
     # returns ( QgsPointXY, error )
-    def eventPoint(self, routeId, start, tolerance=0):
+    def eventPointXY(self, routeId, start, tolerance=0):
         error = self.eventValuesError(routeId, start)
         if error: return None, error
 
         route = self.getRoute(routeId)
-        geo, error = route.eventPoint(start, tolerance)
+        geo, error = route.eventPointXY(start, tolerance)
         return geo, error
 
     # tolerance - minimum missing gap which will be reported as error

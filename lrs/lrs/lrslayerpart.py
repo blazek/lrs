@@ -19,8 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import QgsPoint
-from .utils import pointOnLine, pointsDistance, debug
+from qgis.core import QgsPoint, QgsPointXY
+from .utils import pointXYOnLine, pointsDistance, debug
 from .lrsrecord import LrsRecord
 from .lrspartbase import LrsPartBase
 
@@ -40,20 +40,20 @@ class LrsLayerPart(LrsPartBase):
             self.records.append(record)
 
     # overridden
-    def eventPoint(self, start):
+    def eventPointXY(self, start):
         #debug("eventPoint start = %s" % start)
         if start is None:
             return None
         start = float(start)
         if self.records:  # we may have 1 or none (if removed duplicate)
             if self.records[0].containsMeasure(start):
-                return self.linestringPoint(start)
+                return self.linestringPointXY(start)
         return None
 
     # get point on linestring with measures
     # returns QgsPointXY
     # Note that there is QgsGeometryAnalyzer.locateAlongMeasure()
-    def linestringPoint(self, measure):
+    def linestringPointXY(self, measure):
         #debug("linestringPoint measure = %s" % measure)
         if self.linestring.numPoints() < 2:
             return None
@@ -62,15 +62,15 @@ class LrsLayerPart(LrsPartBase):
             measure2 = self.linestring.mAt(i + 1)
             #debug("linestringPoint measure1 = %s  measure2 = %s" % (measure1, measure2))
             if measure1 == measure:
-                return QgsPoint(self.linestring.pointN(i))
+                return QgsPointXY(self.linestring.pointN(i))
             elif measure2 == measure:
-                return QgsPoint(self.linestring.pointN(i + 1))
+                return QgsPointXY(self.linestring.pointN(i + 1))
             elif measure1 < measure < measure2:
                 point1 = self.linestring.pointN(i)
                 point2 = self.linestring.pointN(i + 1)
                 length = pointsDistance(point1,point2)
                 distance = (measure - measure1) * length / (measure2 - measure1)
-                return pointOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance)
+                return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance)
         return None
 
     # overridden
@@ -103,15 +103,15 @@ class LrsLayerPart(LrsPartBase):
         toMeasure = min(end, maxMeasure)
 
         if start >= minMeasure:  # start point is on linestring
-            polyline.append(self.linestringPoint(start))
+            polyline.append(self.linestringPointXY(start))
 
         for i in range(self.linestring.numPoints()):
             measure = self.linestring.mAt(i)
             if start < measure < end:
-                polyline.append(QgsPoint(self.linestring.pointN(i)))
+                polyline.append(QgsPointXY(self.linestring.pointN(i)))
 
         if end <= maxMeasure:  # end point is on linestring
-            polyline.append(self.linestringPoint(end))
+            polyline.append(self.linestringPointXY(end))
 
         return [polyline, fromMeasure, toMeasure]
 

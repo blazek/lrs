@@ -77,9 +77,9 @@ class LrsRouteBase(metaclass=ABCMeta):
             part.removeRecord(record)
 
     # returns ( QgsPointXY, error )
-    def eventPoint(self, start, tolerance=0):
+    def eventPointXY(self, start, tolerance=0):
         for part in self.parts:
-            point = part.eventPoint(start)
+            point = part.eventPointXY(start)
             if point:
                 return point, None
 
@@ -91,12 +91,12 @@ class LrsRouteBase(metaclass=ABCMeta):
                 for record in part.records:
                     m = abs(record.milestoneFrom - start)
                     if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPoint(record.milestoneFrom)
+                        nearestPoint = part.eventPointXY(record.milestoneFrom)
                         nearestMeasure = m
 
                     m = abs(record.milestoneTo - start)
                     if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPoint(record.milestoneTo)
+                        nearestPoint = part.eventPointXY(record.milestoneTo)
                         nearestMeasure = m
 
             if nearestPoint: return nearestPoint, None
