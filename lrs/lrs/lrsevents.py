@@ -106,7 +106,7 @@ class LrsEvents(QObject):
             else:
                 point, error = self.lrs.eventPoint(routeId, start, eventTolerance)
                 if point:
-                    geo = QgsGeometry(point)
+                    geo = QgsGeometry(QgsPoint(point))
 
             if geo:
                 outputFeature.setGeometry(geo)

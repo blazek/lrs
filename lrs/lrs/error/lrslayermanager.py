@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis._core import QgsCoordinateTransform
+from qgis.core import QgsCoordinateTransform
 
 # Keeps track of features by checksum.
 class LrsLayerManager(object):

@@ -34,8 +34,8 @@ class LrsQualityFeature(LrsFeature):
     # geometry + all attributes
     def getChecksum(self):
         if not self.checksum_:
-            #m = md5("%s" % self.geometry().exportToWkb())
-            m = md5(self.geometry().exportToWkb())
+            #m = md5("%s" % self.geometry().asWkb())
+            m = md5(self.geometry().asWkb())
 
             for attribute in self.attributes():
                 m.update(str(attribute).encode())

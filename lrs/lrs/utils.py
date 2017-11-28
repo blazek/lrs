@@ -186,7 +186,7 @@ def pointOnLine(point1, point2, distance):
     #debug("pointOnLine k = %s" % k)
     x = point1.x() + k * dx
     y = point1.y() + k * dy
-    return QgsPoint(x, y)
+    return QgsPointXY(x, y)
 
 
 # returns new QgsPointXY on polyline in distance along polyline

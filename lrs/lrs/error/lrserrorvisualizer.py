@@ -20,8 +20,8 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import Qt
-from qgis._core import QgsVectorLayer, QgsGeometry, QgsCoordinateTransform, QgsProject, QgsWkbTypes, QgsRectangle
-from qgis._gui import QgsHighlight
+from qgis.core import QgsVectorLayer, QgsGeometry, QgsCoordinateTransform, QgsProject, QgsWkbTypes, QgsRectangle
+from qgis.gui import QgsHighlight
 
 from ..utils import crsString, isProjectCrsEnabled, getProjectCrs
 

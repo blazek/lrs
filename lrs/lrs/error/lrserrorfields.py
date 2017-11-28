@@ -20,7 +20,7 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import QVariant
-from qgis._core import QgsFields, QgsField
+from qgis.core import QgsFields, QgsField
 
 
 class LrsErrorFields(QgsFields):

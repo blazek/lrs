@@ -20,7 +20,7 @@
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from .lrserror import *
+from qgis.core import QgsVectorLayer, QgsProviderRegistry
 
 
 # changes done to vector layer attributes are not stored correctly in project file

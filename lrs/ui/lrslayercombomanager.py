@@ -21,7 +21,7 @@
 """
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex
 from PyQt5.QtGui import QStandardItem
-from qgis._core import QgsMapLayer, QgsProject, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsProject, QgsWkbTypes
 
 from ..lrs.utils import debug
 from .lrscombomanagerbase import LrsComboManagerBase

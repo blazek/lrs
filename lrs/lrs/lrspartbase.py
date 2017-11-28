@@ -21,10 +21,10 @@
 """
 from abc import ABCMeta, abstractmethod
 
-from qgis._core import QgsGeometry
+from qgis.core import QgsGeometry
 
 from .lrsrecord import LrsRecord
-from .utils import polylinePoint, polylineSegment, doubleNear, measureAlongPolyline, segmentLength
+from .utils import polylinePoint, polylineSegment, doubleNear, measureAlongPolyline, segmentLength, debug
 
 
 # Route part
@@ -59,6 +59,7 @@ class LrsPartBase(metaclass=ABCMeta):
 
     def getRecordGeometry(self, record):
         polyline = polylineSegment(self.polyline, record.partFrom, record.partTo)
+        debug( 'getRecordGeometry polyline [0] %s [1] %s' % (type(polyline[0]), type(polyline[1])))
         geo = QgsGeometry.fromPolylineXY(polyline)
         return geo
 

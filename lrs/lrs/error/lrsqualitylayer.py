@@ -21,7 +21,7 @@
 """
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from qgis._core import QgsVectorLayer, QgsProviderRegistry, QgsWkbTypes
+from qgis.core import QgsVectorLayer, QgsProviderRegistry, QgsWkbTypes, QgsSymbol, QgsRendererRange, QgsGraduatedSymbolRenderer
 
 from .lrsqualityfields import LRS_QUALITY_FIELDS
 from ..utils import crsString
@@ -43,12 +43,12 @@ class LrsQualityLayer(QgsVectorLayer):
         ]
         ranges = []
         for style in styles:
-            symbol = QgsSymbolV2.defaultSymbol(QgsWkbTypes.LineGeometry)
+            symbol = QgsSymbol.defaultSymbol(QgsWkbTypes.LineGeometry)
             symbol.setColor(style[2])
-            range = QgsRendererRangeV2(style[0], style[1], symbol, style[3])
+            range = QgsRendererRange(style[0], style[1], symbol, style[3])
             ranges.append(range)
 
-        renderer = QgsGraduatedSymbolRendererV2('err_perc', ranges)
-        self.setRendererV2(renderer)
+        renderer = QgsGraduatedSymbolRenderer('err_perc', ranges)
+        self.setRenderer(renderer)
 
 

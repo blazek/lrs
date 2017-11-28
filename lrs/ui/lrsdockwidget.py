@@ -20,7 +20,7 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import QVariant
-from qgis._gui import QgsHighlight
+from qgis.gui import QgsHighlight
 
 from ..lrs.error.lrserrorlayermanager import LrsErrorLayerManager
 from ..lrs.error.lrserrorlinelayer import LrsErrorLineLayer
@@ -905,7 +905,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         layer = QgsVectorLayer('Point?crs=' + crsString(crs), 'LRS locate highlight', 'memory')
         #self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry.fromPoint(self.locatePoint), layer)
         # QgsGeometry(QgsPoint) takes ownership!
-        self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry(self.locatePoint.clone()), layer)
+        self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry(QgsPoint(self.locatePoint)), layer)
         # highlight point size is hardcoded in QgsHighlight
         self.locateHighlight.setWidth(2)
         self.locateHighlight.setColor(Qt.yellow)

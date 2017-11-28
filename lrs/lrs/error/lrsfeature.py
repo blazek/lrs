@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis._core import QgsFeature
+from qgis.core import QgsFeature
 
 
 class LrsFeature(QgsFeature):

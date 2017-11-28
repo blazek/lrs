@@ -130,12 +130,12 @@ class LrsError(QObject):
             m = md5(str(self.type).encode())
 
             if self.type == self.DUPLICATE_LINE:
-                m.update(self.geo.exportToWkb())
+                m.update(self.geo.asWkb())
             elif self.type == self.DUPLICATE_POINT:
-                m.update(self.geo.exportToWkb())
+                m.update(self.geo.asWkb())
             elif self.type == self.FORK:
                 m.update(str(self.routeId).encode())
-                m.update(self.geo.exportToWkb())
+                m.update(self.geo.asWkb())
             elif self.type == self.ORPHAN:
                 m.update(self.getOriginChecksum())
             elif self.type == self.OUTSIDE_THRESHOLD:
@@ -153,7 +153,7 @@ class LrsError(QObject):
                 m.update(self.getOriginChecksum())
             elif self.type == self.DUPLICATE_REFERENCING:
                 m.update(str(self.routeId).encode())
-                m.update(self.geo.exportToWkb())
+                m.update(self.geo.asWkb())
                 m.update(self.getMeasureString().encode())
             elif self.type == self.PARALLEL:
                 m.update(self.getOriginChecksum())
@@ -166,7 +166,7 @@ class LrsError(QObject):
         # full checksum
         # def getFullChecksum(self):
         # if not self.fullChecksum_:
-        # s  = "%s-%s-%s-%s-%s" % ( self.type, self.geo.exportToWkb(), self.routeId, self.getMeasureString(), self.getOriginChecksum() )
+        # s  = "%s-%s-%s-%s-%s" % ( self.type, self.geo.asWkb(), self.routeId, self.getMeasureString(), self.getOriginChecksum() )
         # m = md5( s )
         # self.fullChecksum_ = m.digest()
         # return self.fullChecksum_

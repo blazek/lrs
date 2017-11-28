@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis._core import QgsWkbTypes
+from qgis.core import QgsWkbTypes
 
 from ..utils import debug
 from .lrslayermanager import LrsLayerManager
