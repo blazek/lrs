@@ -519,7 +519,8 @@ class LrsCalibRoute(LrsRouteBase):
 
     # calculate measures along parts
     def attachMilestones(self):
-        if not self.routeId: return
+        if self.routeId is None:
+            return
 
         sqrThreshold = self.threshold * self.threshold
         for milestone in self.milestones:
