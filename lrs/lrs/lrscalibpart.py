@@ -44,8 +44,10 @@ class LrsCalibPart(LrsPartBase):
 
     def setPolyline(self, polyline):
         self.polyline = polyline
+        # debug('setPolyline polyline: %s %s' % (type(polyline), polyline))
+        # debug('setPolyline first: %s %s' % (type(polyline[0]), polyline[0]))
         # QgsGeometry.fromPolyline() returns None if polyline has only one point
-        self.polylineGeo = QgsGeometry.fromPolyline(self.polyline)
+        self.polylineGeo = QgsGeometry.fromPolylineXY(self.polyline)
         if self.polylineGeo is not None:
             self.length = self.polylineGeo.length()
 
@@ -134,7 +136,7 @@ class LrsCalibPart(LrsPartBase):
             for i in range(len(milestones) - 1, -1, -1):
                 if scores[i] == minScore:
                     m = milestones[i]
-                    geo = QgsGeometry.fromPoint(m.pnt)
+                    geo = QgsGeometry.fromPointXY(m.pnt)
                     origin = LrsOrigin(QgsWkbTypes.PointGeometry, m.fid, m.geoPart, m.nGeoParts)
                     self.errors.append(LrsError(LrsError.WRONG_MEASURE, geo, routeId=self.routeId, measure=m.measure,
                                                 origins=[origin]))
@@ -155,7 +157,7 @@ class LrsCalibPart(LrsPartBase):
     def segmentLengthInMeasureUnits(self, partFrom, partTo):
         if self.distanceArea.willUseEllipsoid():
             polyline = polylineSegment(self.polyline, partFrom, partTo)
-            geo = QgsGeometry.fromPolyline(polyline)
+            geo = QgsGeometry.fromPolylineXY(polyline)
             length = self.distanceArea.measureLength(geo)
             qgisUnit = QgsUnitTypes.DistanceMeters
         else:
@@ -298,7 +300,7 @@ class LrsCalibPart(LrsPartBase):
 
     # overridden
     def pointMeasure(self, point):
-        geo = QgsGeometry.fromPolyline(self.polyline)
+        geo = QgsGeometry.fromPolylineXY(self.polyline)
         (sqDist, nearestPoint, afterVertex) = geo.closestSegmentWithContext(point)
         segment = afterVertex - 1
         partMeasure = measureAlongPolyline(self.polyline, segment, nearestPoint)

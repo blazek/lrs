@@ -277,7 +277,7 @@ class LrsCalibRoute(LrsRouteBase):
         duplicates = list(duplicates)
         duplicates.sort(reverse=True)
         for d in duplicates:  # delete going down (sorted reverse)
-            geo = QgsGeometry.fromPolyline(polylines[d]['polyline'])
+            geo = QgsGeometry.fromPolylineXY(polylines[d]['polyline'])
             origin = LrsOrigin(QgsWkbTypes.LineGeometry, polylines[d]['fid'], polylines[d]['geoPart'],
                                polylines[d]['nGeoParts'])
             self.errors.append(LrsError(LrsError.DUPLICATE_LINE, geo, routeId=self.routeId, origins=[origin]))
@@ -393,7 +393,7 @@ class LrsCalibRoute(LrsRouteBase):
             for part in parallels:
                 origins.extend(part.origins)
                 if self.parallelMode == 'error':
-                    geo = QgsGeometry.fromPolyline(part.polyline)
+                    geo = QgsGeometry.fromPolylineXY(part.polyline)
                     self.errors.append(LrsError(LrsError.PARALLEL, geo, routeId=self.routeId, origins=part.origins))
 
                 self.parts.remove(part)
@@ -402,7 +402,7 @@ class LrsCalibRoute(LrsRouteBase):
             if self.parallelMode == 'error':
                 part = parallels[0]
                 for i in [0, -1]:
-                    geo = QgsGeometry.fromPoint(part.polyline[i])
+                    geo = QgsGeometry.fromPointXY(part.polyline[i])
                     # origins sould not be necessary
                     self.errors.append(LrsError(LrsError.FORK, geo, routeId=self.routeId))
 
@@ -422,7 +422,7 @@ class LrsCalibRoute(LrsRouteBase):
 
         for node in nodes.values():
             if len(node['parts']) > 2:
-                geo = QgsGeometry.fromPoint(node['pnt'])
+                geo = QgsGeometry.fromPointXY(node['pnt'])
                 self.errors.append(LrsError(LrsError.FORK, geo, routeId=self.routeId))
                 # mark shortest forked parts as errors
         for ph, node in nodes.items():
@@ -435,7 +435,7 @@ class LrsCalibRoute(LrsRouteBase):
             for part in removeParts:
                 # one part may be fork at both ends -> check if it was already removed
                 if part in self.parts:
-                    geo = QgsGeometry.fromPolyline(part.polyline)
+                    geo = QgsGeometry.fromPolylineXY(part.polyline)
                     self.errors.append(LrsError(LrsError.FORK_LINE, geo, routeId=self.routeId, origins=part.origins))
                     self.parts.remove(part)
 
@@ -507,7 +507,7 @@ class LrsCalibRoute(LrsRouteBase):
         for node in nodes.values():
             # debug ( "npoints = %s" % node['npoints'] )
             if node['npoints'] > 1:
-                geo = QgsGeometry.fromPoint(node['pnt'])
+                geo = QgsGeometry.fromPointXY(node['pnt'])
                 self.errors.append(
                     LrsError(LrsError.DUPLICATE_POINT, geo, routeId=self.routeId, measure=node['measures'],
                              origins=node['origins']))
@@ -523,7 +523,7 @@ class LrsCalibRoute(LrsRouteBase):
 
         sqrThreshold = self.threshold * self.threshold
         for milestone in self.milestones:
-            pointGeo = QgsGeometry.fromPoint(milestone.pnt)
+            pointGeo = QgsGeometry.fromPointXY(milestone.pnt)
 
             nearSqDist = sys.float_info.max
             nearPartIdx = None
@@ -531,7 +531,7 @@ class LrsCalibRoute(LrsRouteBase):
             nearNearestPnt = None
             for i in range(len(self.parts)):
                 part = self.parts[i]
-                partGeo = QgsGeometry.fromPolyline(part.polyline)
+                partGeo = QgsGeometry.fromPolylineXY(part.polyline)
 
                 (sqDist, nearestPnt, afterVertex) = partGeo.closestSegmentWithContext(milestone.pnt)
                 segment = afterVertex - 1

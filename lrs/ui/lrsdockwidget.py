@@ -588,12 +588,12 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def getGenerateCrs(self):
         crs = None
-        # #debug ( "genLineLayerCM = %s" % self.genLineLayerCM )
+        # debug ( "genLineLayerCM = %s" % self.genLineLayerCM )
         lineLayer = self.genLineLayerCM.getLayer()
         if lineLayer:
+            # debug('lineLayer.crs().authid() = %s' % lineLayer.crs().authid())
             crs = lineLayer.crs()
 
-        # #debug ('line layer  crs = %s' % self.genLineLayerCM.getLayer().crs().authid() )
         if isProjectCrsEnabled():
             # #debug ('enabled mapCanvas crs = %s' % self.iface.mapCanvas().mapSettings().destinationCrs().authid() )
             crs = getProjectCrs()
@@ -903,7 +903,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # QgsHighlight does reprojection from layer CRS
         crs = getProjectCrs() if isProjectCrsEnabled() else self.lrsLayer.crs
         layer = QgsVectorLayer('Point?crs=' + crsString(crs), 'LRS locate highlight', 'memory')
-        self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry.fromPoint(self.locatePoint), layer)
+        #self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry.fromPoint(self.locatePoint), layer)
+        # QgsGeometry(QgsPoint) takes ownership!
+        self.locateHighlight = QgsHighlight(mapCanvas, QgsGeometry(self.locatePoint.clone()), layer)
         # highlight point size is hardcoded in QgsHighlight
         self.locateHighlight.setWidth(2)
         self.locateHighlight.setColor(Qt.yellow)
@@ -919,10 +921,10 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not self.locatePoint: return
         mapCanvas = self.iface.mapCanvas()
         extent = mapCanvas.extent()
-        extent.scale(1.0, self.locatePoint);
+        extent.scale(1.0, self.locatePoint.x(), self.locatePoint.y())
 
         self.iface.mapCanvas().setExtent(extent)
-        self.iface.mapCanvas().refresh();
+        self.iface.mapCanvas().refresh()
 
     def locateZoom(self):
         if not self.locatePoint: return
@@ -931,7 +933,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         extent = QgsRectangle(p.x() - b, p.y() - b, p.x() + b, p.y() + b)
 
         self.iface.mapCanvas().setExtent(extent)
-        self.iface.mapCanvas().refresh();
+        self.iface.mapCanvas().refresh()
 
     # ---------------------------------- EVENTS ----------------------------------
 

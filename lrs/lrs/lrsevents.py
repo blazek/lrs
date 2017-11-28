@@ -102,11 +102,11 @@ class LrsEvents(QObject):
             if endFieldName:
                 line, error = self.lrs.eventMultiPolyLine(routeId, start, end, eventTolerance)
                 if line:
-                    geo = QgsGeometry.fromMultiPolyline(line)
+                    geo = QgsGeometry.fromMultiPolylineXY(line)
             else:
                 point, error = self.lrs.eventPoint(routeId, start, eventTolerance)
                 if point:
-                    geo = QgsGeometry.fromPoint(point)
+                    geo = QgsGeometry(point)
 
             if geo:
                 outputFeature.setGeometry(geo)

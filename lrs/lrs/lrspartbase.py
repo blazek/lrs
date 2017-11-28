@@ -59,7 +59,7 @@ class LrsPartBase(metaclass=ABCMeta):
 
     def getRecordGeometry(self, record):
         polyline = polylineSegment(self.polyline, record.partFrom, record.partTo)
-        geo = QgsGeometry.fromPolyline(polyline)
+        geo = QgsGeometry.fromPolylineXY(polyline)
         return geo
 
     def __str__(self):

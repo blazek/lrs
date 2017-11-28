@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import QgsPointXY
+from qgis.core import QgsPoint
 from .utils import pointOnLine, pointsDistance, debug
 from .lrsrecord import LrsRecord
 from .lrspartbase import LrsPartBase
@@ -31,7 +31,7 @@ class LrsLayerPart(LrsPartBase):
         self.polylineGeo = polylineGeo  # single polyline geometry
         self.polyline = polylineGeo.asPolyline()
         self.length = self.polylineGeo.length()
-        self.linestring = self.polylineGeo.geometry()  # QgsLineString
+        self.linestring = self.polylineGeo.get()  # QgsLineString
         if self.linestring and self.linestring.numPoints() > 1:
             measure1 = self.linestring.mAt(0)
             measure2 = self.linestring.mAt(self.linestring.numPoints() - 1)
@@ -62,9 +62,9 @@ class LrsLayerPart(LrsPartBase):
             measure2 = self.linestring.mAt(i + 1)
             #debug("linestringPoint measure1 = %s  measure2 = %s" % (measure1, measure2))
             if measure1 == measure:
-                return QgsPointXY(self.linestring.pointN(i))
+                return QgsPoint(self.linestring.pointN(i))
             elif measure2 == measure:
-                return QgsPointXY(self.linestring.pointN(i + 1))
+                return QgsPoint(self.linestring.pointN(i + 1))
             elif measure1 < measure < measure2:
                 point1 = self.linestring.pointN(i)
                 point2 = self.linestring.pointN(i + 1)
@@ -108,7 +108,7 @@ class LrsLayerPart(LrsPartBase):
         for i in range(self.linestring.numPoints()):
             measure = self.linestring.mAt(i)
             if start < measure < end:
-                polyline.append(QgsPointXY(self.linestring.pointN(i)))
+                polyline.append(QgsPoint(self.linestring.pointN(i)))
 
         if end <= maxMeasure:  # end point is on linestring
             polyline.append(self.linestringPoint(end))

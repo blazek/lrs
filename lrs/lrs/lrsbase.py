@@ -121,7 +121,7 @@ class LrsBase(QObject):
         for route in self.routes.values():
             for i in range(len(route.parts)):
                 feature = QgsFeature(fid)
-                geo = QgsGeometry.fromPolyline(route.parts[i].polyline)
+                geo = QgsGeometry.fromPolylineXY(route.parts[i].polyline)
                 feature.setGeometry(geo)
                 self.partSpatialIndex.insertFeature(feature)
                 self.partSpatialIndexRoutePart[fid] = [route.routeId, i]
@@ -141,7 +141,7 @@ class LrsBase(QObject):
             routeId, partIdx = self.partSpatialIndexRoutePart[id]
             route = self.getRoute(routeId)
             part = route.parts[partIdx]
-            geo = QgsGeometry.fromPolyline(part.polyline)
+            geo = QgsGeometry.fromPolylineXY(part.polyline)
             (sqDist, nearestPnt, afterVertex) = geo.closestSegmentWithContext(point)
             dist = math.sqrt(sqDist)
             if dist < nearestDist:

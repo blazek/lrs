@@ -80,7 +80,7 @@ class LrsMeasures(QObject):
 
             for point in points:
                 outputFeature = QgsFeature(fields)  # fields must exist during feature life!
-                outputFeature.setGeometry(QgsGeometry.fromPoint(point))
+                outputFeature.setGeometry(QgsGeometry.fromPointXY(point))
 
                 for field in layer.pendingFields():
                     if outputFeature.fields().indexFromName(field.name()) >= 0:
