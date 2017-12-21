@@ -537,6 +537,7 @@ class LrsCalibRoute(LrsRouteBase):
                 (sqDist, nearestPnt, afterVertex, leftOf) = partGeo.closestSegmentWithContext(milestone.pnt, 0)
                 segment = afterVertex - 1
                 # debug ('sqDist %s x %s' % (sqDist, sqrThreshold) )
+                # debug("routeId = %s measure = %s leftOf = %s" % (self.routeId, milestone.measure, leftOf))
                 if sqDist <= sqrThreshold and sqDist < nearSqDist:
                     nearSqDist = sqDist
                     nearPartIdx = i
