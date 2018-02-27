@@ -39,7 +39,7 @@ class LrsEvents(QObject):
         provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
         # and negative length and precision we overwrite type names according to types and reset length and precision
-        fieldsList = layer.pendingFields().toList()
+        fieldsList = layer.fields().toList()
         fixFields(fieldsList)
         provider.addAttributes(fieldsList)
         if errorFieldName:
@@ -55,7 +55,7 @@ class LrsEvents(QObject):
 
         # Not sure why attributes were set again here, the attributes are already in uri
         # outputLayer.startEditing()  # to add fields
-        # for field in layer.pendingFields():
+        # for field in layer.fields():
         #    if not outputLayer.addAttribute(field):
         #        QMessageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
 
@@ -77,7 +77,7 @@ class LrsEvents(QObject):
         eventTolerance = 0.0001
 
         outputFeatures = []
-        fields = outputLayer.pendingFields()
+        fields = outputLayer.fields()
         #debug("create featuresSelect = %s" % featuresSelect)
         if featuresSelect == SELECTED_FEATURES:
             featuresIterator = layer.getSelectedFeatures()
@@ -94,7 +94,7 @@ class LrsEvents(QObject):
             # debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
 
             outputFeature = QgsFeature(fields)  # fields must exist during feature life!
-            for field in layer.pendingFields():
+            for field in layer.fields():
                 if outputFeature.fields().indexFromName(field.name()) >= 0:
                     outputFeature[field.name()] = feature[field.name()]
 

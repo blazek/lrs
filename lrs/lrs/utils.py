@@ -65,7 +65,7 @@ class LrsUnits():
 def debug(msg):
     print("LRSDEBUG: %s" % msg)
     # sys.stdout.flush()  # gives error on Windows if Python console is not open
-    QgsMessageLog.logMessage(msg, 'LRS Plugin', QgsMessageLog.INFO)
+    QgsMessageLog.logMessage(msg, 'LRS Plugin', Qgis.Info)
 
 
 # compare 2 doubles
@@ -301,7 +301,7 @@ def fixFields(fieldsList):
 # types and adds names including types in such case
 def checkFields(inputLayer, outputLayer):
     missingFields = []
-    for field in inputLayer.pendingFields():
+    for field in inputLayer.fields():
         if outputLayer.fields().indexFromName(field.name()) < 0:
             missingFields.append(field.name())
 

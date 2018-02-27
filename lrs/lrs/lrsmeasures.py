@@ -38,7 +38,7 @@ class LrsMeasures(QObject):
         # uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapSettings().destinationCrs() )
         uri = "Point?crs=%s" % crsString(layer.crs())
         provider = QgsProviderRegistry.instance().createProvider('memory', uri)
-        fieldsList = layer.pendingFields().toList()
+        fieldsList = layer.fields().toList()
         fixFields(fieldsList)
         provider.addAttributes(fieldsList)
         provider.addAttributes([
@@ -53,7 +53,7 @@ class LrsMeasures(QObject):
 
         # Not sure why attributes were set again here, the attributes are already in uri
         # outputLayer.startEditing()  # to add fields
-        # for field in layer.pendingFields():
+        # for field in layer.fields():
         #     if not outputLayer.addAttribute(field):
         #         QMess        # create new layerageBox.information(self, 'Information', 'Cannot add attribute %s' % field.name())
         #
@@ -62,7 +62,7 @@ class LrsMeasures(QObject):
         # outputLayer.commitChanges()
 
         outputFeatures = []
-        fields = outputLayer.pendingFields()
+        fields = outputLayer.fields()
         total = layer.featureCount()
         count = 0
         transform = None
@@ -82,7 +82,7 @@ class LrsMeasures(QObject):
                 outputFeature = QgsFeature(fields)  # fields must exist during feature life!
                 outputFeature.setGeometry(QgsGeometry.fromPointXY(point))
 
-                for field in layer.pendingFields():
+                for field in layer.fields():
                     if outputFeature.fields().indexFromName(field.name()) >= 0:
                         outputFeature[field.name()] = feature[field.name()]
 

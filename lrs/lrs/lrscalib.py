@@ -75,8 +75,8 @@ class LrsCalib(LrsBase):
 
 
         self.distanceArea = QgsDistanceArea()
-        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0 
-        self.distanceArea.setSourceCrs(self.crs)
+        # QgsDistanceArea.setSourceCrs( QgsCoordinateReferenceSystem ) is missing in SIP in at least QGIS 2.0
+        self.distanceArea.setSourceCrs(self.crs, QgsProject.instance().transformContext())
         if self.crs.mapUnits() == QgsUnitTypes.DistanceDegrees:
             ellipsoid = self.crs.ellipsoidAcronym()
             if not ellipsoid: ellipsoid = "WGS84"
@@ -219,7 +219,7 @@ class LrsCalib(LrsBase):
         for s in self.statsNames:
             self.stats[s[0]] = 0
 
-        field = self.lineLayer.pendingFields().field(self.lineRouteField)
+        field = self.lineLayer.fields().field(self.lineRouteField)
         self.routeField = QgsField(field.name(), field.type(), field.typeName(), field.length(), field.precision())
 
         self.progressCounts = {}
@@ -482,7 +482,7 @@ class LrsCalib(LrsBase):
         # debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
         self.setEdited()
 
-        fields = self.pointLayer.pendingFields()
+        fields = self.pointLayer.fields()
         routeIdx = fields.indexFromName(self.pointRouteField)
         measureIdx = fields.indexFromName(self.pointMeasureField)
         # debug ( "routeIdx = %s measureIdx = %s" % ( routeIdx, measureIdx) )
@@ -552,7 +552,7 @@ class LrsCalib(LrsBase):
         # debug ( "attribute changed fid = %s attIdx = %s value = %s " % (fid, attIdx, value) )
         self.setEdited()
 
-        fields = self.lineLayer.pendingFields()
+        fields = self.lineLayer.fields()
         routeIdx = fields.indexFromName(self.lineRouteField)
         # debug ( "routeIdx = %s" % ( routeIdx, measureIdx) )
 
