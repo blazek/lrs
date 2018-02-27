@@ -96,7 +96,7 @@ class LrsFieldComboManager(LrsComboManagerBase):
                 self.model.appendRow(item)
 
         fieldsNames = []
-        for idx, field in enumerate(layer.pendingFields()):
+        for idx, field in enumerate(layer.fields()):
             if self.types and not field.type() in self.types: continue
             fieldsNames.append(field.name())
 
@@ -108,7 +108,7 @@ class LrsFieldComboManager(LrsComboManagerBase):
                 self.model.removeRows(i, 1)
 
         # add new fields
-        for idx, field in enumerate(layer.pendingFields()):
+        for idx, field in enumerate(layer.fields()):
             #debug("resetFields %s %s %s" % (field.name(), field.type(), self.types))
             if self.types and not field.type() in self.types: continue
             fieldName = field.name()
