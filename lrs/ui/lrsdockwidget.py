@@ -72,7 +72,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.qualityLayer = None
         self.qualityLayerManager = None
 
-        self.pluginDir = QFileInfo(QgsApplication.qgisUserDatabaseFilePath()).path() + "python/plugins/lrs"
+        self.pluginDir = QFileInfo(QgsApplication.qgisUserDatabaseFilePath()).path() + "/python/plugins/lrs"
         # remember if export schema options has to be reset to avoid asking credential until necessary
         self.resetExportSchemaOptionsOnVisible = False
 
