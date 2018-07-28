@@ -872,7 +872,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             if point:
                 mapSettings = self.iface.mapCanvas().mapSettings()
                 if isProjectCrsEnabled() and getProjectCrs() != self.lrsLayer.crs:
-                    transform = QgsCoordinateTransform(self.lrsLayer.crs, mapSettings.destinationCrs())
+                    transform = QgsCoordinateTransform(self.lrsLayer.crs, mapSettings.destinationCrs(),
+                                                       QgsProject.instance())
                     point = transform.transform(point)
                 coordinates = "%.3f,%.3f" % (point.x(), point.y())
             else:
