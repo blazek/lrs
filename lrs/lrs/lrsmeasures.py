@@ -33,6 +33,10 @@ class LrsMeasures(QObject):
         self.progressBar = progressBar
 
     def calculate(self, layer, routeFieldName, measureFieldName, threshold, outputName):
+        # get the  lrs layer's route field, to obtain its type
+        lrsFields = self.lrs.layer.fields()
+        lrsRouteField = lrsFields.at(lrsFields.indexFromName(self.lrs.routeFieldName))
+
         # create new layer
         # it may happen that memory provider does not support all fields types, see #10, check if fields exists
         # uri = "Point?crs=%s" %  crsString ( self.iface.mapCanvas().mapSettings().destinationCrs() )
@@ -42,7 +46,7 @@ class LrsMeasures(QObject):
         fixFields(fieldsList)
         provider.addAttributes(fieldsList)
         provider.addAttributes([
-            QgsField(routeFieldName, QVariant.String, "string"),
+            QgsField(routeFieldName, lrsRouteField.type(), lrsRouteField.typeName()),
             QgsField(measureFieldName, QVariant.Double, "double"),
         ])
 
@@ -92,7 +96,7 @@ class LrsMeasures(QObject):
                 # debug ( "routeId = %s merasure = %s" % (routeId, measure) )
 
                 if routeId is not None:
-                    outputFeature[routeFieldName] = '%s' % routeId
+                    outputFeature[routeFieldName] = routeId
                 outputFeature[measureFieldName] = measure
 
                 outputFeatures.append(outputFeature)
