@@ -67,7 +67,7 @@ class LrsMeasures(QObject):
         count = 0
         transform = None
         if layer.crs() != self.lrs.crs:
-            transform = QgsCoordinateTransform(layer.crs(), self.lrs.crs)
+            transform = QgsCoordinateTransform(layer.crs(), self.lrs.crs, QgsProject.instance())
         for feature in layer.getFeatures():
             points = []
 
