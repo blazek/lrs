@@ -1205,6 +1205,61 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>locateLrsLayerCombo</tabstop>
+  <tabstop>locateLrsRouteFieldCombo</tabstop>
+  <tabstop>locateRouteCombo</tabstop>
+  <tabstop>locateMeasureSpin</tabstop>
+  <tabstop>locateHighlightCheckBox</tabstop>
+  <tabstop>locateBufferSpin</tabstop>
+  <tabstop>locateHelpButton</tabstop>
+  <tabstop>locateCenterButton</tabstop>
+  <tabstop>locateZoomButton</tabstop>
+  <tabstop>eventsLrsLayerCombo</tabstop>
+  <tabstop>eventsLrsRouteFieldCombo</tabstop>
+  <tabstop>eventsLayerCombo</tabstop>
+  <tabstop>eventsRouteFieldCombo</tabstop>
+  <tabstop>eventsMeasureStartFieldCombo</tabstop>
+  <tabstop>eventsMeasureEndFieldCombo</tabstop>
+  <tabstop>eventsFeaturesSelectCombo</tabstop>
+  <tabstop>eventsOutputNameLineEdit</tabstop>
+  <tabstop>eventsErrorFieldLineEdit</tabstop>
+  <tabstop>measureLrsLayerCombo</tabstop>
+  <tabstop>measureLrsRouteFieldCombo</tabstop>
+  <tabstop>measureLayerCombo</tabstop>
+  <tabstop>measureThresholdSpin</tabstop>
+  <tabstop>measureOutputNameLineEdit</tabstop>
+  <tabstop>measureRouteFieldLineEdit</tabstop>
+  <tabstop>measureMeasureFieldLineEdit</tabstop>
+  <tabstop>calibTabWidget</tabstop>
+  <tabstop>genLineLayerCombo</tabstop>
+  <tabstop>genLineRouteFieldCombo</tabstop>
+  <tabstop>genPointLayerCombo</tabstop>
+  <tabstop>genPointRouteFieldCombo</tabstop>
+  <tabstop>genPointMeasureFieldCombo</tabstop>
+  <tabstop>genMeasureUnitCombo</tabstop>
+  <tabstop>genSelectionModeCombo</tabstop>
+  <tabstop>genSelectionLineEdit</tabstop>
+  <tabstop>genSelectionButton</tabstop>
+  <tabstop>genSnapSpin</tabstop>
+  <tabstop>genThresholdSpin</tabstop>
+  <tabstop>genParallelModeCombo</tabstop>
+  <tabstop>genExtrapolateCheckBox</tabstop>
+  <tabstop>genButtonBox</tabstop>
+  <tabstop>genOutputNameLineEdit</tabstop>
+  <tabstop>genCreateOutputButton</tabstop>
+  <tabstop>errorFilterLineEdit</tabstop>
+  <tabstop>errorView</tabstop>
+  <tabstop>errorButtonBox</tabstop>
+  <tabstop>errorZoomButton</tabstop>
+  <tabstop>addErrorLayersButton</tabstop>
+  <tabstop>addQualityLayerButton</tabstop>
+  <tabstop>helpTextBrowser</tabstop>
+  <tabstop>exportPostgisConnectionCombo</tabstop>
+  <tabstop>exportPostgisSchemaCombo</tabstop>
+  <tabstop>exportPostgisTableLineEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
