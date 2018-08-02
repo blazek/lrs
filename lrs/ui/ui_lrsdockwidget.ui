@@ -1053,6 +1053,9 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_2">
                  <item>
                   <widget class="QDialogButtonBox" name="errorButtonBox">
+                   <property name="focusPolicy">
+                    <enum>Qt::StrongFocus</enum>
+                   </property>
                    <property name="standardButtons">
                     <set>QDialogButtonBox::Help</set>
                    </property>
