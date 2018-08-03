@@ -282,9 +282,9 @@ def fixFields(fieldsList):
         elif field.type() == QVariant.Int:
             field.setTypeName('int')
         elif field.type() == QVariant.LongLong:
-            field.setTypeName('int')
+            field.setTypeName('int8')
         elif field.type() == QVariant.ULongLong:
-            field.setTypeName('int')
+            field.setTypeName('int8')
         elif field.type() == QVariant.Double:
             field.setTypeName('double')
 
