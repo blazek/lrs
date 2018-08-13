@@ -35,7 +35,7 @@ class LrsEvents(QObject):
         # create new layer
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
-        uri += "?crs=%s" % crsString(self.iface.mapCanvas().mapSettings().destinationCrs())
+        uri += "?crs=%s" % crsString(self.lrs.crs)
         provider = QgsProviderRegistry.instance().createProvider('memory', uri)
         # Because memory provider (QGIS 2.4) fails to parse PostGIS type names (like int8, float, float8 ...)
         # and negative length and precision we overwrite type names according to types and reset length and precision
