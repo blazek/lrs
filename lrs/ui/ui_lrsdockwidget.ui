@@ -1195,9 +1195,6 @@
   <tabstop>addErrorLayersButton</tabstop>
   <tabstop>addQualityLayerButton</tabstop>
   <tabstop>helpTextBrowser</tabstop>
-  <tabstop>exportPostgisConnectionCombo</tabstop>
-  <tabstop>exportPostgisSchemaCombo</tabstop>
-  <tabstop>exportPostgisTableLineEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>
