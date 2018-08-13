@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>739</width>
-    <height>544</height>
+    <height>704</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>LRS</string>
+   <string>&amp;LRS</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <property name="sizePolicy">
@@ -1133,67 +1133,6 @@
            </widget>
           </item>
          </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="exportTab">
-       <attribute name="title">
-        <string>Export</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="exportPostgisTableLineEdit"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="exportPostgisTableLabel">
-            <property name="text">
-             <string>Output table</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="exportPostgisConnectionCombo"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="exportPostgisConnectionLabel">
-            <property name="text">
-             <string>PostGIS connection</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="exportPostgisSchemaLabel">
-            <property name="text">
-             <string>Output schema</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="exportPostgisSchemaCombo"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QDialogButtonBox" name="exportButtonBox">
-          <property name="standardButtons">
-           <set>QDialogButtonBox::Help|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>294</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>

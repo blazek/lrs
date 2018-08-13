@@ -34,7 +34,6 @@ from ..lrs.lrscalib import LrsCalib
 from ..lrs.lrslayer import LrsLayer
 from ..lrs.lrsoutput import LrsOutput
 from ..lrs.lrsmeasures import LrsMeasures
-from ..lrs.postgis import ExportPostgis
 from .lrscombomanager import LrsComboManager
 from .lrscombomanagerbase import *
 from .lrsfieldcombomanager import LrsFieldComboManager
@@ -73,8 +72,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.qualityLayerManager = None
 
         self.pluginDir = QFileInfo(QgsApplication.qgisUserDatabaseFilePath()).path() + "/python/plugins/lrs"
-        # remember if export schema options has to be reset to avoid asking credential until necessary
-        self.resetExportSchemaOptionsOnVisible = False
 
         super(LrsDockWidget, self).__init__(parent)
 
@@ -258,29 +255,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.addQualityLayerButton.clicked.connect(self.addQualityLayer)
         self.errorButtonBox.button(QDialogButtonBox.Help).clicked.connect(lambda: self.showHelp('errors'))
 
-        # --------------------------------- export tab -----------------------------------------
-        self.exportPostgisConnectionCM = LrsComboManager(self.exportPostgisConnectionCombo,
-                                                         settingsName='exportPostgisConnection')
-        self.exportPostgisSchemaCM = LrsComboManager(self.exportPostgisSchemaCombo, settingsName='exportPostgisSchema')
-        self.exportPostgisTableWM = LrsWidgetManager(self.exportPostgisTableLineEdit, settingsName='exportPostgisTable',
-                                                     defaultValue='lrs')
-        validator = QRegExpValidator(QRegExp('[A-Za-z_][A-Za-z0-9_]+'), None)
-        self.exportPostgisTableLineEdit.setValidator(validator)
-
-        self.exportPostgisConnectionCombo.currentIndexChanged.connect(self.resetExportSchemaOptions)
-        self.exportPostgisConnectionCombo.currentIndexChanged.connect(self.resetExportButtons)
-        self.exportPostgisSchemaCombo.currentIndexChanged.connect(self.resetExportButtons)
-        self.exportPostgisTableLineEdit.textEdited.connect(self.resetExportButtons)
-        self.exportButtonBox.button(QDialogButtonBox.Ok).clicked.connect(self.export)
-        self.exportButtonBox.button(QDialogButtonBox.Reset).clicked.connect(self.resetExportOptionsAndWrite)
-        self.exportButtonBox.button(QDialogButtonBox.Help).clicked.connect(lambda: self.showHelp('export'))
-
-        self.resetExportOptions()
-        self.resetExportButtons()
-
-        # Hide export tab - it should be removed completely once memory layer export is working
-        self.tabWidget.removeTab(self.tabWidget.indexOf(self.exportTab))
-
         # ---------------------------- statistics tab ----------------------------
         # currently not used (did not correspond well to errors)
         # self.tabWidget.removeTab( self.tabWidget.indexOf(self.statsTab) )
@@ -370,7 +344,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.readLocateOptions()
         self.readEventsOptions()
         self.readMeasureOptions()
-        self.readExportOptions()
 
         # --------------------- set error layers if stored in project -------------------
         errorLineLayerId = project.readEntry(PROJECT_PLUGIN_NAME, "errorLineLayerId")[0]
@@ -402,7 +375,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetGenerateOptions()
         self.resetEventsOptions()
         self.resetMeasureOptions()
-        self.resetExportOptions()
         self.enableTabs()
 
     def deleteLrs(self):
@@ -461,13 +433,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # self.locateTab.setEnabled(enable)
         # self.eventsTab.setEnabled(enable)
         # self.measureTab.setEnabled(enable)
-        # self.exportTab.setEnabled(enable)
         # self.statsTab.setEnabled(enable)
 
     def tabChanged(self, index):
         # #debug("tabChanged index = %s" % index )
-        if self.tabWidget.widget(index) == self.exportTab:
-            self.exportTabBecameVisible()
+        pass
 
     def mapSettingsCrsChanged(self):
         # #debug("mapSettingsCrsChanged")
@@ -674,7 +644,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.resetLocateRoutes()
         self.resetEventsButtons()
         self.resetMeasureButtons()
-        self.resetExportButtons()
         self.updateMeasureUnits()
         self.enableTabs()
 
@@ -1055,105 +1024,6 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
         measures = LrsMeasures(self.iface, self.lrsLayer, self.measureProgressBar)
         measures.calculate(layer, routeFieldName, measureFieldName, threshold, outputName)
-
-    # ------------------- EXPORT -------------------
-
-    def resetExportOptions(self):
-        options = []
-
-        for connection in ExportPostgis.getPostgisConnections():
-            options.append([connection['name'], connection['name']])
-        self.exportPostgisConnectionCM.setOptions(options)
-        self.exportPostgisConnectionCM.reset()
-        self.exportPostgisSchemaCM.reset()
-        self.exportPostgisTableWM.reset()
-
-        self.resetExportButtons()
-
-    def exportTabVisible(self):
-        return self.tabWidget.currentWidget() == self.exportTab
-
-    def exportTabBecameVisible(self):
-        # #debug("exportTabBecameVisible" )
-        if self.resetExportSchemaOptionsOnVisible:
-            self.resetExportSchemaOptions()
-
-    def resetExportSchemaOptions(self):
-        if self.exportPostgisConnectionCombo.currentIndex() == -1:
-            self.exportPostgisSchemaCM.clear()
-            return
-
-        # do not reset options until the tab is visible to avoid asking credentials
-        # this will only happen if project is loaded when export tab is not active
-        if not self.exportTabVisible():
-            self.exportPostgisSchemaCM.clear()
-            self.resetExportSchemaOptionsOnVisible = True
-            return
-
-        conn = self.openPostgisConnection()
-        if not conn:
-            self.exportPostgisSchemaCM.clear()
-            return
-
-        try:
-            # set current schema as default
-            schema = self.postgisSelect(conn, "select current_schema()")[0][0]
-            self.exportPostgisSchemaCM.defaultValue = schema
-
-            options = [(r[0], r[0]) for r in self.postgisSelect(conn,
-                                                                "select nspname from pg_catalog.pg_namespace where nspname <> 'information_schema' and nspname !~ '^pg_'")]
-            # #debug('options: %s' % options)
-
-
-            self.exportPostgisSchemaCM.setOptions(options)
-
-            if self.resetExportSchemaOptionsOnVisible:
-                self.exportPostgisSchemaCM.readFromProject()
-
-            self.resetExportSchemaOptionsOnVisible = False
-
-            conn.close()
-
-        except Exception as e:
-            conn.close()
-            QMessageBox.critical(self, 'Error', '%s' % e)
-            return
-
-    def resetExportOptionsAndWrite(self):
-        self.resetExportOptions()
-        self.writeExportOptions()
-
-    def resetExportButtons(self):
-        enabled = bool(
-            self.lrs) and self.exportPostgisConnectionCombo.currentIndex() != -1 and self.exportPostgisSchemaCombo.currentIndex() != -1 and bool(
-            self.exportPostgisTableLineEdit.text())
-        self.exportButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
-
-    def writeExportOptions(self):
-        self.exportPostgisConnectionCM.writeToProject()
-        self.exportPostgisSchemaCM.writeToProject()
-        self.exportPostgisTableWM.writeToProject()
-
-    def readExportOptions(self):
-        self.exportPostgisConnectionCM.readFromProject()
-        self.exportPostgisSchemaCM.readFromProject()
-        self.exportPostgisTableWM.readFromProject()
-
-    def export(self):
-        # #debug('export')
-        self.writeExportOptions()
-
-        # TODO: disable tab instead
-        if not havePostgis:
-            QMessageBox.critical(self, 'Error', 'psycopg2 not installed')
-            return
-
-        connectionName = self.exportPostgisConnectionCM.value()
-        outputSchema = self.exportPostgisSchemaCM.value()
-        outputTable = self.exportPostgisTableLineEdit.text()
-
-        export = ExportPostgis(self.iface, self.lrs)
-        export.export(connectionName, outputSchema, outputTable)
 
     # ------------------- STATS -------------------
 
