@@ -83,7 +83,7 @@ class LrsLayerPart(LrsPartBase):
         end = float(end)
 
         if self.records:  # we may have 1 or none (if removed duplicate)
-            rec = LrsRecord(start, end, None, None)
+            rec = LrsRecord(min(start, end), max(start, end), None, None)
             if self.records[0].measureOverlaps(rec):
                 segment = self.linestringSegment(start, end)
                 if segment:
@@ -99,19 +99,30 @@ class LrsLayerPart(LrsPartBase):
         polyline = []
         minMeasure = self.linestring.mAt(0)
         maxMeasure = self.linestring.mAt(self.linestring.numPoints() - 1)
-        fromMeasure = max(start, minMeasure)
-        toMeasure = min(end, maxMeasure)
+        fromMeasure = max(start, minMeasure) if start <= end else min(start, maxMeasure)
+        toMeasure = min(end, maxMeasure) if start <= end else max(end, minMeasure)
 
-        if start >= minMeasure:  # start point is on linestring
-            polyline.append(self.linestringPointXY(start))
+        # map the given start and end measures (which may specify a linear
+        # event in either direction) to measures within the linestring, which
+        # always increase uniformly
+        linestringSegmentStart = min(start, end)
+        linestringSegmentEnd = max(start, end)
+
+        if linestringSegmentStart >= minMeasure:  # start point is on linestring
+            polyline.append(self.linestringPointXY(linestringSegmentStart))
 
         for i in range(self.linestring.numPoints()):
             measure = self.linestring.mAt(i)
-            if start < measure < end:
+            if linestringSegmentStart < measure < linestringSegmentEnd:
                 polyline.append(QgsPointXY(self.linestring.pointN(i)))
 
-        if end <= maxMeasure:  # end point is on linestring
-            polyline.append(self.linestringPointXY(end))
+        if linestringSegmentEnd <= maxMeasure:  # end point is on linestring
+            polyline.append(self.linestringPointXY(linestringSegmentEnd))
+
+        # if the given start and end measures specify a linear event in the
+        # opposite direction, reverse the direction of the segment to match
+        if start > end:
+            polyline = reversed(polyline)
 
         return [polyline, fromMeasure, toMeasure]
 
