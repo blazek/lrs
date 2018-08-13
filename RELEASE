@@ -1,6 +1,6 @@
 Release steps:
 
-* verify that designer was saved with first stab selected and calibration input tab selected
+* verify that designer was saved with first stab selected
 * make resources in lrs/: make (using correct PYTHONPATH variable for Python3 and Qt5)
 * verify that debug() output is disabled
 * set new version in lrs/metadata.txt
