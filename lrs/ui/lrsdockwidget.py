@@ -162,10 +162,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureOutputNameWM = LrsWidgetManager(self.measureOutputNameLineEdit, settingsName='measureOutputName',
                                                     defaultValue='LRS measure')
 
-        self.measureRouteFieldWM = LrsWidgetManager(self.measureRouteFieldLineEdit, settingsName='measureRouteField',
-                                                    defaultValue='route')
+        self.measureOutputRouteFieldWM = LrsWidgetManager(self.measureOutputRouteFieldLineEdit,
+                                                          settingsName='measureOutputRouteField',
+                                                          defaultValue='route')
         validator = QRegExpValidator(QRegExp('[A-Za-z_][A-Za-z0-9_]+'), None)
-        self.measureRouteFieldLineEdit.setValidator(validator)
+        self.measureOutputRouteFieldLineEdit.setValidator(validator)
 
         self.measureMeasureFieldWM = LrsWidgetManager(self.measureMeasureFieldLineEdit,
                                                       settingsName='measureMeasureField', defaultValue='measure')
@@ -176,7 +177,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureButtonBox.button(QDialogButtonBox.Help).clicked.connect(lambda: self.showHelp('measures'))
         self.measureLayerCombo.currentIndexChanged.connect(self.resetMeasureButtons)
         self.measureOutputNameLineEdit.textEdited.connect(self.resetMeasureButtons)
-        self.measureRouteFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
+        self.measureOutputRouteFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
         self.measureMeasureFieldLineEdit.textEdited.connect(self.resetMeasureButtons)
         self.resetMeasureOptions()
         self.resetMeasureButtons()
@@ -971,7 +972,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureLayerCM.reset()
         self.measureThresholdWM.reset()
         self.measureOutputNameWM.reset()
-        self.measureRouteFieldWM.reset()
+        self.measureOutputRouteFieldWM.reset()
         self.measureMeasureFieldWM.reset()
 
         self.resetMeasureButtons()
@@ -983,7 +984,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def resetMeasureButtons(self):
         # #debug('resetMeasureButtons')
         enabled = bool(self.lrsLayer) and self.measureLayerCombo.currentIndex() != -1 and bool(
-            self.measureOutputNameLineEdit.text()) and bool(self.measureRouteFieldLineEdit.text()) and bool(
+            self.measureOutputNameLineEdit.text()) and bool(self.measureOutputRouteFieldLineEdit.text()) and bool(
             self.measureMeasureFieldLineEdit.text())
 
         self.measureButtonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
@@ -993,14 +994,14 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureLayerCM.writeToProject()
         self.measureThresholdWM.writeToProject()
         self.measureOutputNameWM.writeToProject()
-        self.measureRouteFieldWM.writeToProject()
+        self.measureOutputRouteFieldWM.writeToProject()
         self.measureMeasureFieldWM.writeToProject()
 
     def readMeasureOptions(self):
         self.measureLayerCM.readFromProject()
         self.measureThresholdWM.readFromProject()
         self.measureOutputNameWM.readFromProject()
-        self.measureRouteFieldWM.readFromProject()
+        self.measureOutputRouteFieldWM.readFromProject()
         self.measureMeasureFieldWM.readFromProject()
 
     # set threshold units according to current crs
@@ -1020,11 +1021,11 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         threshold = self.measureThresholdSpin.value()
         outputName = self.measureOutputNameLineEdit.text()
         if not outputName: outputName = self.measureOutputNameWM.defaultValue()
-        routeFieldName = self.measureRouteFieldLineEdit.text()
+        outputRouteFieldName = self.measureOutputRouteFieldLineEdit.text()
         measureFieldName = self.measureMeasureFieldLineEdit.text()
 
         measures = LrsMeasures(self.iface, self.lrsLayer, self.measureProgressBar)
-        measures.calculate(layer, routeFieldName, measureFieldName, threshold, outputName)
+        measures.calculate(layer, outputRouteFieldName, measureFieldName, threshold, outputName)
 
     # ------------------- STATS -------------------
 
