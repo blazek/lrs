@@ -22,6 +22,8 @@
 import sys
 from abc import ABCMeta, abstractmethod
 
+from qgis.core import QgsGeometry
+
 from .error.lrserror import LrsError
 from .utils import LrsUnits, formatMeasure, doubleNear, debug
 
@@ -153,4 +155,11 @@ class LrsRouteBase(metaclass=ABCMeta):
         # debug( '%s' % measures )
         return multipolyline, error
 
+    # get measure for nearest point along any part
+    def pointMeasure(self, point):
+        # locate the part nearest to the point
+        pointGeometry = QgsGeometry.fromPointXY(point)
+        nearestPart = min(self.parts, key=lambda part: part.distance(pointGeometry))
 
+        # return the measure along this part
+        return nearestPart.pointMeasure(point)

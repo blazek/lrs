@@ -157,6 +157,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         # ----------------------- measureTab ---------------------------
         self.measureLayerCM = LrsLayerComboManager(self.measureLayerCombo, geometryType=QgsWkbTypes.PointGeometry,
                                                    settingsName='measureLayerId')
+        self.measureRouteFieldCM = LrsFieldComboManager(self.measureRouteFieldCombo, self.measureLayerCM,
+                                                        allowNone=True, settingsName='measureRouteField')
         self.measureThresholdWM = LrsWidgetManager(self.measureThresholdSpin, settingsName='measureThreshold',
                                                    defaultValue=100.0)
         self.measureOutputNameWM = LrsWidgetManager(self.measureOutputNameLineEdit, settingsName='measureOutputName',
@@ -970,6 +972,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def resetMeasureOptions(self):
         # #debug('resetMeasureOptions')
         self.measureLayerCM.reset()
+        self.measureRouteFieldCM.reset()
         self.measureThresholdWM.reset()
         self.measureOutputNameWM.reset()
         self.measureOutputRouteFieldWM.reset()
@@ -992,6 +995,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     # save settings in project
     def writeMeasureOptions(self):
         self.measureLayerCM.writeToProject()
+        self.measureRouteFieldCM.writeToProject()
         self.measureThresholdWM.writeToProject()
         self.measureOutputNameWM.writeToProject()
         self.measureOutputRouteFieldWM.writeToProject()
@@ -999,6 +1003,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
 
     def readMeasureOptions(self):
         self.measureLayerCM.readFromProject()
+        self.measureRouteFieldCM.readFromProject()
         self.measureThresholdWM.readFromProject()
         self.measureOutputNameWM.readFromProject()
         self.measureOutputRouteFieldWM.readFromProject()
@@ -1018,6 +1023,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureProgressBar.show()
 
         layer = self.measureLayerCM.getLayer()
+        routeFieldName = self.measureRouteFieldCM.getFieldName()
         threshold = self.measureThresholdSpin.value()
         outputName = self.measureOutputNameLineEdit.text()
         if not outputName: outputName = self.measureOutputNameWM.defaultValue()
@@ -1025,7 +1031,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         measureFieldName = self.measureMeasureFieldLineEdit.text()
 
         measures = LrsMeasures(self.iface, self.lrsLayer, self.measureProgressBar)
-        measures.calculate(layer, outputRouteFieldName, measureFieldName, threshold, outputName)
+        measures.calculate(layer, routeFieldName, outputRouteFieldName, measureFieldName, threshold, outputName)
 
     # ------------------- STATS -------------------
 

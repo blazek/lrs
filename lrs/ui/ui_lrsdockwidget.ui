@@ -413,35 +413,35 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="measureOutputNameLabel">
             <property name="text">
              <string>Output layer name</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="0" colspan="2">
+          <item row="12" column="0" colspan="2">
            <widget class="Line" name="line_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
-          <item row="13" column="0">
+          <item row="14" column="0">
            <widget class="QLabel" name="measureOutputRouteFieldLabel">
             <property name="text">
              <string>Output route field</string>
             </property>
            </widget>
           </item>
-          <item row="14" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="measureMeasureFieldLabel">
             <property name="text">
              <string>Output measure field</string>
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
+          <item row="10" column="0">
            <widget class="QLabel" name="measureThresholdLabel">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -458,7 +458,7 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="0" colspan="2">
+          <item row="9" column="0" colspan="2">
            <widget class="Line" name="line_5">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -479,28 +479,28 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="1">
+          <item row="15" column="1">
            <widget class="QLineEdit" name="measureMeasureFieldLineEdit">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="13" column="1">
+          <item row="14" column="1">
            <widget class="QLineEdit" name="measureOutputRouteFieldLineEdit">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
+          <item row="13" column="1">
            <widget class="QLineEdit" name="measureOutputNameLineEdit">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="9" column="1">
+          <item row="10" column="1">
            <widget class="QDoubleSpinBox" name="measureThresholdSpin">
             <property name="toolTip">
              <string>Maximum distance of point from line.</string>
@@ -524,6 +524,16 @@
           </item>
           <item row="1" column="1">
            <widget class="QComboBox" name="measureLrsLayerCombo"/>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="measureRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="measureRouteFieldCombo"/>
           </item>
          </layout>
         </item>
@@ -1167,6 +1177,7 @@
   <tabstop>measureLrsLayerCombo</tabstop>
   <tabstop>measureLrsRouteFieldCombo</tabstop>
   <tabstop>measureLayerCombo</tabstop>
+  <tabstop>measureRouteFieldCombo</tabstop>
   <tabstop>measureThresholdSpin</tabstop>
   <tabstop>measureOutputNameLineEdit</tabstop>
   <tabstop>measureOutputRouteFieldLineEdit</tabstop>

@@ -32,7 +32,7 @@ class LrsMeasures(QObject):
         self.lrs = lrs  # Lrs object
         self.progressBar = progressBar
 
-    def calculate(self, layer, outputRouteFieldName, measureFieldName, threshold, outputName):
+    def calculate(self, layer, routeFieldName, outputRouteFieldName, measureFieldName, threshold, outputName):
         # get the  lrs layer's route field, to obtain its type
         lrsFields = self.lrs.layer.fields()
         lrsRouteField = lrsFields.at(lrsFields.indexFromName(self.lrs.routeFieldName))
@@ -73,6 +73,7 @@ class LrsMeasures(QObject):
         if layer.crs() != self.lrs.crs:
             transform = QgsCoordinateTransform(layer.crs(), self.lrs.crs, QgsProject.instance())
         for feature in layer.getFeatures():
+            featureRouteId = None
             points = []
 
             geo = feature.geometry()
@@ -81,6 +82,14 @@ class LrsMeasures(QObject):
                     points = [geo.asPoint()]
                 else:
                     points = geo.asMultiPoint()
+
+            # fetch the route, if any, specified by the feature
+            if routeFieldName is not None:
+                featureRouteId = feature[routeFieldName]
+                if (type(featureRouteId) is QVariant) and featureRouteId.isNull():
+                    featureRouteId = None
+                else:
+                    featureRoute = self.lrs.getRouteIfExists(featureRouteId)
 
             for point in points:
                 outputFeature = QgsFeature(fields)  # fields must exist during feature life!
@@ -92,7 +101,14 @@ class LrsMeasures(QObject):
 
                 if transform:
                     point = transform.transform(point)
-                routeId, measure = self.lrs.pointMeasure(point, threshold)
+
+                # measure along the feature's route, if it specifies one; otherwise, find the nearest route and
+                # measure along it
+                if featureRouteId is not None:
+                    routeId = featureRouteId
+                    measure = featureRoute.pointMeasure(point) if featureRoute is not None else None
+                else:
+                    routeId, measure = self.lrs.pointMeasure(point, threshold)
                 # debug ( "routeId = %s merasure = %s" % (routeId, measure) )
 
                 if routeId is not None:

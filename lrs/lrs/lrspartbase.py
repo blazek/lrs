@@ -75,6 +75,10 @@ class LrsPartBase(metaclass=ABCMeta):
     def eventSegments(self, start, end):
         pass
 
+    # get the minimum distance between this part and another geometry
+    def distance(self, geometry):
+        return self.polylineGeo.distance(geometry)
+
     # get measure for nearest point on polyline
     # returns None if there is no record for the nearest point
     @abstractmethod
