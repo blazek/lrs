@@ -157,9 +157,16 @@ class LrsRouteBase(metaclass=ABCMeta):
 
     # get measure for nearest point along any part
     def pointMeasure(self, point):
-        # locate the part nearest to the point
-        pointGeometry = QgsGeometry.fromPointXY(point)
-        nearestPart = min(self.parts, key=lambda part: part.distance(pointGeometry))
+        # if this route has no parts, no measure is available
+        if not self.parts:
+            return None
+
+        # otherwise, locate the part nearest to the point
+        if len(self.parts) == 1:
+            nearestPart = self.parts[0]
+        else:
+            pointGeometry = QgsGeometry.fromPointXY(point)
+            nearestPart = min(self.parts, key=lambda part: part.distance(pointGeometry))
 
         # return the measure along this part
         return nearestPart.pointMeasure(point)
