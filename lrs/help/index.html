@@ -188,6 +188,7 @@
                         <li><strong>Layer with measures:</strong> Input vector layer with measures.</li>
                         <li><strong>Route field:</strong> Field with route id.</li>
                         <li><strong>Layer:</strong> Existing layer of points for which measures have to be found.</li>
+                        <li><strong>Route field (optional):</strong> Optional point layer route field.</li>
                         <li><strong>Max point distance:</strong> Maximum distance of point from nearest line.</li>
                         <li><strong>Output layer name:</strong> Name of output layer used in legend.</li>
                         <li><strong>Output route field:</strong> Name of output field in which route id will be stored.
@@ -196,10 +197,17 @@
                         </li>
                     </ul>
                     <p>The output layer contains all attributes from input layer plus route id and measure field. To
-                        acqure measure, the points are projected to neares point on nearest route within the threshold.
+                        acquire measure, the points are projected to nearest point on nearest route within the threshold.
                         If nearest route within threshold was found but there is no LRS for that part of the route, the
                         measure field is left blank. If no route was found within the threshold both route id and
                         measure fields are left blank.</p>
+                    <p>If the user does select a point layer route id field, then for each feature in the input layer
+                        <ul class="simple">
+                            <li>If point route id is valid existing route, the point is assigned to the nearest line of that route id to calculate measure.</li>
+                            <li>If the value of the field is NULL, the default behaviour is used: A nearby route is selected automatically.</li>
+                            <li>If the value of the field specifies an invalid route, no measurement is generated (the default behaviour is suppressed).</li>
+                        </ul>
+                    </p>
                     <p>The output is created as memory layer which can be later stored in a persistent data source using
                         standard QGIS options like <em>“Save as”</em> or using drag and drop to an existing PostGIS schema in the browser.</p>
                 </div>

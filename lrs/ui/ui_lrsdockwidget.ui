@@ -528,7 +528,7 @@
           <item row="8" column="0">
            <widget class="QLabel" name="measureRouteFieldLabel">
             <property name="text">
-             <string>Route field</string>
+             <string>Route field (optional)</string>
             </property>
            </widget>
           </item>
