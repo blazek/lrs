@@ -129,11 +129,13 @@ class LrsCalib(LrsBase):
 
         self.lineTransform = None
         if self.crs and self.crs != lineLayer.crs():
-            self.lineTransform = QgsCoordinateTransform(lineLayer.crs(), self.crs)
+            self.lineTransform = QgsCoordinateTransform(lineLayer.crs(), self.crs,
+                                                        QgsProject.instance())
 
         self.pointTransform = None
         if self.crs and self.crs != pointLayer.crs():
-            self.pointTransform = QgsCoordinateTransform(pointLayer.crs(), self.crs)
+            self.pointTransform = QgsCoordinateTransform(pointLayer.crs(), self.crs,
+                                                         QgsProject.instance())
 
         self.wasEdited = False  # true if layers were edited since calibration
 
