@@ -39,7 +39,7 @@ class LrsLayer(LrsBase):
         self.routeFieldName = routeField
 
     # load from layer
-    def load(self, progressFunction):
+    def load(self, progressFunction=None):
         #debug("load %s %s" % (self.layer.name(), self.routeFieldName))
         self.reset()
         if not self.routeFieldName:
@@ -64,7 +64,8 @@ class LrsLayer(LrsBase):
 
             count += 1
             percent = 100 * count / total;
-            progressFunction(percent)
+            if progressFunction:
+                progressFunction(percent)
 
         for route in self.routes.values():
             route.checkPartOverlaps()

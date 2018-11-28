@@ -25,9 +25,9 @@ from .utils import *
 
 # Generates events
 class LrsEvents(QObject):
-    def __init__(self, iface, lrs, progressBar):
+    def __init__(self, lrs, progressBar=None):
         # debug( "LrsEvents.__init__")
-        self.iface = iface
+        # self.iface = iface
         self.lrs = lrs  # Lrs object
         self.progressBar = progressBar
 
@@ -117,11 +117,13 @@ class LrsEvents(QObject):
             outputFeatures.append(outputFeature)
 
             count += 1
-            percent = 100 * count / total;
-            self.progressBar.setValue(percent)
+            percent = 100 * count / total
+            if self.progressBar:
+                self.progressBar.setValue(percent)
 
         outputLayer.dataProvider().addFeatures(outputFeatures)
 
         QgsProject.instance().addMapLayers([outputLayer, ])
 
-        self.progressBar.hide()
+        if self.progressBar:
+            self.progressBar.hide()

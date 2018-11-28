@@ -964,7 +964,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
 
-        events = LrsEvents(self.iface, self.lrsLayer, self.eventsProgressBar)
+        events = LrsEvents(self.lrsLayer, self.eventsProgressBar)
         events.create(layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
 
     # ------------------- MEASURE -------------------
