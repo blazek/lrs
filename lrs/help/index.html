@@ -429,6 +429,55 @@
                         </li>
                     </ul>
                 </div>
+                <div class="section" id="scripts">
+                    <h2>Scripts</h2>
+                    This is work in progress, not all components are adapted yet to be used in scripts. Currently only LrsEvents can be used without hacks. The plugin directory must be in PYTHONPATH.
+
+                    <p>
+                        Events example:
+                        <pre>
+                            qgis_prefix = '/path/to/qgis/installation'
+                            # add path to plugins directory
+                            sys.path.insert(0, prefix + '/share/qgis/python/plugins/')
+                            QgsApplication.setPrefixPath(prefix, True)  # does not work?
+                            os.environ['QGIS_PREFIX_PATH'] = prefix  # workaround
+
+                            qgs = QgsApplication([], False)
+                            qgs.initQgis()
+
+                            # TODO: import public classes to lrs/__init__.py and add __all__
+                            from lrs.lrs.utils import ALL_FEATURES
+                            from lrs.lrs.lrslayer import LrsLayer
+                            from lrs.lrs.lrsevents import LrsEvents
+
+                            measures = QgsVectorLayer('measures.shp', 'measures', 'ogr')
+
+                            lrs = QgsVectorLayer('lrs.shp', 'lrs', 'ogr')
+                            lrs_layer = LrsLayer(lrs)
+                            lrs_layer.setRouteFieldName('route')
+                            lrs_layer.load()
+
+                            lrs_events = LrsEvents(lrs_layer)
+                            lrs_events.create(measures, featuresSelect=ALL_FEATURES, routeFieldName='route',
+                                                         startFieldName='from', endFieldName='to',
+                                                         errorFieldName='err', outputName='events')
+
+                            # Events were created as memory layer:
+                            events = QgsProject.instance().mapLayersByName('events')[0]
+
+                            crs = QgsCoordinateReferenceSystem.fromEpsgId(3857)
+                            writer = QgsVectorFileWriter('events.shp', 'utf8', events.fields(), QgsWkbTypes.LineString,
+                                                                           crs, 'ESRI Shapefile')
+
+                            for feature in events.getFeatures():
+                                writer.addFeature(QgsFeature(feature))
+
+                            del writer
+                            qgs.exitQgis()
+                        </pre>
+                    </p>
+
+                </div>
                 <!--div class="section" id="known-issues">
                     <h2>Known issues</h2>
                     <ul class="simple">
