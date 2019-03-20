@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from ..utils import debug
 from qgis.core import QgsCoordinateTransform, QgsProject
 
 
@@ -48,12 +49,16 @@ class LrsLayerManager(object):
         if crs != self.layer.crs():
             transform = QgsCoordinateTransform(crs, self.layer.crs(), QgsProject.instance())
             for feature in features:
-                feature.geometry().transform(transform)
+                # feature.geometry().transform(transform)  # does not work
+                geo = feature.geometry()
+                geo.transform(transform)
+                feature.setGeometry(geo)
         return features
 
         # add features with getChecksum() method
 
     def addFeatures(self, features, crs):
+        # debug('addFeatures layer.crs = {} features crs = {}'.format(self.layer.crs().authid(), crs.authid()))
         features = self.transformFeatures(features, crs)
 
         status, addedFeatures = self.layer.dataProvider().addFeatures(features)
