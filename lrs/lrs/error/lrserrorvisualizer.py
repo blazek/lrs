@@ -59,7 +59,7 @@ class LrsErrorVisualizer(object):
         mapSettings = self.mapCanvas.mapSettings()
         if isProjectCrsEnabled() and getProjectCrs() != crs:
             geo = QgsGeometry(error.geo)
-            transform = QgsCoordinateTransform(crs, QgsProject().instance().crs())
+            transform = QgsCoordinateTransform(crs, QgsProject().instance().crs(), QgsProject.instance())
             geo.transform(transform)
 
         if geo.type() == QgsWkbTypes.PointGeometry:

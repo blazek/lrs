@@ -19,7 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import QgsCoordinateTransform
+from qgis.core import QgsCoordinateTransform, QgsProject
+
 
 # Keeps track of features by checksum.
 class LrsLayerManager(object):
@@ -45,7 +46,7 @@ class LrsLayerManager(object):
     # modifies original feature geometry
     def transformFeatures(self, features, crs):
         if crs != self.layer.crs():
-            transform = QgsCoordinateTransform(crs, self.layer.crs())
+            transform = QgsCoordinateTransform(crs, self.layer.crs(), QgsProject.instance())
             for feature in features:
                 feature.geometry().transform(transform)
         return features
