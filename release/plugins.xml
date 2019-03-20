@@ -14,8 +14,8 @@
      <homepage>https://github.com/blazek/lrs</homepage>
      <qgis_minimum_version>2.99</qgis_minimum_version>
      <qgis_maximum_version>3.98</qgis_maximum_version>
-     <file_name>lrs.1.1.1.zip </file_name>
+     <file_name>lrs.1.1.2.zip </file_name>
      <author_name>Radim Blazek</author_name>
-     <download_url>http://blazek.github.io/lrs/release/lrs.1.1.1.zip</download_url>
+     <download_url>http://blazek.github.io/lrs/release/lrs.1.1.2.zip</download_url>
    </pyqgis_plugin>
 </plugins> 
