@@ -1,0 +1,74 @@
+# This file contains metadata for your plugin. Beginning
+# with version 1.8 this is the preferred way to supply information about a
+# plugin. The current method of embedding metadata in __init__.py will
+# be supported until version 2.0
+
+# This file should be included when you package your plugin.
+
+# Mandatory items:
+
+
+[general]
+name=LRS
+qgisMinimumVersion=2.99
+qgisMaximumVersion=3.99
+description=Linear reference system builder and editor 
+about=The plugin supports calibration, creation of punctual and linear events and calculation of measures for points
+version=1.1.3
+author=Radim Blazek, Simon South
+email=radim.blazek@gmail.com
+
+# end of mandatory metadata
+
+# Optional items:
+
+# Changelog entries:
+changelog=
+  1.1.3
+    - Fixed error layers transformation
+  1.1.2
+    - Fixed error layers transformation
+  1.1.1
+    - Fixed latest QGIS 3 API changes
+  1.1.0
+    - Optional point route id in measures, implemented by Simon South
+  1.0.3
+    - Fixes issues 26, 28, 30, 32, 34, 36, 38, 40
+  1.0.2
+    - Fixed latest QGIS 3 API changes
+  1.0.1
+    - Fixed latest QGIS 3 API changes
+  1.0.0
+    - Upgrade to QGIS 3
+    - Support for existing layers with measures
+    - Refactored UI
+  0.3.7
+    - Fixed issues #9 and #10
+  0.3.6
+    - Fixed issue #6 (PostGIS data types not supported by memory provider)
+  0.3.5
+    - Fixed error when input line has duplicate coordinates
+  0.3.4
+    - Fixed issue #5 (export to PostGIS)
+  0.3.3
+    - Fixed export to PostGIS (wrong line coordinates order)
+    - Added event tolerance (0.01m)
+  0.3.2
+    - Fixed issue #2 (error on degenerated lines) 
+    - Fixed issue #3 (generate segments starting on 0)
+  0.3.1
+    - Fixed issue #1 (string type route id selection)
+
+# tags are comma separated with spaces allowed
+tags=vector,network,lrs,lineare reference system,linear referencing,dynamic segmentation
+
+homepage=http://blazek.github.io/lrs/
+tracker=https://github.com/blazek/lrs/issues/
+repository=https://github.com/blazek/lrs/
+icon=icon.svg
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version
+deprecated=False
+
