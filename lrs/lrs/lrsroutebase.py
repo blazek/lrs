@@ -29,7 +29,7 @@ from .utils import LrsUnits, formatMeasure, doubleNear, debug
 
 
 class LrsRouteBase(metaclass=ABCMeta):
-    def __init__(self,routeId,**kwargs):
+    def __init__(self, routeId, **kwargs):
         self.routeId = routeId  # if None, keeps all lines and points without routeId
         self.measureUnit = LrsUnits.UNKNOWN
         # parallelMode, http://en.wikipedia.org/wiki/Multiple_edges:
@@ -79,9 +79,9 @@ class LrsRouteBase(metaclass=ABCMeta):
             part.removeRecord(record)
 
     # returns ( QgsPointXY, error )
-    def eventPointXY(self, start, tolerance=0):
+    def eventPointXY(self, start, tolerance=0, startOffset=0):
         for part in self.parts:
-            point = part.eventPointXY(start)
+            point = part.eventPointXY(start, startOffset)
             if point:
                 return point, None
 
@@ -93,12 +93,12 @@ class LrsRouteBase(metaclass=ABCMeta):
                 for record in part.records:
                     m = abs(record.milestoneFrom - start)
                     if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPointXY(record.milestoneFrom)
+                        nearestPoint = part.eventPointXY(record.milestoneFrom, startOffset)
                         nearestMeasure = m
 
                     m = abs(record.milestoneTo - start)
                     if m <= tolerance and m < nearestMeasure:
-                        nearestPoint = part.eventPointXY(record.milestoneTo)
+                        nearestPoint = part.eventPointXY(record.milestoneTo, startOffset)
                         nearestMeasure = m
 
             if nearestPoint: return nearestPoint, None
@@ -106,13 +106,13 @@ class LrsRouteBase(metaclass=ABCMeta):
         return None, 'measure not available'
 
     # returns ( QgsMultiPolyline, error )
-    def eventMultiPolyLine(self, start, end, tolerance=0):
+    def eventMultiPolyLine(self, start, end, tolerance=0, oStart=0.0, oEnd=0.0):
         #debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         multipolyline = []
         measures = []
         for part in self.parts:
             #debug("eventMultiPolyLine part = %s" % part)
-            segments = part.eventSegments(start, end)
+            segments = part.eventSegments(start, end, oStart, oEnd)
             #debug("eventMultiPolyLine segments = %s" % segments)
             for polyline, measure_from, measure_to in segments:
                 multipolyline.append(polyline)

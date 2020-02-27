@@ -31,7 +31,7 @@ class LrsEvents(QObject):
         self.lrs = lrs  # Lrs object
         self.progressBar = progressBar
 
-    def create(self, layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName):
+    def create(self, layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName, startOffsetFieldName=None, endOffsetFieldName=None):
         # create new layer
         geometryType = "MultiLineString" if endFieldName else "Point"
         uri = geometryType
@@ -92,6 +92,9 @@ class LrsEvents(QObject):
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None
             # debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
+            # Offset
+            startOffset = feature[startOffsetFieldName] if startOffsetFieldName else 0.0
+            endOffset = feature[endOffsetFieldName] if endOffsetFieldName else 0.0
 
             outputFeature = QgsFeature(fields)  # fields must exist during feature life!
             for field in layer.fields():
@@ -100,11 +103,11 @@ class LrsEvents(QObject):
 
             geo = None
             if endFieldName:
-                line, error = self.lrs.eventMultiPolyLine(routeId, start, end, eventTolerance)
+                line, error = self.lrs.eventMultiPolyLine(routeId, start, end, eventTolerance, startOffset, endOffset)
                 if line:
                     geo = QgsGeometry.fromMultiPolylineXY(line)
             else:
-                point, error = self.lrs.eventPointXY(routeId, start, eventTolerance)
+                point, error = self.lrs.eventPointXY(routeId, start, eventTolerance, startOffset)
                 if point:
                     geo = QgsGeometry(QgsPoint(point))
 

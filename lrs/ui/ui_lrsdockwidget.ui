@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="locateTab">
        <attribute name="title">
@@ -243,14 +243,122 @@
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <layout class="QGridLayout" name="eventsGridLayout">
-          <item row="13" column="0">
+          <item row="10" column="0">
+           <widget class="QLabel" name="eventsMeasureEndFieldLabel">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
+            <property name="text">
+             <string>End measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QComboBox" name="eventsLrsRouteFieldCombo"/>
+          </item>
+          <item row="15" column="1">
+           <widget class="QLineEdit" name="eventsErrorFieldLineEdit"/>
+          </item>
+          <item row="14" column="1">
+           <widget class="QLineEdit" name="eventsOutputNameLineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0" colspan="2">
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QComboBox" name="eventsMeasureEndFieldCombo">
+            <property name="toolTip">
+             <string>End of linear event. Leave blank for punctual events.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QComboBox" name="eventsFeaturesSelectCombo"/>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="eventsRouteFieldLabel">
+            <property name="text">
+             <string>Events route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="eventsLayerCombo"/>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="eventsFeaturesSelectLabel">
+            <property name="text">
+             <string>Features</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="eventsLrsRouteFieldLabel">
+            <property name="text">
+             <string>Route field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="eventsMeasureStartFieldLabel">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
+            <property name="text">
+             <string>Start measure field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="Line" name="line_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="eventsLrsLayerLabel">
+            <property name="text">
+             <string>Layer with measures</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="eventsMeasureStartFieldCombo">
+            <property name="toolTip">
+             <string>Measure of punctual or start of linear event.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="eventsOffsetEndFieldLabel">
+            <property name="text">
+             <string>End offset field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QComboBox" name="eventsOffsetEndFieldCombo"/>
+          </item>
+          <item row="15" column="0">
            <widget class="QLabel" name="eventsErrorFieldLabel">
             <property name="text">
              <string>Output error field</string>
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="7" column="1">
+           <widget class="QComboBox" name="eventsRouteFieldCombo"/>
+          </item>
+          <item row="14" column="0">
            <widget class="QLabel" name="eventsOutputNameLabel">
             <property name="text">
              <string>Output layer name</string>
@@ -267,103 +375,15 @@
           <item row="1" column="1">
            <widget class="QComboBox" name="eventsLrsLayerCombo"/>
           </item>
-          <item row="7" column="1">
-           <widget class="QComboBox" name="eventsRouteFieldCombo"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QComboBox" name="eventsLrsRouteFieldCombo"/>
-          </item>
           <item row="9" column="0">
-           <widget class="QLabel" name="eventsMeasureEndFieldLabel">
-            <property name="toolTip">
-             <string>End of linear event. Leave blank for punctual events.</string>
-            </property>
+           <widget class="QLabel" name="eventsOffsetStartFieldLabel">
             <property name="text">
-             <string>End measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="1">
-           <widget class="QLineEdit" name="eventsErrorFieldLineEdit"/>
-          </item>
-          <item row="12" column="1">
-           <widget class="QLineEdit" name="eventsOutputNameLineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0" colspan="2">
-           <widget class="Line" name="line_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <string>Start offset field</string>
             </property>
            </widget>
           </item>
           <item row="9" column="1">
-           <widget class="QComboBox" name="eventsMeasureEndFieldCombo">
-            <property name="toolTip">
-             <string>End of linear event. Leave blank for punctual events.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="eventsMeasureStartFieldLabel">
-            <property name="toolTip">
-             <string>Measure of punctual or start of linear event.</string>
-            </property>
-            <property name="text">
-             <string>Start measure field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="eventsLrsLayerLabel">
-            <property name="text">
-             <string>Layer with measures</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="eventsFeaturesSelectLabel">
-            <property name="text">
-             <string>Features</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="eventsLrsRouteFieldLabel">
-            <property name="text">
-             <string>Route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QComboBox" name="eventsLayerCombo"/>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="eventsRouteFieldLabel">
-            <property name="text">
-             <string>Events route field</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0" colspan="2">
-           <widget class="Line" name="line_8">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QComboBox" name="eventsMeasureStartFieldCombo">
-            <property name="toolTip">
-             <string>Measure of punctual or start of linear event.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QComboBox" name="eventsFeaturesSelectCombo"/>
+           <widget class="QComboBox" name="eventsOffsetStartFieldCombo"/>
           </item>
          </layout>
         </item>

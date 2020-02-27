@@ -67,12 +67,12 @@ class LrsPartBase(metaclass=ABCMeta):
 
     # returns QgsPointXY or None
     @abstractmethod
-    def eventPointXY(self, start):
+    def eventPointXY(self, start, offset=0.0):
         pass
 
     # returns [ [ QgsPolyline, measure_from, measure_to ], ... ]
     @abstractmethod
-    def eventSegments(self, start, end):
+    def eventSegments(self, start, end, oStart=0.0, oEnd=0.0):
         pass
 
     # get the minimum distance between this part and another geometry
