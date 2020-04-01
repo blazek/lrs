@@ -61,7 +61,7 @@ class LrsLayerPart(LrsPartBase):
         #debug("linestringPoint measure = %s" % measure)
         if self.linestring.numPoints() < 2:
             return None
-        #offset = 0.0
+
         for i in range(self.linestring.numPoints() - 1):
             measure1 = self.linestring.mAt(i)
             measure2 = self.linestring.mAt(i + 1)
@@ -75,9 +75,8 @@ class LrsLayerPart(LrsPartBase):
                     pt = offsetPt(point1, point2, offset)
                 else:
                     pt = QgsPointXY(self.linestring.pointN(i))
-
-                #return QgsPointXY(self.linestring.pointN(i))
                 return pt
+
             elif measure2 == measure:
                 # Offset
                 point1 = self.linestring.pointN(i)
@@ -86,9 +85,8 @@ class LrsLayerPart(LrsPartBase):
                     pt = offsetPt(point1, point2, offset)
                 else:
                     pt = QgsPointXY(self.linestring.pointN(i + 1))
-
-                #return QgsPointXY(self.linestring.pointN(i + 1))
                 return pt
+
             elif measure1 < measure < measure2:
                 point1 = self.linestring.pointN(i)
                 point2 = self.linestring.pointN(i + 1)
@@ -96,6 +94,7 @@ class LrsLayerPart(LrsPartBase):
                 distance = (measure - measure1) * length / (measure2 - measure1)
                 #return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance)
                 return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance, offset)
+
         return None
 
     # overridden
@@ -138,7 +137,9 @@ class LrsLayerPart(LrsPartBase):
             polyline.append(self.linestringPointXY(linestringSegmentStart, oStart))
 
         # Incremental offset
-        iOffset = (oEnd - oStart) / (toMeasure - fromMeasure)
+        oStart = oStart or 0.0
+        oEnd = oEnd or 0.0
+        iOffset = (oEnd - oStart) / ((toMeasure - fromMeasure) or 1)
 
         for i in range(self.linestring.numPoints()):
             measure = self.linestring.mAt(i)
