@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>Extension LRS pour QGIS</title>
+
+    <!--link rel="stylesheet" href="static/alabaster.css" type="text/css"/>
+    <link rel="stylesheet" href="static/pygments.css" type="text/css"/-->
+
+
+    <link rel="shortcut icon" href="static/icon.ico"/>
+    <!--link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="stylesheet" href="static/custom.css" type="text/css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9"/-->
+</head>
+<body>
+
+
+<div class="document">
+    <div class="documentwrapper">
+        <div class="body" role="main">
+            <div class="section" id="lrs-plugin-for-qgis">
+                <h1>LRS Plugin for QGIS</h1>
+                <div class="toctree-wrapper compound">
+                </div>
+                <p>"Le référencement linéaire (aussi appelé système linéaire de référence ou système de référencement linéaire ou LRS) est une méthode de référencement spatial, dans laquelle la localisation des entités est décrite sous forme de mesures le long d'un élément linéaire à partir d'un point d'origine, par exemple une borne le long d'une route." (<a class="reference external" href="http://en.wikipedia.org/wiki/Linear_Reference_System">Linear
+                        referencing</a>, Wikipedia, 2020).</p>
+                <div class="section" id="introduction">
+                    <h2>Introduction</h2>
+                    <!-- table used for milestone.jpeg layout, QTextBrowser does not support img align -->
+                    <table border="0">
+                        <tr>
+                            <td>
+                            <p>Cette extension a été développée par <a class="reference external" href="http://www.mpasolutions.it/">MPA
+                                Solutions</a> en collaboration avec <a class="reference external"
+                                                                       href="http://www.provincia.tn.it/">Provincia Autonoma di
+                                Trento</a> - Dipartimento infrastrutture e mobilità - Servizio Gestione Strade - Ufficio
+                                Controllo e Tecnologie Stradali.</p>
+                            <p>
+                            <p>La traduction de l'interface et de l'aide a été réalisée par <a class="reference external"
+                                                                       href="http://www.sigeal.com/">SIGéal</a>.</p>
+                            <p>
+                            <img alt="images/logo_mpa.png" src="images/logo_mpa.png"/>
+                            <img alt="images/logo_pat.png" src="images/logo_pat.png"/>
+                            <img alt="images/logo_gsc.png" src="images/logo_gsc.png"/>
+                            </p>
+                            <div class="section" id="motivation">
+                                <h3>Motivation</h3>
+                                <p>La partie la plus difficile du LRS est la cohérence et la qualité des données. Cela est dû
+                                    au fait que les données linéaires et les données ponctuelles sont maintenues indépendament,
+                                    parfois même par des services différents.
+                                    L'identification et la correction des erreurs dans le LRS est donc fastidieuse et chronophage
+                                    sans outils spécialisés. La principale valeur de cette extension réside dans ses fonctionnalités
+                                    de détection, de repérage et de correction des erreurs.</p>
+                            </div>
+                            </td>
+                            <td>
+                                <img alt="images/milestone.jpeg" class="align-right" src="images/milestone.jpeg"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="section" id="features">
+                        <h3>Fonctionnalités</h3>
+                        <ul class="simple">
+                            <li>Tâches standard de LRS : calibration (création du LRS), création d'évènements ponctuels
+                            et linéaires, et calcul de mesures pour des points.
+                            </li>
+                            <li>Compatibilité avec tous les formats reconnus par QGIS.</li>
+                            <li>Les lignes, les multi-lignes, les points et les multi-points sont supportés. Les lignes
+                            ne sont pas obligatoirement orientées.
+                            </li>
+                            <li>Création et mise à jour <strong>dynamique et immédiate</strong> de la liste et de la couche des erreurs,
+                            ainsi que de la couche de qualité, lorsque la couche de référence est modifiée.
+                            </li>
+                            <li>Stockage du LRS en mémoire.</li>
+                            <li>Interpolation par défaut entre les points, extrapolation optionnelle.</li>
+                        </ul>
+                    </div>
+                    <div class="section" id="terminology">
+                        <h3>Terminologie</h3>
+                        <ul class="simple">
+                            <li><strong>la route</strong> est une entité linéaire représentée par une ou plusieurs lignes
+                            ayant le même identifiant, ex. une route avec le même numéro ou une rivière avec le même nom.
+                            </li>
+                            <li><strong>l'id d'une route</strong> est son identifiant unique</li>
+                            <li><strong>la mesure</strong> est la mesure réelle sur le terrain le long d'une entité linéaire,
+                            ex. les kilomètres mesurés le long d'une route depuis son origine qui peut être représentée
+                            dans le monde réel par une borne.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="section" id="common-input">
+                    <h2>Paramètres communs en entrée</h2>
+                    <p>Les trois onglets <em>Localisation</em>, <em>Évènements</em> et <em>Mesures</em>, qui s'appuient sur
+                    une couche vectorielle existante avec des mesures, ont deux paramètres communs qui sont présents sur tous les onglets</p>
+                    <p>Paramètres communs :</p>
+                    <ul class="simple">
+                        <li><strong>Couche avec mesures:</strong> Couche vectorielle en entrée contenant des mesures.</li>
+                        <li><strong>Champ nom de route :</strong> Colonne contenant l'identifiant de la route.</li>
+                    </ul>
+                    Quand le champ Route est sélectionné, l'extension commence à charger les données vectorielles de façon
+                    à ce qu'elles soient rapidement accessibles. Le processus de chargement des données vectorielles étant
+                    susceptible de prendre du temps, un indicateur de progression précise son état d'avancement.
+                </div>
+                <div class="section" id="locate">
+                    <h2>Localisation</h2>
+                    <p>Une position simple peut être localisée de façon interactive depuis l'onglet <em>Localisation</em>.</p>
+                    <p>
+                    <img alt="images_fr/locate.png" class="align-center" src="images_fr/locate.png"/>
+                    </p>
+                    <p>Paramètres de l'onglet Localiser :</p>
+                    <ul class="simple">
+                        <li><strong>Couche avec mesures :</strong> Couche vectorielle avec mesure en entrée.</li>
+                        <li><strong>Champ nom de route :</strong> Champ contenant les identifiants des routes.</li>
+                        <li><strong>Route :</strong> Identifiant de la route.</li>
+                        <li><strong>Plages de mesures disponibles :</strong> Liste des plages de mesure disponibles (séparées par des virgules).
+                        </li>
+                        <li><strong>Mesure :</strong> Mesure de l'évènement.</li>
+                        <li><strong>Coordonnées :</strong> Coordonnées de l'évènement dans le système de coordonnées (SCR) de la carte, ou message d'erreur si l'évènement ne peut pas être localisé.
+                        </li>
+                        <li><strong>Surbrillance :</strong> Mise en surbrillance de l'évènement sur la carte.</li>
+                        <li><strong>Marge de zoom :</strong> Marge (rayon minimal) en unités de carte utilisée pour le zoom autour de l'évènement.
+                        </li>
+                    </ul>
+                    <p>Il est possible de <strong>Centrer</strong> la carte sur l'évènement courant ou de <strong>Zoomer</strong>
+                        sur l'évènement en utilisant la marge spécifiée.</p>
+                </div>
+                <div class="section" id="events">
+                    <h2>Créer des Évènements</h2>
+                    <p>Des évènements ponctuels ou linéaires peuvent être créés depuis l'onglet <em>Évènements</em>.</p>
+                    <p>
+                    <img alt="images_fr/events.png" class="align-center" src="images_fr/events.png"/>
+                    </p>
+                    <p>Paramètres de l'onglet Évènements :</p>
+                    <ul class="simple">
+                        <li><strong>Couche avec mesures :</strong> Couche vectorielles avec mesures en entrée.</li>
+                        <li><strong>Champ nom de route :</strong> Champ contenant les identifiants des routes.</li>
+                        <li><strong>Couche d'évènements :</strong> Couche contenant les informations sur les évènements. Ex. identifiants de routes et mesures. Cette couche est en général une table sans géométrie.
+                        </li>
+                        <li><strong>Champ route des évènements :</strong> Champ contenant les identifiants des routes des évènements.</li>
+                        <li><strong>Champ mesure de début :</strong> Champ contenant la mesure d'un évènement ponctuel ou la mesure de début d'un évènement linéaire.
+                        </li>
+                        <li><strong>Champ décalage de début :</strong> Champ contenant le décalage d'un évènement ponctuel ou le décalage de début d'un évènement linéaire.
+                        </li>
+                        <li><strong>Champ mesure de fin :</strong> Champ contenant la mesure de fin d'un évènement linéaire. Doit être laissé vide pour les évènements ponctuels.
+                        </li>
+                        <li><strong>Champ décalage de fin :</strong> Champ contenant le décalage de fin d'un évènement linéaire. Doit être laissé vide pour les évènements ponctuels.
+                        </li>
+                        <li><strong>Entités :</strong> Sélection des entités à traiter de la couche d'évènements, toutes les entités ou seulement celles qui sont sélectionnées peuvent être traitées.
+                        </li>
+                        <li><strong>Nom de la couche générée :</strong> Nom  utilisé dans la légende pour la couche générée.</li>
+                        <li><strong>Champ des erreurs :</strong> Champ pour les erreurs (optionnel). Ce champ contient la description des raisons pour lesquelles un évènement n'a pas pu être (complètement) généré. Si ce paramètre est laissé vide, le champ n'est pas créé.
+                        </li>
+                    </ul>
+                    <p>La couche générée est de type ponctuel si le <em>champ mesure de fin</em> est laissé vide, ou de type linéaire si le <em>champ mesure de fin</em> est renseigné. La couche générée contient tous les attributs de la couche en entrée, plus le champ d'erreur s'il est spécifié.</p>
+                    <p>Si un décalage de début est spécifié, les points sont créés avec un décalage correspondant à la valeur saisie, à droite de la ligne de référence dans le sens des mesures croissantes si elle est positive, à gauche si elle est négative.
+                    Les évènements linéaires sont décalés uniformément si seul le décalage de début est spécifié
+                    Si le décalage de fin est aussi spécifié, le décalage de la ligne créée évolue progressivement du décalage de début au décalage de fin, proportionnellement aux mesures.</p>
+                    <p>La sortie est créée sous la forme d'une couche en mémoire qui peut ensuite être transformée en couche de type fichier, en utilisant l'option standard <em>Convertir en couche permanente</em> de QGIS, ou en faisant un cliquer-glisser vers un schéma PostGis existant dans l'explorateur QGIS.</p>
+                    <p>Il peut arriver que les  mesures d'évènement soient légèrement en dehors du LRS disponible (au début ou à la fin d'une route, par exemple) du fait de l'imprécision des valeurs décimales des données en entrée. Pour éviter ces erreurs indésirables, une tolérance de mesure peut être appliquée :</p>
+                    <ul class="simple">
+                        <li><strong>Évènements ponctuels :</strong> Si une mesure d'évènement exacte n'est pas trouvée, l'extension recherchera l'évènement le plus proche dans l'intervalle de tolérance.
+                        </li>
+                        <li><strong>Évènements linéaires :</strong> Les parties manquantes d'évènements (trous) sont enregistrées comme des erreurs seulement si elles sont plus longues que l'intervalle de tolérance.
+                        </li>
+                    </ul>
+                    <p>La tolérance d'évènement est paramétrée par défaut à 0.0001 (en unités de carte).</p>
+                </div>
+                <div class="section" id="measures">
+                    <h2>Calculer des mesures</h2>
+                    <p>Les identifiants de route et les mesures de points existants peuvent être calculés depuis l'onglet<em>Mesures</em>.</p>
+                    <p>
+                    <img alt="images_fr/measure.png" class="align-center" src="images_fr/measure.png"/>
+                    </p>
+                    <p>Paramètres de l'onglet Mesures :</p>
+                    <ul class="simple">
+                        <li><strong>Couche avec mesures :</strong> Couche vectorielle avec mesure en entrée.</li>
+                        <li><strong>Champ nom de route :</strong> Champ contenant les identifiants des routes.</li>
+                        <li><strong>Couche :</strong> Couche de points existante pour laquelle les mesures doivent être calculées..</li>
+                        <li><strong>Champ route (optionnel):</strong> Champ route pour la couche de points (optionnel).</li>
+                        <li><strong>Distance maximale entre point et ligne :</strong> Distance maximale entre le point et la ligne la plus proche.</li>
+                        <li><strong>Nom de la couche générée :</strong> Nom utilisé dans la légende pour la couche générée.</li>
+                        <li><strong>Champ route en sortie :</strong> Nom du champ dans lequel l'identifiant de la route sera stocké.</li>
+                        <li><strong>Champ mesure en sortie:</strong> Nom du champ dans lequel la mesure sera stockée.</li>
+                    </ul>
+                    <p>La couche générée contient tous les attributs de la couche en entrée plus le champ de l'identifiant de route et le champ de mesure. Pour calculer une mesure, les points sont projetés sur le point le plus proche de la route la plus proche dans l'intervalle de tolérance. Si la route la plus proche dans l'intervalle de tolérance est trouvée mais qu'il n'y a pas de LRS pour cette partie de la route, le champ de mesure est laissé vide. Si aucune route n'est trouvée dans l'intervalle de tolérance, le champ de l'identifiant de route et le champ de mesure sont laissés vides.</p>
+                    <p>Si l'utilisateur sélectionne un champ route pour la couche de points, alors pour chaque entité de la couche en entrée :</p>
+                    <ul class="simple">
+                        <li>Si l'identifiant de route du point est une route existante et valide, le point est associé à la ligne la plus proche de cette route pour calculer la mesure.</li>
+                        <li>Si la valeur du champ est NULL le choix par défaut est retenu : une route proche est sélectionnée automatiquement.</li>
+                        <li>Si la valeur du champ spécifie une route invalide, aucune mesure n'est générée (le choix par défaut est annulé).</li>
+                    </ul>
+                    <p>La sortie est créée sous la forme d'une couche en mémoire qui peut ensuite être transformée en couche de type fichier, en utilisant l'option standard <em>Convertir en couche permanente</em> de QGIS, ou en faisant un cliquer-glisser vers un schéma PostGis existant dans l'explorateur QGIS.</p>
+                </div>
+                <div class="section" id="calibration">
+                    <h2>Calibration</h2>
+                    <p>La calibration est un processus par lequel :</p>
+                    <ul class="simple">
+                        <li>les éléments de route sont fusionnés en parties de route</li>
+                        <li>les points sont associés aux routes grâce aux identifiants de route</li>
+                        <li>l'orientation des routes est déduite des mesures</li>
+                        <li>une table des résultats de calibration est générée pour chaque partie de route</li>
+                        <li>une liste des erreurs est générée</li>
+                    </ul>
+                    <p>La calibration est lancée depuis l'onglet <em>Calibration &gt; Paramètres </em></p>
+                    <h3>Paramètres de calibration</h3>
+                    <p>
+                    <img alt="images_fr/calibration.png" class="align-center" src="images_fr/calibration.png"/>
+                    </p>
+                    <p>Paramètres :</p>
+                    <ul class="simple">
+                        <li><strong>Couche de lignes :</strong> Couche contenant les lignes représentant les routes. Il peut contenir des lignes et des multi-lignes. Un route unique peut être représentée par plusieurs entités. Les lignes ne sont pas obligatoirement orientées.</li>
+                        <li><strong>Champ nom de route pour les lignes :</strong> Champ de la couche de lignes contenant l'identifiant de route. Tous les types de champ sont acceptés (y compris les nombres flottants), mais les types classiques (texte, entier) sont conseillés.</li>
+                        <li><strong>Couche de points :</strong> Couche contenant des points. Elle peut contenir des points ou des multi-points (mais ces derniers n'ont pas d'intérêt pour le référencement linéaire).
+                        </li>
+                        <li><strong>Champ nom de route pour les points :</strong> Champ de la couche de points contenant l'identifiant de route. Le champ peut être de type texte ou entier.</li>
+                        <li><strong>Champ mesure :</strong> Champ de la couche de points contenant les mesures. Tous les types de champs sont acceptés (y compris les nombres flottants), mais les types classiques (texte, entier) sont conseillés. Le type de champ n'est pas obligatoirement le même que celui de l'identifiant de route de la couche de ligne, voir les notes générales.</li>
+                        <li><strong>Unité de mesure :</strong> Unité pour les valeurs du champ mesure.</li>
+                        <li><strong>Toutes les routes/Inclure des routes/Exclure des routes :</strong> La calibration peut être réalisée sur toutes les routes, sur les routes sélectionnées ou sur les routes autres que les routes sélectionnées. Les routes inclues/exclues peuvent être spécifiées sous la forme d'une liste séparée par des virgules à partir de la liste affichée en cliquant sur le bouton <em>Sélectionner</em>. La liste affichée dans la fenêtre est générée à partir des identifiants de routes de la couche de lignes.</li>
+                        <li><strong>Écart maxi entre lignes :</strong> Écart maximal pour l'accrochage des lignes.</li>
+                        <li><strong>Distance maxi point-ligne :</strong> Distance maximale à utiliser pour associer un point à une route.</li>
+                        <li><strong>Parallèles :</strong> Parce que les <a class="reference external"
+                                                                   href="http://en.wikipedia.org/wiki/Multiple_edges">parallèles</a>
+                            (arrêtes multiples, arrêtes parallèles), par exemple les <a class="reference external"
+                                                                          href="http://en.wikipedia.org/wiki/Roundabout">ronds-points</a>
+                            peuvent être ambigües dans les LRS, elles doivent être traitées de façon spécifique. Trois possibilités sont offertes :
+                            <ul>
+                                <li><strong>Marquer comme erreurs :</strong> Les parallèles sont ajoutées à la liste des erreurs et exclues de la calibration.</li>
+                                <li><strong>Traiter comme ligne droite :</strong> Les lignes parallèles sont remplacées par une ligne droite entre le début et la fin des parallèles.</li>
+                                <li><strong>Exclure :</strong> Les parallèles sont exclues de la calibration sans être marquées comme des erreurs.
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Extrapoler :</strong> Si coché, les mesure sont extrapolées avant le premier et après le dernier point de chaque partie de route. Sinon les segments précédent/suivant le premier/dernier point ne sont pas calibrées.</li>
+                        <li><strong>Nom de la couche en sortie :</strong> Couche vectorielle en mémoire dans laquelle les géométries avec mesure sont enregistrées si un nom est donné. La couche vectorielle en mémoire peut ensuite être enregistrée, en utilisant l'option standard <em>Convertir en couche permanente</em> de QGIS, ou en faisant un cliquer-glisser vers un schéma PostGis existant dans l'explorateur QGIS. La couche générée peut être utilisée comme référence pour les outils Localiser, Évènements et Mesurer.</li>
+                    </ul>
+                    <p>Lorsque tous les paramètres sont renseignés correctement, la calibration peut être lancée en cliquant sur le bouton <em>Ok</em>. Le processus peut prendre un certain temps, la barre de progression indique l'état d'avancement. Lorsque la calibration est terminée, tous les onglets sont activés et le LRS peut être utilisé et/ou modifié.</p>
+                    <p>Les mesures sont toujours interpolées entre deux points. Ce comportement sera peut-être optionnel par la suite, mais aucun cas d'usage pour lequel l'absence d'interpolation donnerait de meilleurs résultats n'a encore été identifié. Merci de créer une <a class="reference external" href="https://github.com/blazek/lrs/issues/new">nouvelle issue</a> le cas échéant.</p>
+                    <p>Le LRS généré n'est pas enregistré dans une nouvelle couche, mais est stocké en mémoire et peut être utilisé immédiatement pour générer des évènements ou calculer des mesures. Cela pourra évoluer ultérieurement mais l'API de QGIS ne permet pas pour l'instant de gérer les valeurs de mesures dans les géométries vectorielles. Nous espérons que la nécessaire reconstruction du LRS n'est pas trop gênante dans la mesure où tous les paramètres sont mémorisés dans le projet pour les tâches répétitives et où la calibration est <em>relativement</em> rapide.</p>
+                    <p>L'extension LRS de QGIS fontionne de façon similaire à la fonction CalibrateRoutes_lr() d'ArcGIS avec les paramètres calibrate_method=DISTANCE, search_radius=&lt;<strong>Max distance</strong>&gt; et
+                        interpolate_between=BETWEEN. Avec en plus les paramètres extrapolate_before=BEFORE and extrapolate_after=AFTER si l'option<strong>Extrapoler</strong> est coché.</p>
+
+                    <h3 id="errors">Erreurs de calibration</h3>
+                    <p>Lorsque la phase de calibration est terminée, il est possible de vérifier les incohérences de données dans l'onglet <em>Calibration &gt; Erreurs</em>.</p>
+                    <p>
+                    <img alt="images_fr/errors.png" class="align-center" src="images_fr/errors.png"/>
+                    </p>
+                    <p>Cet onglet contient la liste de toutes les erreurs qui peuvent être filtrées sur toutes les colonnes en saisissant du texte dans la case <strong>Filtrer</strong>. L'extension peut identifier les erreurs suivantes :</p>
+                    <ul class="simple">
+                        <li><strong>Ligne dupliquée :</strong> Deux lignes ou plus ont le même identifiant et la même géométrie.</li>
+                        <li><strong>Point dupliqué :</strong> Deux points ou plus ont le même identifiant et la même géométrie.</li>
+                        <li><strong>Patte d'oie :</strong> Trois lignes ou plus ont le même identifiant et sont connectées au même noeud.</li>
+                        <li><strong>Ligne en patte d'oie :</strong> La plus courte partie de route connectée à une patte d'oie.</li>
+                        <li><strong>Point orphelin :</strong> Aucune ligne n'a le même identifiant de route que le point.</li>
+                        <li><strong>En dehors de la plage de tolérance:</strong> La distance entre le point et la ligne la plus proche avec le même identifiant de route est plus importante que le paramètre de distance maximale.</li>
+                        <li><strong>Pas assez de points :</strong> Une partie de la route n'a pas assez de points pour être calibrée (deux points au minimum).</li>
+                        <li><strong>Identifiant de route manquant :</strong> Le point ou la route n'a pas d'identifiant de route (NULL).</li>
+                        <li><strong>Mesure manquante :</strong> Le point n'a pas d'attribut mesure (NULL).</li>
+                        <li><strong>Impossible de déduire le sens :</strong> Les mesures de points le long d'une partie de route ne sont pas ordonnées et le nombre de segments dans chaque direction est identique.</li>
+                        <li><strong>Mauvaise mesure :</strong> Une mesure de point n'est pas cohérente avec les autres points et le sens déduit pour la route.</li>
+                        <li><strong>Référencement dupliqué :</strong> Plusieurs parties de route contiennent les mêmes mesures.</li>
+                        <li><strong>Lignes parallèles :</strong> Lignes parallèles (arrêtes multiples), voir le paramètre <em>Parallèles</em>.</li>
+                    </ul>
+                    <p>Lorsqu'une erreur est sélectionnée dans la liste, elle est mise en surbrillance sur la carte, et il est possible de <strong>Zoomer</strong> sur l'entité en cliquant sur le bouton situé en dessous de la liste.</p>
+                    <p>Il est aussi possible de générer une couche erreur en mémoire (points et lignes) en cliquant sur le bouton <strong>Créer couches erreurs</strong>.</p>
+                    <p>Il est également possible de générer une couche qualité en cliquant sur le bouton <strong>Créer couche qualité</strong>.
+                        La couche qualité symbolise par défaut les entités selon leur erreur relative, qui est calculée en faisant la différence entre la distance déduite des mesures définies en attribut du point et la longueur de la ligne mesurée entre les points (en suivant la géométrie de la ligne). Les attributs de la couche qualité sont :</p>
+                    <ul class="simple">
+                        <li><strong>route :</strong> Identifiant de la route.</li>
+                        <li><strong>m_from :</strong> Mesure du point de début du segment.</li>
+                        <li><strong>m_to :</strong> Mesure du point de fin du segment.</li>
+                        <li><strong>m_len :</strong> Longueur entre les mesures de points calculées comme suit : <strong>(m_to-m_from) * unités_de_carte_par_unité_de_mesure</strong>.
+                        </li>
+                        <li><strong>len :</strong> Distance le long de la ligne entre deux points en unités de mesure.</li>
+                        <li><strong>err_abs :</strong> Différence absolue entre m_len and len : <strong>m_len - len</strong>.
+                        </li>
+                        <li><strong>err_rel :</strong> Erreur relative calculée comme suit : <strong>err_abs / len</strong>.</li>
+                        <li><strong>err_perc :</strong> Valeur absolue de l'erreur relative en pourcentage : <strong>abs(err_rel) * 100</strong>.</li>
+                    </ul>
+                    <p>Les propriétés des couches erreurs et de la couche qualité sont stockées dans le projet comme pour n'importe quelle couche, et l'extension mémorise ces couches pour qu'il soit possible de modifier leur symbologie et de la retrouver lors de la réouverture du projet.</p>
+                    <p>La <strong>puissance de l'extension</strong> réside dans la <strong>mise à jour dynamique</strong> du LRS, de la liste des erreurs et des couches d'erreurs et de qualité lorsque les couches sources de lignes et de points sont modifiées. L'utilisateur peut commencer à modifier les points et les lignes, zoomer sur une erreur, corriger les données à l'origine de l'erreur et les couches erreurs et qualité sont instantanément mises à jour (rapidement car une seule route est recalibrée), de façon à ce que l'utilisateur puisse voir si la modification est correcte.</p>
+                </div>
+                <!--div class="section" id="export">
+                    <h2>Export</h2>
+                    <p>The calibrated LRS may be exported to PostGIS database using <em>LINESTRINGM</em> (not the
+                        <em>M</em> at the end) geometry type from <em>Export</em> tab.</p>
+                    <img alt="images/export.png" class="align-center" src="images/export.png"/>
+                    <p>Export tab options:</p>
+                    <ul class="simple">
+                        <li><strong>PostGIS connection:</strong> Standard QGIS PostGIS database connection which may be
+                            created in <em>Add PostGIS layers</em> dialog.
+                        </li>
+                        <li><strong>Output schema:</strong> Output schema selection filled with schemas for selected
+                            connection.
+                        </li>
+                        <li><strong>Output table:</strong> Name of output table. If a table of the same name already
+                            exists, user will be asked if the table should be overwritten or export aborted.
+                        </li>
+                    </ul>
+                    <p>Exported table has four fields:</p>
+                    <ul class="simple">
+                        <li><strong>&lt;route id&gt;:</strong> Route id. Name and type are taken from line layer.</li>
+                        <li><strong>m_from:</strong> Measure of the first coordinate in linestring.</li>
+                        <li><strong>m_to:</strong> Measure of the last coordinate in linestring.</li>
+                        <li><strong>geom:</strong> Geometry of type LINESTRINGM.</li>
+                    </ul>
+                    <p>Exported table may be used by other applications supporting geometry with measure, by custom
+                        applications or even from SQL console, for example, to create event (point) on ‘road1’ at km
+                        6.3:</p>
+                    <div class="highlight-default">
+                        <div class="highlight"><pre><span class="n">select</span> <span
+                                class="n">locate_along_measure</span><span class="p">(</span><span class="n">geom</span><span
+                                class="p">,</span><span class="mf">6.3</span><span class="p">)</span> <span class="kn">from</span> <span
+                                class="nn">lrs</span> <span class="n">where</span> <span class="n">route</span> <span
+                                class="o">=</span> <span class="s">&#39;road1&#39;</span> <span
+                                class="ow">and</span> <span class="n">m_from</span> <span class="o">&lt;=</span> <span
+                                class="mf">6.3</span> <span class="ow">and</span> <span class="mf">6.3</span> <span
+                                class="o">&lt;=</span> <span class="n">m_to</span><span class="p">;</span>
+</pre>
+                        </div>
+                    </div>
+                </div-->
+                <div class="section" id="general-notes">
+                    <h2>Notes générales</h2>
+                    <ul class="simple">
+                        <li><strong>SCR :</strong> La calibration du LRS est réalisée dans un seul Système de Coordonnées de Référence (SCR) dans lequel les lignes et les points sont reprojetés (si les couches ont des SCR différents). Le SCR est soit celui de la carte si la projection à la volée est activée, soit le SCR de la couche de lignes. Noter que la distance maximale point-ligne et la distance d'accrochage des lignes sont exprimées dans les unités utilisées pouir construire le LRS (l'unité est ajoutée aux noms de champs).</li>
+                        <li><strong>Identifiant de Route :</strong> Tous les types de champ sont acceptés. Le type des champs d'identifiant de route des couches de lignes et de points ne sont pas obligatoirement les mêmes. Par exemple, les valeurs 1 (entier), 1.0 (flottant) et "1" (texte) sont considérées comme identiques. Dans le cas du format texte, l'association des identifiants de route (trouver les points pour une ligne ou trouver la route pour des évènements) ne tient pas compte de la casse (majuscules/minuscules).</li>
+                        <li><strong>Les paramètres</strong> de tous les onglets sont mémorisés dans le projet. Les paramètres de chaque onglet sont écrits dans le projet lorsque le boutton <em>Ok</em> est cliqué (validation des paramètres). Les boutons Reset dans les différents onglets réinitialisent tous les paramètres à leurs valeurs <strong>par défaut</strong>.</li>
+                        <li><strong>Panneau ancrable :</strong> La fenêtre de l'extension est ancrable, c'est à dire qu'elle peut être utilisée soit comme fenêtre independante, soit comme panneau ancré dans l'interface principale de QGIS.</li>
+                    </ul>
+                </div>
+                <div class="section" id="scripts">
+                    <h2>Scripts</h2>
+                    Ce qui suit est en cours de développement, tous les composants ne sont pas encore adaptés à l'utilisation dans des scripts. Pour l'instant seule la classe LrsEvents peut être utilisée simplement. Le dossier de l'extension doit se trouver dans le chemin PYTHONPATH.
+                    <p>Exemple pour les évènements :</p>
+                        <pre>
+                            qgis_prefix = '/path/to/qgis/installation'
+                            # add path to plugins directory
+                            sys.path.insert(0, prefix + '/share/qgis/python/plugins/')
+                            QgsApplication.setPrefixPath(prefix, True)  # does not work?
+                            os.environ['QGIS_PREFIX_PATH'] = prefix  # workaround
+
+                            qgs = QgsApplication([], False)
+                            qgs.initQgis()
+
+                            # TODO: import public classes to lrs/__init__.py and add __all__
+                            from lrs.lrs.utils import ALL_FEATURES
+                            from lrs.lrs.lrslayer import LrsLayer
+                            from lrs.lrs.lrsevents import LrsEvents
+
+                            measures = QgsVectorLayer('measures.shp', 'measures', 'ogr')
+
+                            lrs = QgsVectorLayer('lrs.shp', 'lrs', 'ogr')
+                            lrs_layer = LrsLayer(lrs)
+                            lrs_layer.setRouteFieldName('route')
+                            lrs_layer.load()
+
+                            lrs_events = LrsEvents(lrs_layer)
+                            lrs_events.create(measures, featuresSelect=ALL_FEATURES, routeFieldName='route',
+                                                         startFieldName='from', endFieldName='to',
+                                                         errorFieldName='err', outputName='events')
+
+                            # Events were created as memory layer:
+                            events = QgsProject.instance().mapLayersByName('events')[0]
+
+                            crs = QgsCoordinateReferenceSystem.fromEpsgId(3857)
+                            writer = QgsVectorFileWriter('events.shp', 'utf8', events.fields(), QgsWkbTypes.LineString,
+                                                                           crs, 'ESRI Shapefile')
+
+                            for feature in events.getFeatures():
+                                writer.addFeature(QgsFeature(feature))
+
+                            del writer
+                            qgs.exitQgis()
+                        </pre>
+
+                </div>
+                <!--div class="section" id="known-issues">
+                    <h2>Known issues</h2>
+                    <ul class="simple">
+                        <li>Because of <a class="reference external" href="http://hub.qgis.org/issues/9309">issue
+                            9309</a> saving of event layer with features without geometry (if an event could not be
+                            referenced) was giving warning and those features were not saved (features with geometry
+                            were saved correctly however) in QGIS 2.0 and early development version 2.1. The issue was
+                            fixed in 2.1 which will become official 2.2 release.
+                        </li>
+                    </ul>
+                </div-->
+            </div>
+
+
+        </div>
+    </div>
+    <div class="clearer"></div>
+</div>
+<div class="footer">
+    &copy;2017, Radim Blazek - Traduction SIGéal, 2020.
+</div>
+
+
+</body>
+</html>
