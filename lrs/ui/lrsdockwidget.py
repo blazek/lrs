@@ -19,7 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QVariant
+from PyQt5.QtCore import QVariant, QCoreApplication
 from qgis.gui import QgsHighlight
 
 from ..lrs.error.lrserrorlayermanager import LrsErrorLayerManager
@@ -128,6 +128,13 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsMeasureEndFieldCM = LrsFieldComboManager(self.eventsMeasureEndFieldCombo, self.eventsLayerCM,
                                                             types=QVARIANT_NUMBER_TYPE_LIST, allowNone=True,
                                                             settingsName='eventsMeasureEndField')
+        # Offset values
+        self.eventsOffsetStartFieldCM = LrsFieldComboManager(self.eventsOffsetStartFieldCombo, self.eventsLayerCM,
+                                                              types=QVARIANT_NUMBER_TYPE_LIST, allowNone=True,
+                                                              settingsName='eventsOffsetStartField')
+        self.eventsOffsetEndFieldCM = LrsFieldComboManager(self.eventsOffsetEndFieldCombo, self.eventsLayerCM,
+                                                            types=QVARIANT_NUMBER_TYPE_LIST, allowNone=True,
+                                                            settingsName='eventsOffsetEndField')
 
         self.eventsFeaturesSelectCM = LrsComboManager(self.eventsFeaturesSelectCombo, options=(
             (ALL_FEATURES, self.tr('All features')), (SELECTED_FEATURES, self.tr('Selected features'))),
@@ -147,6 +154,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
         self.eventsMeasureStartFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
         self.eventsMeasureEndFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        # Offset
+        self.eventsOffsetStartFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
+        self.eventsOffsetEndFieldCombo.currentIndexChanged.connect(self.resetEventsButtons)
         self.eventsOutputNameLineEdit.textEdited.connect(self.resetEventsButtons)
         self.resetEventsOptions()
         self.resetEventsButtons()
@@ -405,6 +415,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         del self.eventsRouteFieldCM
         del self.eventsMeasureStartFieldCM
         del self.eventsMeasureEndFieldCM
+        # Offset
+        del self.eventsOffsetStartFieldCM
+        del self.eventsOffsetEndFieldCM
         del self.eventsFeaturesSelectCM
 
         self.clearLocateHighlight()
@@ -454,13 +467,19 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
             return ""
 
     def getThresholdLabel(self, crs):
-        label = "Max point distance"
+        #label = "Max point distance"
+        label = QCoreApplication.translate("LrsDockWidget", "Max point distance")
         if crs is not None:
             label += self.getUnitsLabel(crs)
         return label
 
     def getHelpUrl(self):
-        return "file:///" + self.pluginDir + "/help/index.html"
+        #return "file:///" + self.pluginDir + "/help/index.html"
+        helpFile = u'file:///{}/help/{}'.format(
+            self.pluginDir,
+            QCoreApplication.translate("LrsDockWidget", "index.html"))
+        debug('help %s' % helpFile)
+        return helpFile
 
     def showHelp(self, anchor=None):
         # debug("showHelp anchor = %s" % anchor)
@@ -577,7 +596,8 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         crs = self.getGenerateCrs()
         label = self.getThresholdLabel(crs)
         self.genThresholdLabel.setText(label)
-        label = "Max lines snap" + self.getUnitsLabel(crs)
+        #label = "Max lines snap" + self.getUnitsLabel(crs)
+        label = QCoreApplication.translate("LrsDockWidget", "Max lines snap") + self.getUnitsLabel(crs)
         self.genSnapLabel.setText(label)
 
     def generateLrs(self):
@@ -915,6 +935,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.reset()
         self.eventsMeasureStartFieldCM.reset()
         self.eventsMeasureEndFieldCM.reset()
+        # Offset
+        self.eventsOffsetStartFieldCM.reset()
+        self.eventsOffsetEndFieldCM.reset()
         self.eventsFeaturesSelectCM.reset()
         self.eventsOutputNameWM.reset()
         self.eventsErrorFieldWM.reset()
@@ -938,6 +961,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.writeToProject()
         self.eventsMeasureStartFieldCM.writeToProject()
         self.eventsMeasureEndFieldCM.writeToProject()
+        # Offset
+        self.eventsOffsetStartFieldCM.writeToProject()
+        self.eventsOffsetEndFieldCM.writeToProject()
         self.eventsFeaturesSelectCM.writeToProject()
         self.eventsOutputNameWM.writeToProject()
         self.eventsErrorFieldWM.writeToProject()
@@ -947,6 +973,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.eventsRouteFieldCM.readFromProject()
         self.eventsMeasureStartFieldCM.readFromProject()
         self.eventsMeasureEndFieldCM.readFromProject()
+        # Offset
+        self.eventsOffsetStartFieldCM.readFromProject()
+        self.eventsOffsetEndFieldCM.readFromProject()
         self.eventsFeaturesSelectCM.readFromProject()
         self.eventsOutputNameWM.readFromProject()
         self.eventsErrorFieldWM.readFromProject()
@@ -959,13 +988,17 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         routeFieldName = self.eventsRouteFieldCM.getFieldName()
         startFieldName = self.eventsMeasureStartFieldCM.getFieldName()
         endFieldName = self.eventsMeasureEndFieldCM.getFieldName()
+        # Offset
+        startOffsetFieldName = self.eventsOffsetStartFieldCM.getFieldName()
+        endOffsetFieldName = self.eventsOffsetEndFieldCM.getFieldName()
         featuresSelect = self.eventsFeaturesSelectCM.value()
         outputName = self.eventsOutputNameLineEdit.text()
         if not outputName: outputName = self.eventsOutputNameWM.defaultValue()
         errorFieldName = self.eventsErrorFieldLineEdit.text()
 
         events = LrsEvents(self.lrsLayer, self.eventsProgressBar)
-        events.create(layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
+        #events.create(layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName)
+        events.create(layer, featuresSelect, routeFieldName, startFieldName, endFieldName, errorFieldName, outputName, startOffsetFieldName, endOffsetFieldName)
 
     # ------------------- MEASURE -------------------
 

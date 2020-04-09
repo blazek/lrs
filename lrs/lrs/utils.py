@@ -175,8 +175,55 @@ def measureAlongPolyline(polyline, segment, pnt):
 
 # layer.dataProvider().deleteFeatures( ids )
 
+# compute offset pt
+def offsetPt(point1, point2, offset=0.0):
+    dx = math.fabs(point2.x() - point1.x())
+    dy = math.fabs(point2.y() - point1.y())
+    a = math.atan(math.fabs(dy) / math.fabs(dx))
+    #a = math.atan2(dy, dx) - math.pi/2
+    offset = offset or 0.0
+    dxo = offset * math.fabs(math.sin(a))
+    dyo = offset * math.fabs(math.cos(a))
+    #debug("dx = %s dy = %s !" % (dx, dy))
+    #debug("dxo = %s dyo = %s !" % (dxo, dyo))
+    if point2.x() >= point1.x() and point2.y() >= point1.y(): # Quadrant 1
+        x = point2.x() + dxo
+        y = point2.y() - dyo
+    elif point2.x() < point1.x() and point2.y() >= point1.y(): # Quadrant 2
+        x = point2.x() + dxo
+        y = point2.y() + dyo
+    elif point2.x() < point1.x() and point2.y() < point1.y(): # Quadrant 3
+        x = point2.x() - dxo
+        y = point2.y() + dyo
+    elif point2.x() >= point1.x() and point2.y() < point1.y(): # Quadrant 4
+        x = point2.x() - dxo
+        y = point2.y() - dyo
+    return QgsPointXY(x, y)
+
+# place point on line in distance from point 1 with offset o
+def pointXYOnLine(point1, point2, distance, o=0.0):
+    #debug("pointOnLine distance = %s" % distance)
+    dx = point2.x() - point1.x()
+    dy = point2.y() - point1.y()
+    # this gives exception if point1 and point2 have the same coordinate, but duplicate coordinates 
+    # clean up was added in LrsRoute.buildParts so that it should no more happen
+    k = distance / math.sqrt(dx * dx + dy * dy)
+    #debug("pointOnLine k = %s" % k)
+
+    x = point1.x() + k * dx
+    y = point1.y() + k * dy
+
+    # Calcul du décalage
+    if o != 0.0:
+        pt = offsetPt(point1, QgsPointXY(x, y), o)
+    else:
+        pt = QgsPointXY(x, y)
+
+    #return QgsPointXY(x, y)
+    return pt
+
 # place point on line in distance from point 1
-def pointXYOnLine(point1, point2, distance):
+def pointXYOnLine_sav(point1, point2, distance):
     #debug("pointOnLine distance = %s" % distance)
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
@@ -210,7 +257,8 @@ def polylineXYPointXY(polyline, distance):
 
 
 # returns new polyline 'from - to' measured along original polyline
-def polylineXYSegmentXY(polylineXY, frm, to):
+def polylineXYSegmentXY(polylineXY, frm, to, oStart=0.0, oEnd=0.0):
+    debug('offset %s' % oStart)
     geo = QgsGeometry.fromPolylineXY(polylineXY)
     length = geo.length()
 
@@ -223,13 +271,13 @@ def polylineXYSegmentXY(polylineXY, frm, to):
 
         if len(poly) == 0 and frm <= length + l:
             d = frm - length
-            p = pointXYOnLine(p1, p2, d)
+            p = pointXYOnLine(p1, p2, d, oStart)
             poly.append(p)
 
         if len(poly) > 0:
             if to < length + l:
                 d = to - length
-                p = pointXYOnLine(p1, p2, d)
+                p = pointXYOnLine(p1, p2, d, oEnd)
                 poly.append(p)
                 break
             else:

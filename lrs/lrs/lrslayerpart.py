@@ -18,9 +18,11 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+ ***************************************************************************/
 """
+import math
 from qgis.core import QgsPoint, QgsPointXY
-from .utils import pointXYOnLine, pointsDistance, debug
+from .utils import pointXYOnLine, pointsDistance, debug, offsetPt
 from .lrsrecord import LrsRecord
 from .lrspartbase import LrsPartBase
 
@@ -40,41 +42,63 @@ class LrsLayerPart(LrsPartBase):
             self.records.append(record)
 
     # overridden
-    def eventPointXY(self, start):
+    def eventPointXY(self, start, startOffset=0.0):
         #debug("eventPoint start = %s" % start)
         if start is None:
             return None
         start = float(start)
         if self.records:  # we may have 1 or none (if removed duplicate)
             if self.records[0].containsMeasure(start):
-                return self.linestringPointXY(start)
+                return self.linestringPointXY(start, startOffset)
         return None
 
     # get point on linestring with measures
     # returns QgsPointXY
     # Note that there is QgsGeometryAnalyzer.locateAlongMeasure()
-    def linestringPointXY(self, measure):
+    # But QGIS 3 : QgsGeometryAnalyzer. Use the equivalent Processing algorithms instead
+    # See QgsGeometryUtils linePerpendicularAngle() interpolatePointOnLine()
+    def linestringPointXY(self, measure, offset=0.0):
         #debug("linestringPoint measure = %s" % measure)
         if self.linestring.numPoints() < 2:
             return None
+
         for i in range(self.linestring.numPoints() - 1):
             measure1 = self.linestring.mAt(i)
             measure2 = self.linestring.mAt(i + 1)
             #debug("linestringPoint measure1 = %s  measure2 = %s" % (measure1, measure2))
+
             if measure1 == measure:
-                return QgsPointXY(self.linestring.pointN(i))
+                # Offset
+                point1 = self.linestring.pointN(i - 1)
+                point2 = self.linestring.pointN(i)
+                if offset != 0.0:
+                    pt = offsetPt(point1, point2, offset)
+                else:
+                    pt = QgsPointXY(self.linestring.pointN(i))
+                return pt
+
             elif measure2 == measure:
-                return QgsPointXY(self.linestring.pointN(i + 1))
+                # Offset
+                point1 = self.linestring.pointN(i)
+                point2 = self.linestring.pointN(i + 1)
+                if offset != 0.0:
+                    pt = offsetPt(point1, point2, offset)
+                else:
+                    pt = QgsPointXY(self.linestring.pointN(i + 1))
+                return pt
+
             elif measure1 < measure < measure2:
                 point1 = self.linestring.pointN(i)
                 point2 = self.linestring.pointN(i + 1)
-                length = pointsDistance(point1,point2)
+                length = pointsDistance(point1, point2)
                 distance = (measure - measure1) * length / (measure2 - measure1)
-                return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance)
+                #return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance)
+                return pointXYOnLine(self.linestring.pointN(i), self.linestring.pointN(i + 1), distance, offset)
+
         return None
 
     # overridden
-    def eventSegments(self, start, end):
+    def eventSegments(self, start, end, oStart=0.0, oEnd=0.0):
         #debug("eventMultiPolyLine start = %s end = %s" % (start, end))
         segments = []
         if start is None or end is None:
@@ -85,7 +109,7 @@ class LrsLayerPart(LrsPartBase):
         if self.records:  # we may have 1 or none (if removed duplicate)
             rec = LrsRecord(min(start, end), max(start, end), None, None)
             if self.records[0].measureOverlaps(rec):
-                segment = self.linestringSegment(start, end)
+                segment = self.linestringSegment(start, end, oStart, oEnd)
                 if segment:
                     segments.append(segment)
 
@@ -93,7 +117,8 @@ class LrsLayerPart(LrsPartBase):
 
     # return [ QgsPolyline, measure_from, measure_to ]
     # Note that there is QgsGeometryAnalyzer.locateBetweenMeasures()
-    def linestringSegment(self, start, end):
+    def linestringSegment(self, start, end, oStart=0.0, oEnd=0.0):
+        #debug('offset %s - %s' % (oStart, oEnd))
         if self.linestring.numPoints() < 2:
             return None
         polyline = []
@@ -109,15 +134,36 @@ class LrsLayerPart(LrsPartBase):
         linestringSegmentEnd = max(start, end)
 
         if linestringSegmentStart >= minMeasure:  # start point is on linestring
-            polyline.append(self.linestringPointXY(linestringSegmentStart))
+            polyline.append(self.linestringPointXY(linestringSegmentStart, oStart))
+
+        # Incremental offset
+        oStart = oStart or 0.0
+        oEnd = oEnd or 0.0
+        iOffset = (oEnd - oStart) / ((toMeasure - fromMeasure) or 1)
 
         for i in range(self.linestring.numPoints()):
             measure = self.linestring.mAt(i)
             if linestringSegmentStart < measure < linestringSegmentEnd:
-                polyline.append(QgsPointXY(self.linestring.pointN(i)))
+                # Offset
+                if oStart != 0.0:
+                    if oStart != oEnd:
+                        dOffset = iOffset * (self.linestring.mAt(i) - fromMeasure)
+                        offset = oStart + dOffset
+                        #debug('oS %s oE %s dO %s MaxM %s M %s ' % (oStart, oEnd, dOffset, maxMeasure, self.linestring.mAt(i)))
+                        #debug('oS %s oE %s dO %s iO %s M %s ' % (oStart, oEnd, dOffset, iOffset, self.linestring.mAt(i)))
+                    else:
+                        offset = oStart
+
+                    polyline.append(offsetPt(
+                        QgsPointXY(self.linestring.pointN(i-1)),
+                        QgsPointXY(self.linestring.pointN(i)), 
+                        offset))
+                    
+                else:
+                    polyline.append(QgsPointXY(self.linestring.pointN(i)))
 
         if linestringSegmentEnd <= maxMeasure:  # end point is on linestring
-            polyline.append(self.linestringPointXY(linestringSegmentEnd))
+            polyline.append(self.linestringPointXY(linestringSegmentEnd, oEnd))
 
         # if the given start and end measures specify a linear event in the
         # opposite direction, reverse the direction of the segment to match

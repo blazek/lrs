@@ -146,8 +146,12 @@
                         <li><strong>Start measure field:</strong> Measure of a point event or start measure of a linear
                             event.
                         </li>
+                        <li><strong>Start offset field :</strong> Offset to be applied to point event or start point of a linear event.
+                        </li>
                         <li><strong>End measure field:</strong> End measure of a linear event. To be left empty for
                             point events.
+                        </li>
+                        <li><strong>End offset field :</strong> Offset to be applied to end point of a linear event.
                         </li>
                         <li><strong>Features:</strong> Selection of input features from events layer, either all
                             features or selected features may be processed.
@@ -161,6 +165,9 @@
                     <p>The output layer type is point if <em>End measure field</em> is left blank or line if <em>End
                         measure field</em> is selected. The output layer contains all attributes from input layer plus,
                         if specified, error field.</p>
+                    <p>If a start offset is specified, points are created with a corresponding offset, on the right of the line looking toward growing measures if it is positive, on the left if it is negative.
+                    Linear events are created with a uniform offset if only start offset is specified.
+                    If end offset is also specified, created line offset grows gradually from start offset to end offset, proportionally to measures.</p>
                     <p>The output is created as memory layer which can be later stored in a persistent data source using
                         standard QGIS options like <em>“Save as”</em> or using
                             drag and drop to an existing PostGIS schema in the browser.</p>
