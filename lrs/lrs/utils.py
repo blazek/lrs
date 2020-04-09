@@ -258,7 +258,7 @@ def polylineXYPointXY(polyline, distance):
 
 # returns new polyline 'from - to' measured along original polyline
 def polylineXYSegmentXY(polylineXY, frm, to, oStart=0.0, oEnd=0.0):
-    debug('offset %s' % oStart)
+    # debug('offset %s' % oStart)
     geo = QgsGeometry.fromPolylineXY(polylineXY)
     length = geo.length()
 

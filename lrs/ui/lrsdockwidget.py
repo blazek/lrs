@@ -478,7 +478,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         helpFile = u'file:///{}/help/{}'.format(
             self.pluginDir,
             QCoreApplication.translate("LrsDockWidget", "index.html"))
-        debug('help %s' % helpFile)
+        # debug('help %s' % helpFile)
         return helpFile
 
     def showHelp(self, anchor=None):
