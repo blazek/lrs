@@ -67,8 +67,8 @@ changelog=
 tags=vector,network,lrs,lineare reference system,linear referencing,dynamic segmentation
 
 homepage=http://blazek.github.io/lrs/
-tracker=https://github.com/blazek/lrs/issues/
-repository=https://github.com/blazek/lrs/
+tracker=https://github.io/blazek/lrs/issues/
+repository=https://github.io/blazek/lrs/
 icon=icon.svg
 # experimental flag
 experimental=False

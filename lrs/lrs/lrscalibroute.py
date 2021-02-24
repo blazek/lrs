@@ -533,7 +533,7 @@ class LrsCalibRoute(LrsRouteBase):
             for i in range(len(self.parts)):
                 part = self.parts[i]
                 partGeo = QgsGeometry.fromPolylineXY(part.polyline)
-                # use epsilon=0, see https://github.com/blazek/lrs/issues/15
+                # use epsilon=0, see https://github.io/blazek/lrs/issues/15
                 (sqDist, nearestPnt, afterVertex, leftOf) = partGeo.closestSegmentWithContext(milestone.pnt, 0)
                 segment = afterVertex - 1
                 # debug ('sqDist %s x %s' % (sqDist, sqrThreshold) )
