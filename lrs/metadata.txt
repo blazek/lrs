@@ -24,7 +24,6 @@ email=radim.blazek@gmail.com
 
 # Changelog entries:
 changelog=
-RELEASE.txt
   1.2.2
     - Fixed include/exclude routes select dialog (issue #53)
   1.2.1
@@ -67,7 +66,7 @@ RELEASE.txt
     - Fixed issue #1 (string type route id selection)
 
 # tags are comma separated with spaces allowed
-tags=vector,network,lrs,lineare reference system,linear referencing,dynamic segmentation
+tags=vector,network,lrs,linear reference system,linear referencing,dynamic segmentation
 
 homepage=http://blazek.github.io/lrs/
 tracker=https://github.io/blazek/lrs/issues/
