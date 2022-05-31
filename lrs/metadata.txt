@@ -14,7 +14,7 @@ qgisMinimumVersion=2.99
 qgisMaximumVersion=3.99
 description=Linear reference system builder and editor 
 about=The plugin supports calibration, creation of punctual and linear events and calculation of measures for points
-version=1.2.1
+version=1.2.2
 author=Radim Blazek, Simon South, Christophe Damour
 email=radim.blazek@gmail.com
 
@@ -24,6 +24,9 @@ email=radim.blazek@gmail.com
 
 # Changelog entries:
 changelog=
+RELEASE.txt
+  1.2.2
+    - Fixed include/exclude routes select dialog (issue #53)
   1.2.1
     - French translation, contributed by Christophe Damour <c.damour@sigeal.com>
   1.2.0
