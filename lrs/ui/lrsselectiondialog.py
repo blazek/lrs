@@ -22,6 +22,7 @@
 
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
+from qgis.core import NULL
 
 from .ui_selectiondialog import Ui_LrsSelectionDialog
 
@@ -52,8 +53,9 @@ class LrsSelectionDialog(QDialog, Ui_LrsSelectionDialog):
             self.tableWidget.removeRow(0)
         if not layer or not fieldName: return
 
-        field = layer.pendingFields().field(fieldName)
-        if not field: return
+        field = layer.fields().field(fieldName)
+        if not field:
+            return
 
         values = set()
         for feature in layer.getFeatures():
@@ -61,7 +63,7 @@ class LrsSelectionDialog(QDialog, Ui_LrsSelectionDialog):
             values.add(value)
 
         if field.type() == QVariant.String:
-            values = sorted(values, key=lambda s: s.lower() if type(s) is not QPyNullVariant else '')
+            values = sorted(values, key=lambda s: s.lower() if s != NULL else '')
         else:
             values = sorted(values)
 
