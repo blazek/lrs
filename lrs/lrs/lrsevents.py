@@ -132,7 +132,7 @@ class LrsEvents(QObject):
             count += 1
             percent = 100 * count / total
             if self.progressBar:
-                self.progressBar.setValue(percent)
+                self.progressBar.setValue(int(percent))
 
         outputLayer.dataProvider().addFeatures(outputFeatures)
 

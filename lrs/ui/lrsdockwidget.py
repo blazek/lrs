@@ -685,7 +685,7 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
     def showGenProgress(self, label, percent):
         self.genProgressFrame.show()
         self.genProgressLabel.setText(label)
-        self.genProgressBar.setValue(percent)
+        self.genProgressBar.setValue(int(percent))
 
     def hideGenProgress(self):
         self.genProgressFrame.hide()
@@ -812,9 +812,9 @@ class LrsDockWidget(QDockWidget, Ui_LrsDockWidget):
         self.measureProgressBar.hide()
 
     def loadLrsLayerProgress(self, percent):
-        self.locateProgressBar.setValue(percent)
-        self.eventsProgressBar.setValue(percent)
-        self.measureProgressBar.setValue(percent)
+        self.locateProgressBar.setValue(int(percent))
+        self.eventsProgressBar.setValue(int(percent))
+        self.measureProgressBar.setValue(int(percent))
 
     # ------------------------------------ LOCATE ------------------------------------
     def resetLocateOptions(self):
