@@ -6,8 +6,11 @@ Release steps:
 * set new version in lrs/metadata.txt
 * add changelog in lrs/metadata.txt
 * create package in lrs/: make package VERSION=x.x.x (using correct PYTHONPATH variable for Python3 and Qt5)
-* set link to latest help in index.html
+* set link to the latest help in index.html
 * update release/plugins.xml to new version
 * git commit
 * tag new version in git
 * git push; git push --tags; git push origin gh-pages:gh-pages
+
+QGIS installs plugins in
+~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/
