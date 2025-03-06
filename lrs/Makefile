@@ -107,6 +107,7 @@ package: compile
 	rsync -r --exclude __pycache__ $(PACKAGE_FILES) build/lrs
 	cp -r help build/lrs
 	cp -r i18n build/lrs
+	cp ../LICENSE build/lrs
 	cp -r help ../release/help.$(VERSION)
 	cd build; zip -9r ../../release/lrs.$(VERSION).zip lrs/; cd -
 	rm -rf build
