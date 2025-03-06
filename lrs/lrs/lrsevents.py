@@ -19,6 +19,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from html import escape
 
 from .utils import *
 
@@ -91,11 +92,12 @@ class LrsEvents(QObject):
             total = layer.featureCount()
         count = 0
         for feature in featuresIterator:
-            #debug("create feature.id = %s" % feature.id())
+            # debug("create feature.id = %s" % feature.id())
             routeId = feature[routeFieldName]
             start = feature[startFieldName]
             end = feature[endFieldName] if endFieldName else None
-            # debug ( "event routeId = %s start = %s end = %s" % ( routeId, start, end ) )
+            # Some special (HTML?) characters like "<" were breaking output in console -> escape()
+            # debug ( "event routeId = %s start = %s end = %s" % ( escape(routeId), start, end ) )
             # Offset
             startOffset = feature[startOffsetFieldName] if startOffsetFieldName else 0.0
             endOffset = feature[endOffsetFieldName] if endOffsetFieldName else 0.0

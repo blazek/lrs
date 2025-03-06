@@ -21,7 +21,10 @@
  ***************************************************************************/
 """
 import math
-from qgis.core import QgsPoint, QgsPointXY
+from html import escape
+
+from qgis.core import QgsPoint, QgsPointXY, QgsGeometry
+
 from .utils import pointXYOnLine, pointsDistance, debug, offsetPt
 from .lrsrecord import LrsRecord
 from .lrspartbase import LrsPartBase
@@ -29,17 +32,25 @@ from .lrspartbase import LrsPartBase
 
 class LrsLayerPart(LrsPartBase):
     def __init__(self, polylineGeo):
+        # polylineGeo is single polyline geometry (QgsGeometry)
         super(LrsLayerPart, self).__init__()
-        self.polylineGeo = polylineGeo  # single polyline geometry
-        self.polyline = polylineGeo.asPolyline()
-        self.length = self.polylineGeo.length()
-        self.linestring = self.polylineGeo.get()  # QgsLineString
+        self.linestring = polylineGeo.get()  # QgsLineString
+        self.length = polylineGeo.length()
         if self.linestring and self.linestring.numPoints() > 1:
             measure1 = self.linestring.mAt(0)
             measure2 = self.linestring.mAt(self.linestring.numPoints() - 1)
             # debug('LrsLayerRoutePart %s - %s : %s - %s' % (measure1, measure2, 0, self.length))
+            # The measures may be in descending order
+            #    -> revert if necessary
+            if measure1 > measure2:
+                measure1, measure2 = measure2, measure1
+                # debug('LrsLayerRoutePart reverted %s - %s : %s - %s' % (measure1, measure2, 0, self.length))
+                self.linestring = self.linestring.reversed()
+                polylineGeo = QgsGeometry(self.linestring)
             record = LrsRecord(measure1, measure2, 0, self.length)
             self.records.append(record)
+        self.polylineGeo = polylineGeo  # possibly reversed
+        self.polyline = polylineGeo.asPolyline()  # list
 
     # overridden
     def eventPointXY(self, start, startOffset=0.0):
