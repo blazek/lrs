@@ -179,7 +179,7 @@ def measureAlongPolyline(polyline, segment, pnt):
 def offsetPt(point1, point2, offset=0.0):
     dx = math.fabs(point2.x() - point1.x())
     dy = math.fabs(point2.y() - point1.y())
-    a = math.atan(math.fabs(dy) / math.fabs(dx))
+    a = math.atan2(math.fabs(dy), math.fabs(dx))
     #a = math.atan2(dy, dx) - math.pi/2
     offset = offset or 0.0
     dxo = offset * math.fabs(math.sin(a))
