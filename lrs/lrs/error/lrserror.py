@@ -116,7 +116,7 @@ class LrsError(QObject):
 
             checksums.sort()
 
-            m = md5()
+            m = md5(usedforsecurity=False)
             for checksum in checksums:
                 m.update(checksum)
             self.originChecksum_ = m.digest()
@@ -127,7 +127,7 @@ class LrsError(QObject):
     # calculation depends on error type
     def getChecksum(self):
         if not self.checksum_:
-            m = md5(str(self.type).encode())
+            m = md5(str(self.type).encode(), usedforsecurity=False)
 
             if self.type == self.DUPLICATE_LINE:
                 m.update(self.geo.asWkb())

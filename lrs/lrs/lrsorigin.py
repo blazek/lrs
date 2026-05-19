@@ -32,7 +32,7 @@ class LrsOrigin(object):
 
     def getChecksum(self):
         s = "%s-%s-%s-%s" % (self.geoType, self.fid, self.geoPart, self.nGeoParts)
-        m = md5(s.encode())
+        m = md5(s.encode(), usedforsecurity=False)
         return m.digest()
 
 
