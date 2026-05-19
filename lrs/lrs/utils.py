@@ -177,38 +177,30 @@ def measureAlongPolyline(polyline, segment, pnt):
 
 # compute offset pt
 def offsetPt(point1, point2, offset=0.0):
-    dx = math.fabs(point2.x() - point1.x())
-    dy = math.fabs(point2.y() - point1.y())
-    a = math.atan(math.fabs(dy) / math.fabs(dx))
-    #a = math.atan2(dy, dx) - math.pi/2
+    dx = point2.x() - point1.x()
+    dy = point2.y() - point1.y()
+    # length = math.sqrt(dx * dx + dy * dy)
+    # debug(f'length = {length}')
+    # if length == 0:
+    #    return point2, 'Zero length segment, could not calculate offset.'
+    a = math.atan2(dy, dx) - math.pi/2
     offset = offset or 0.0
-    dxo = offset * math.fabs(math.sin(a))
-    dyo = offset * math.fabs(math.cos(a))
-    #debug("dx = %s dy = %s !" % (dx, dy))
-    #debug("dxo = %s dyo = %s !" % (dxo, dyo))
-    if point2.x() >= point1.x() and point2.y() >= point1.y(): # Quadrant 1
-        x = point2.x() + dxo
-        y = point2.y() - dyo
-    elif point2.x() < point1.x() and point2.y() >= point1.y(): # Quadrant 2
-        x = point2.x() + dxo
-        y = point2.y() + dyo
-    elif point2.x() < point1.x() and point2.y() < point1.y(): # Quadrant 3
-        x = point2.x() - dxo
-        y = point2.y() + dyo
-    elif point2.x() >= point1.x() and point2.y() < point1.y(): # Quadrant 4
-        x = point2.x() - dxo
-        y = point2.y() - dyo
+    x = point2.x() + offset * math.cos(a)
+    y = point2.y() + offset * math.sin(a)
+    # threshold = 1e-10 if QgsProject.instance().crs().mapUnits() == QgsUnitTypes.DistanceDegrees else 0.001
+    # error = f'Suspiciously short segment ({length}).' if length < threshold else None
+    # return QgsPointXY(x, y), error
     return QgsPointXY(x, y)
 
 # place point on line in distance from point 1 with offset o
 def pointXYOnLine(point1, point2, distance, o=0.0):
-    #debug("pointOnLine distance = %s" % distance)
+    # debug("pointOnLine distance = %s" % distance)
     dx = point2.x() - point1.x()
     dy = point2.y() - point1.y()
     # this gives exception if point1 and point2 have the same coordinate, but duplicate coordinates 
     # clean up was added in LrsRoute.buildParts so that it should no more happen
     k = distance / math.sqrt(dx * dx + dy * dy)
-    #debug("pointOnLine k = %s" % k)
+    # debug("pointOnLine k = %s" % k)
 
     x = point1.x() + k * dx
     y = point1.y() + k * dy
@@ -219,7 +211,6 @@ def pointXYOnLine(point1, point2, distance, o=0.0):
     else:
         pt = QgsPointXY(x, y)
 
-    #return QgsPointXY(x, y)
     return pt
 
 # place point on line in distance from point 1

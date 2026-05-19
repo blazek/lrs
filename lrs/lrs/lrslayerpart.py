@@ -54,7 +54,7 @@ class LrsLayerPart(LrsPartBase):
 
     # overridden
     def eventPointXY(self, start, startOffset=0.0):
-        #debug("eventPoint start = %s" % start)
+        # debug("eventPoint start = %s" % start)
         if start is None:
             return None
         start = float(start)
@@ -165,11 +165,8 @@ class LrsLayerPart(LrsPartBase):
                     else:
                         offset = oStart
 
-                    polyline.append(offsetPt(
-                        QgsPointXY(self.linestring.pointN(i-1)),
-                        QgsPointXY(self.linestring.pointN(i)), 
-                        offset))
-                    
+                    pt, error = offsetPt(QgsPointXY(self.linestring.pointN(i-1)), QgsPointXY(self.linestring.pointN(i)), offset)
+                    polyline.append(pt)
                 else:
                     polyline.append(QgsPointXY(self.linestring.pointN(i)))
 
